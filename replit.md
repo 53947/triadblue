@@ -107,6 +107,18 @@ Preferred communication style: Simple, everyday language.
 - Storage layer supports bulk operations for efficient commit insertion
 - Requires GITHUB_TOKEN environment variable for authenticated API access
 
+**Webhook System** *(Completed - Task 2)*
+- Inbound webhook receiver endpoint (POST /api/projects/:projectId/webhook-events) for external projects to POST events
+- HMAC-SHA256 signature verification using X-Hub-Signature header against raw request payload
+- Event type filtering - only processes events in webhook's configured events array
+- Event processing pipeline handles task.created, task.updated, conversation.created events
+- Auto-creates tasks/conversations from verified webhook payloads
+- Webhook management API: create, list, update, delete webhooks per project
+- Auto-generated secure secrets for each webhook (64-character hex)
+- Tracks lastTriggeredAt timestamp for webhook activity monitoring
+- Returns 401 for missing/invalid signatures, 403 for disallowed event types
+- Backend properly uses raw body for HMAC verification (avoids JSON re-serialization issues)
+
 ### External Dependencies
 
 **Package Management**
