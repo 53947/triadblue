@@ -82,6 +82,19 @@ export const githubActivity = pgTable("github_activity", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Webhooks - allows external projects to register webhook endpoints
+export const webhooks = pgTable("webhooks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  projectId: varchar("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  name: text("name").notNull(), // Friendly name for the webhook
+  url: text("url").notNull(), // Endpoint URL to POST to
+  secret: text("secret").notNull(), // HMAC secret for signature verification
+  events: text("events").array().notNull().default(sql`ARRAY[]::text[]`), // ['task.created', 'task.updated', 'conversation.created']
+  isActive: boolean("is_active").notNull().default(true),
+  lastTriggeredAt: timestamp("last_triggered_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Project permissions for users
 export const projectPermissions = pgTable("project_permissions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -110,6 +123,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   tasks: many(tasks),
   conversations: many(conversations),
   githubActivity: many(githubActivity),
+  webhooks: many(webhooks),
   permissions: many(projectPermissions),
 }));
 
@@ -145,6 +159,13 @@ export const conversationsRelations = relations(conversations, ({ one }) => ({
 export const githubActivityRelations = relations(githubActivity, ({ one }) => ({
   project: one(projects, {
     fields: [githubActivity.projectId],
+    references: [projects.id],
+  }),
+}));
+
+export const webhooksRelations = relations(webhooks, ({ one }) => ({
+  project: one(projects, {
+    fields: [webhooks.projectId],
     references: [projects.id],
   }),
 }));
@@ -203,6 +224,12 @@ export const insertProjectPermissionSchema = createInsertSchema(projectPermissio
   createdAt: true,
 });
 
+export const insertWebhookSchema = createInsertSchema(webhooks).omit({
+  id: true,
+  createdAt: true,
+  lastTriggeredAt: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -224,3 +251,6 @@ export type GithubActivity = typeof githubActivity.$inferSelect;
 
 export type InsertProjectPermission = z.infer<typeof insertProjectPermissionSchema>;
 export type ProjectPermission = typeof projectPermissions.$inferSelect;
+
+export type InsertWebhook = z.infer<typeof insertWebhookSchema>;
+export type Webhook = typeof webhooks.$inferSelect;

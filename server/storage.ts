@@ -7,6 +7,7 @@ import {
   conversations,
   githubActivity,
   projectPermissions,
+  webhooks,
   type User,
   type InsertUser,
   type Project,
@@ -21,6 +22,8 @@ import {
   type InsertGithubActivity,
   type ProjectPermission,
   type InsertProjectPermission,
+  type Webhook,
+  type InsertWebhook,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql } from "drizzle-orm";
@@ -69,6 +72,14 @@ export interface IStorage {
   // Project Permissions
   getProjectPermissions(userId: string): Promise<ProjectPermission[]>;
   createProjectPermission(permission: InsertProjectPermission): Promise<ProjectPermission>;
+
+  // Webhooks
+  getWebhooks(projectId: string): Promise<Webhook[]>;
+  getWebhook(id: string): Promise<Webhook | undefined>;
+  createWebhook(webhook: InsertWebhook): Promise<Webhook>;
+  updateWebhook(id: string, updates: Partial<InsertWebhook>): Promise<Webhook | undefined>;
+  deleteWebhook(id: string): Promise<void>;
+  updateWebhookLastTriggered(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -228,6 +239,41 @@ export class DatabaseStorage implements IStorage {
   async createProjectPermission(insertPermission: InsertProjectPermission): Promise<ProjectPermission> {
     const [permission] = await db.insert(projectPermissions).values(insertPermission).returning();
     return permission;
+  }
+
+  // Webhooks
+  async getWebhooks(projectId: string): Promise<Webhook[]> {
+    return await db.select().from(webhooks).where(eq(webhooks.projectId, projectId)).orderBy(desc(webhooks.createdAt));
+  }
+
+  async getWebhook(id: string): Promise<Webhook | undefined> {
+    const [webhook] = await db.select().from(webhooks).where(eq(webhooks.id, id));
+    return webhook || undefined;
+  }
+
+  async createWebhook(insertWebhook: InsertWebhook): Promise<Webhook> {
+    const [webhook] = await db.insert(webhooks).values(insertWebhook).returning();
+    return webhook;
+  }
+
+  async updateWebhook(id: string, updates: Partial<InsertWebhook>): Promise<Webhook | undefined> {
+    const [webhook] = await db
+      .update(webhooks)
+      .set(updates)
+      .where(eq(webhooks.id, id))
+      .returning();
+    return webhook || undefined;
+  }
+
+  async deleteWebhook(id: string): Promise<void> {
+    await db.delete(webhooks).where(eq(webhooks.id, id));
+  }
+
+  async updateWebhookLastTriggered(id: string): Promise<void> {
+    await db
+      .update(webhooks)
+      .set({ lastTriggeredAt: new Date() })
+      .where(eq(webhooks.id, id));
   }
 }
 

@@ -3,9 +3,14 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { extractActionItemsFromConversation } from "./ai";
 import { syncGitHubActivity } from "./github";
-import { randomBytes } from "crypto";
+import { randomBytes, createHmac } from "crypto";
 import { z } from "zod";
 import { insertProjectSchema, insertTaskSchema, insertConversationSchema, insertGithubActivitySchema, insertApiKeySchema } from "@shared/schema";
+
+// Helper function to create HMAC signature for webhook payloads
+function createHmacSignature(payload: string, secret: string): string {
+  return createHmac("sha256", secret).update(payload).digest("hex");
+}
 
 // Middleware to validate API key for external requests
 async function validateApiKey(req: any, res: any, next: any) {
@@ -137,6 +142,167 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating API key:", error);
       res.status(500).json({ error: "Failed to create API key" });
+    }
+  });
+
+  // ============= Webhooks API =============
+
+  app.get("/api/projects/:projectId/webhooks", async (req, res) => {
+    try {
+      const webhooks = await storage.getWebhooks(req.params.projectId);
+      res.json(webhooks);
+    } catch (error) {
+      console.error("Error fetching webhooks:", error);
+      res.status(500).json({ error: "Failed to fetch webhooks" });
+    }
+  });
+
+  app.post("/api/projects/:projectId/webhooks", async (req, res) => {
+    try {
+      const { name, url, events } = req.body;
+      
+      // Generate a secure random webhook secret for HMAC verification
+      const secret = randomBytes(32).toString('hex');
+      
+      const webhook = await storage.createWebhook({
+        projectId: req.params.projectId,
+        name,
+        url,
+        secret,
+        events,
+        isActive: true,
+      });
+      
+      res.json(webhook);
+    } catch (error) {
+      console.error("Error creating webhook:", error);
+      res.status(500).json({ error: "Failed to create webhook" });
+    }
+  });
+
+  app.put("/api/webhooks/:id", async (req, res) => {
+    try {
+      const updates = req.body;
+      const webhook = await storage.updateWebhook(req.params.id, updates);
+      if (!webhook) {
+        return res.status(404).json({ error: "Webhook not found" });
+      }
+      res.json(webhook);
+    } catch (error) {
+      console.error("Error updating webhook:", error);
+      res.status(500).json({ error: "Failed to update webhook" });
+    }
+  });
+
+  app.delete("/api/webhooks/:id", async (req, res) => {
+    try {
+      await storage.deleteWebhook(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting webhook:", error);
+      res.status(500).json({ error: "Failed to delete webhook" });
+    }
+  });
+
+  // INBOUND webhook receiver - external projects POST events here
+  app.post("/api/projects/:projectId/webhook-events", async (req, res) => {
+    try {
+      const { projectId } = req.params;
+      const signature = req.headers["x-hub-signature"] as string;
+      
+      if (!signature) {
+        return res.status(401).json({ error: "Missing X-Hub-Signature header" });
+      }
+
+      // Use the raw body for HMAC verification (captured by express.json verify option)
+      const rawBody = (req as any).rawBody;
+      if (!rawBody) {
+        return res.status(400).json({ error: "Unable to verify webhook signature - raw body missing" });
+      }
+      const payload = rawBody.toString('utf8');
+
+      // Get all active webhooks for this project
+      const webhooks = await storage.getWebhooks(projectId);
+      const activeWebhooks = webhooks.filter(w => w.isActive);
+
+      if (activeWebhooks.length === 0) {
+        return res.status(404).json({ error: "No active webhooks configured for this project" });
+      }
+
+      // Verify signature against all active webhook secrets
+      let verified = false;
+      let matchedWebhook = null;
+
+      for (const webhook of activeWebhooks) {
+        const expectedSignature = createHmacSignature(payload, webhook.secret);
+        if (signature === expectedSignature) {
+          verified = true;
+          matchedWebhook = webhook;
+          break;
+        }
+      }
+
+      if (!verified) {
+        return res.status(401).json({ error: "Invalid webhook signature" });
+      }
+
+      // Process webhook event
+      const event = req.body;
+      const eventType = event.event || event.type;
+      
+      // Check if event type is allowed for this webhook
+      if (matchedWebhook.events.length > 0 && !matchedWebhook.events.includes(eventType)) {
+        return res.status(403).json({ error: `Event type '${eventType}' not allowed for this webhook` });
+      }
+
+      console.log(`Received webhook event: ${eventType} for project ${projectId}`);
+
+      // Handle different event types
+      if (eventType === "task.created" || eventType === "task_created") {
+        const taskData = event.data || event.task;
+        if (taskData) {
+          await storage.createTask({
+            projectId,
+            title: taskData.title || "Untitled Task",
+            description: taskData.description || "",
+            status: taskData.status || "pending",
+            priority: taskData.priority || "medium",
+            source: "api",
+            sourceUrl: taskData.sourceUrl || taskData.url,
+          });
+        }
+      } else if (eventType === "task.updated" || eventType === "task_updated") {
+        const taskData = event.data || event.task;
+        if (taskData && taskData.id) {
+          await storage.updateTask(taskData.id, {
+            title: taskData.title,
+            description: taskData.description,
+            status: taskData.status,
+            priority: taskData.priority,
+          });
+        }
+      } else if (eventType === "conversation.created" || eventType === "conversation_created") {
+        const convData = event.data || event.conversation;
+        if (convData) {
+          await storage.createConversation({
+            projectId,
+            userId: "default-user", // System user for webhook-created conversations
+            title: convData.title || "Webhook Conversation",
+            content: convData.content || convData.text || "",
+            agentName: convData.agentName || convData.agent || "External System",
+          });
+        }
+      }
+
+      // Update webhook last triggered timestamp
+      if (matchedWebhook) {
+        await storage.updateWebhookLastTriggered(matchedWebhook.id);
+      }
+
+      res.json({ success: true, message: "Webhook event processed successfully" });
+    } catch (error) {
+      console.error("Error processing webhook event:", error);
+      res.status(500).json({ error: "Failed to process webhook event" });
     }
   });
 

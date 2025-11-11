@@ -94,10 +94,18 @@ Preferred communication style: Simple, everyday language.
 - Optional project association for context
 - Automated task creation from extracted items
 
-**GitHub Activity**
-- Commit history tracking linked to projects
-- Repository and branch information
-- Commit message and SHA storage for reference
+**GitHub Integration** *(Completed - Task 1)*
+- Real GitHub API integration to fetch commit history from configured repositories
+- Per-project GitHub repository and branch configuration via project detail page
+- Manual sync functionality via "Sync Now" button to fetch latest commits
+- SHA-based deduplication to prevent duplicate commit entries
+- Commit tracking with repository, branch, message, author, and timestamp metadata
+- Last sync timestamp tracking (lastGithubSync) for future incremental sync support
+- Graceful error handling when GitHub token is not configured
+- GitHub activity displayed in unified dashboard feed alongside tasks and conversations
+- Backend service (server/github.ts) handles GitHub API communication
+- Storage layer supports bulk operations for efficient commit insertion
+- Requires GITHUB_TOKEN environment variable for authenticated API access
 
 ### External Dependencies
 
