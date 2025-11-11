@@ -19,6 +19,9 @@ export const projects = pgTable("projects", {
   description: text("description"),
   color: text("color").notNull().default("#3B82F6"), // For visual identification
   icon: text("icon"), // Lucide icon name
+  githubRepo: text("github_repo"), // Format: "owner/repo" - NOT storing token in DB for security
+  githubBranch: text("github_branch").default("main"), // Branch to track
+  lastGithubSync: timestamp("last_github_sync"), // Last successful GitHub sync
   createdById: varchar("created_by_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),

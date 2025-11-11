@@ -63,6 +63,8 @@ export interface IStorage {
   getGithubActivity(): Promise<GithubActivity[]>;
   getGithubActivityByProject(projectId: string): Promise<GithubActivity[]>;
   createGithubActivity(activity: InsertGithubActivity): Promise<GithubActivity>;
+  bulkCreateGithubActivity(activities: InsertGithubActivity[]): Promise<GithubActivity[]>;
+  getGithubActivityBySha(projectId: string, sha: string): Promise<GithubActivity | undefined>;
 
   // Project Permissions
   getProjectPermissions(userId: string): Promise<ProjectPermission[]>;
@@ -203,6 +205,19 @@ export class DatabaseStorage implements IStorage {
   async createGithubActivity(insertActivity: InsertGithubActivity): Promise<GithubActivity> {
     const [activity] = await db.insert(githubActivity).values(insertActivity).returning();
     return activity;
+  }
+
+  async bulkCreateGithubActivity(activities: InsertGithubActivity[]): Promise<GithubActivity[]> {
+    if (activities.length === 0) return [];
+    return await db.insert(githubActivity).values(activities).returning();
+  }
+
+  async getGithubActivityBySha(projectId: string, sha: string): Promise<GithubActivity | undefined> {
+    const [activity] = await db
+      .select()
+      .from(githubActivity)
+      .where(and(eq(githubActivity.projectId, projectId), eq(githubActivity.commitSha, sha)));
+    return activity || undefined;
   }
 
   // Project Permissions

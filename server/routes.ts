@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { extractActionItemsFromConversation } from "./ai";
+import { syncGitHubActivity } from "./github";
 import { randomBytes } from "crypto";
 import { z } from "zod";
 import { insertProjectSchema, insertTaskSchema, insertConversationSchema, insertGithubActivitySchema, insertApiKeySchema } from "@shared/schema";
@@ -281,6 +282,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       console.error("Error creating GitHub activity:", error);
       res.status(500).json({ error: "Failed to create GitHub activity" });
+    }
+  });
+
+  // Sync GitHub activity for a project
+  app.post("/api/projects/:projectId/sync-github", async (req, res) => {
+    try {
+      const { projectId } = req.params;
+      const project = await storage.getProject(projectId);
+      
+      if (!project) {
+        return res.status(404).json({ error: "Project not found" });
+      }
+
+      if (!project.githubRepo) {
+        return res.status(400).json({ error: "Project does not have a GitHub repository configured" });
+      }
+
+      const token = process.env.GITHUB_TOKEN;
+      const activities = await syncGitHubActivity(
+        projectId,
+        project.githubRepo,
+        project.githubBranch || "main",
+        token,
+        project.lastGithubSync || undefined
+      );
+
+      // Filter out commits that already exist in the database
+      const newActivities = [];
+      for (const activity of activities) {
+        const existing = await storage.getGithubActivityBySha(projectId, activity.commitSha || "");
+        if (!existing) {
+          newActivities.push(activity);
+        }
+      }
+
+      const saved = await storage.bulkCreateGithubActivity(newActivities);
+
+      // Update lastGithubSync timestamp
+      await storage.updateProject(projectId, { lastGithubSync: new Date() });
+
+      res.json({ 
+        synced: saved.length,
+        total: activities.length,
+        activities: saved 
+      });
+    } catch (error: any) {
+      console.error("Error syncing GitHub activity:", error);
+      res.status(500).json({ error: error.message || "Failed to sync GitHub activity" });
     }
   });
 

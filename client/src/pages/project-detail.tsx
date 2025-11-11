@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRoute } from "wouter";
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Key, Copy, RefreshCw, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { Key, Copy, RefreshCw, Eye, EyeOff, AlertCircle, Github } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Project, ApiKey } from "@shared/schema";
@@ -23,6 +23,9 @@ export default function ProjectDetail() {
     "read_tasks",
     "write_tasks",
   ]);
+  const [githubRepo, setGithubRepo] = useState("");
+  const [githubBranch, setGithubBranch] = useState("main");
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const { data: project, isLoading: projectLoading } = useQuery<Project>({
     queryKey: ["/api/projects", projectId],
@@ -31,6 +34,19 @@ export default function ProjectDetail() {
   const { data: apiKeys = [], isLoading: keysLoading } = useQuery<ApiKey[]>({
     queryKey: ["/api/projects", projectId, "api-keys"],
   });
+
+  // Initialize local state with project data on first load only
+  useEffect(() => {
+    if (project && !githubRepo && project.githubRepo) {
+      setGithubRepo(project.githubRepo);
+    }
+  }, [project?.id]); // Only run when project ID changes (initial load)
+
+  useEffect(() => {
+    if (project && project.githubBranch && (!githubBranch || githubBranch === "main")) {
+      setGithubBranch(project.githubBranch);
+    }
+  }, [project?.id]); // Only run when project ID changes (initial load)
 
   const isLoading = projectLoading || keysLoading;
 
@@ -80,6 +96,66 @@ export default function ProjectDetail() {
     );
   };
 
+  const handleUpdateGitHub = async () => {
+    if (!githubRepo.trim() || !githubRepo.includes("/")) {
+      toast({
+        title: "Error",
+        description: "Please provide a valid repository in the format 'owner/repo'.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await apiRequest("PUT", `/api/projects/${projectId}`, {
+        githubRepo: githubRepo.trim(),
+        githubBranch: githubBranch.trim() || "main",
+      });
+      await queryClient.invalidateQueries({ queryKey: ["/api/projects", projectId] });
+      toast({
+        title: "GitHub Integration Updated",
+        description: "Repository configuration has been saved.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update GitHub integration.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSyncGitHub = async () => {
+    const repoToSync = project?.githubRepo || githubRepo;
+    if (!repoToSync) {
+      toast({
+        title: "Error",
+        description: "Please configure a GitHub repository first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSyncing(true);
+    try {
+      const result = await apiRequest("POST", `/api/projects/${projectId}/sync-github`, {});
+      await queryClient.invalidateQueries({ queryKey: ["/api/github-activity"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/projects", projectId] });
+      toast({
+        title: "GitHub Sync Complete",
+        description: `Synced ${result.synced} new commits from ${repoToSync}.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Sync Failed",
+        description: error.message || "Failed to sync GitHub activity.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const availablePermissions = [
     { value: "read_tasks", label: "Read Tasks" },
     { value: "write_tasks", label: "Write Tasks" },
@@ -126,6 +202,62 @@ export default function ProjectDetail() {
           )}
         </div>
       </div>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Github className="w-5 h-5" />
+            <CardTitle>GitHub Integration</CardTitle>
+          </div>
+          <CardDescription>
+            Connect your GitHub repository to automatically sync commits and activity.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="github-repo">Repository (owner/repo)</Label>
+              <Input
+                id="github-repo"
+                value={githubRepo || project.githubRepo || ""}
+                onChange={(e) => setGithubRepo(e.target.value)}
+                placeholder="username/repository"
+                data-testid="input-github-repo"
+              />
+            </div>
+            <div>
+              <Label htmlFor="github-branch">Branch</Label>
+              <Input
+                id="github-branch"
+                value={githubBranch || project.githubBranch || "main"}
+                onChange={(e) => setGithubBranch(e.target.value)}
+                placeholder="main"
+                data-testid="input-github-branch"
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <Button onClick={handleUpdateGitHub} variant="outline" data-testid="button-save-github">
+              Save Configuration
+            </Button>
+            <Button
+              onClick={handleSyncGitHub}
+              disabled={(!project.githubRepo && !githubRepo) || isSyncing}
+              data-testid="button-sync-github"
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+              {isSyncing ? 'Syncing...' : 'Sync Now'}
+            </Button>
+          </div>
+
+          {project.lastGithubSync && (
+            <p className="text-xs text-muted-foreground">
+              Last synced: {new Date(project.lastGithubSync).toLocaleString()}
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
