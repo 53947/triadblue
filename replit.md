@@ -107,6 +107,19 @@ Preferred communication style: Simple, everyday language.
 - Storage layer supports bulk operations for efficient commit insertion
 - Requires GITHUB_TOKEN environment variable for authenticated API access
 
+**Bidirectional GitHub Sync** *(Completed - Task 4)*
+- Push tasks to GitHub as issues directly from task cards
+- GitHubIssuesService (server/github-issues.ts): Creates GitHub issues via REST API
+- Automatic labeling based on task priority (urgent/high/medium/low)
+- Issue body includes task description, priority, status, source, and due date
+- Database tracking: githubIssueNumber, githubIssueUrl, githubIssueState, githubSyncedAt
+- Frontend "Push to GitHub" button on tasks (appears when not yet synced)
+- After sync, displays clickable GitHub issue badge (#123) with external link
+- Optimistic UI updates for instant visual feedback
+- Prevents duplicate GitHub issues with validation
+- API endpoint POST /api/tasks/:id/create-github-issue
+- Architect-approved UI compliance: proper button sizing, optimistic cache updates
+
 **Webhook System** *(Completed - Task 2)*
 - Inbound webhook receiver endpoint (POST /api/projects/:projectId/webhook-events) for external projects to POST events
 - HMAC-SHA256 signature verification using X-Hub-Signature header against raw request payload
@@ -134,6 +147,16 @@ Preferred communication style: Simple, everyday language.
 - Empty states for no agent selected and no messages
 - Project context display showing selected agent's project and endpoint URL
 - Enables chatting with AI agents running in other Replit projects from centralized hub interface
+
+**Activity Timeline** *(Completed - Task 12)*
+- Unified activity timeline aggregating all system events
+- Backend API endpoint /api/activities combines tasks, conversations, GitHub commits, agent messages
+- Frontend page with chronological feed and date grouping (today/yesterday/this week)
+- Advanced filtering: project, activity type (all/tasks/conversations/github/agent)
+- Search functionality across all activity types
+- Sidebar navigation integration
+- Efficient query performance with optimized data aggregation
+- ActivityService (server/activity.ts) handles multi-source data queries
 
 **Task Status Sync Back** *(Completed - Task 3)*
 - Bidirectional task update synchronization to source projects via HTTP API

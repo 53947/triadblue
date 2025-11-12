@@ -135,6 +135,32 @@ export const agentChatMessages = pgTable("agent_chat_messages", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Notifications for users
+export const notifications = pgTable("notifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  type: text("type").notNull(), // 'urgent_task', 'sync_failed', 'task_due_soon', 'webhook_error', 'github_sync'
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  metadata: text("metadata"), // JSON string for additional data (task details, error context, etc.)
+  taskId: varchar("task_id").references(() => tasks.id, { onDelete: "cascade" }),
+  projectId: varchar("project_id").references(() => projects.id, { onDelete: "cascade" }),
+  read: boolean("read").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  userReadIdx: sql`create index if not exists "notifications_user_read_idx" on ${table} ("user_id", "read")`,
+  userCreatedIdx: sql`create index if not exists "notifications_user_created_idx" on ${table} ("user_id", "created_at" desc)`,
+}));
+
+// Notification preferences - allows users to opt out of specific notification types
+export const notificationPreferences = pgTable("notification_preferences", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  type: text("type").notNull(), // Matches notification types
+  enabled: boolean("enabled").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Project permissions for users
 export const projectPermissions = pgTable("project_permissions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -327,3 +353,17 @@ export type AgentConnection = typeof agentConnections.$inferSelect;
 
 export type InsertAgentChatMessage = z.infer<typeof insertAgentChatMessageSchema>;
 export type AgentChatMessage = typeof agentChatMessages.$inferSelect;
+
+export const insertNotificationSchema = createInsertSchema(notifications).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type Notification = typeof notifications.$inferSelect;
+
+export const insertNotificationPreferenceSchema = createInsertSchema(notificationPreferences).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertNotificationPreference = z.infer<typeof insertNotificationPreferenceSchema>;
+export type NotificationPreference = typeof notificationPreferences.$inferSelect;

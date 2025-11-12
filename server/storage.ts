@@ -10,6 +10,8 @@ import {
   webhooks,
   agentConnections,
   agentChatMessages,
+  notifications,
+  notificationPreferences,
   type User,
   type InsertUser,
   type Project,
@@ -30,6 +32,10 @@ import {
   type InsertAgentConnection,
   type AgentChatMessage,
   type InsertAgentChatMessage,
+  type Notification,
+  type InsertNotification,
+  type NotificationPreference,
+  type InsertNotificationPreference,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql } from "drizzle-orm";
@@ -98,6 +104,19 @@ export interface IStorage {
   // Agent Chat Messages
   getAgentChatMessages(connectionId: string): Promise<AgentChatMessage[]>;
   createAgentChatMessage(message: InsertAgentChatMessage): Promise<AgentChatMessage>;
+
+  // Notifications
+  getNotifications(userId: string): Promise<Notification[]>;
+  getNotification(id: string): Promise<Notification | undefined>;
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  markNotificationAsRead(id: string): Promise<void>;
+  deleteNotification(id: string): Promise<void>;
+  deleteNotificationsOlderThan(cutoffDate: Date): Promise<number>;
+
+  // Notification Preferences
+  getNotificationPreferences(userId: string): Promise<NotificationPreference[]>;
+  createNotificationPreference(preference: InsertNotificationPreference): Promise<NotificationPreference>;
+  updateNotificationPreference(userId: string, type: string, enabled: boolean): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -341,6 +360,61 @@ export class DatabaseStorage implements IStorage {
   async createAgentChatMessage(insertMessage: InsertAgentChatMessage): Promise<AgentChatMessage> {
     const [message] = await db.insert(agentChatMessages).values(insertMessage).returning();
     return message;
+  }
+
+  // Notifications
+  async getNotifications(userId: string): Promise<Notification[]> {
+    return await db.select().from(notifications)
+      .where(eq(notifications.userId, userId))
+      .orderBy(desc(notifications.createdAt));
+  }
+
+  async getNotification(id: string): Promise<Notification | undefined> {
+    const [notification] = await db.select().from(notifications)
+      .where(eq(notifications.id, id));
+    return notification || undefined;
+  }
+
+  async createNotification(insertNotification: InsertNotification): Promise<Notification> {
+    const [notification] = await db.insert(notifications).values(insertNotification).returning();
+    return notification;
+  }
+
+  async markNotificationAsRead(id: string): Promise<void> {
+    await db.update(notifications)
+      .set({ read: true })
+      .where(eq(notifications.id, id));
+  }
+
+  async deleteNotification(id: string): Promise<void> {
+    await db.delete(notifications).where(eq(notifications.id, id));
+  }
+
+  async deleteNotificationsOlderThan(cutoffDate: Date): Promise<number> {
+    const result = await db.delete(notifications)
+      .where(sql`${notifications.createdAt} < ${cutoffDate.toISOString()}`)
+      .returning();
+    return result.length;
+  }
+
+  // Notification Preferences
+  async getNotificationPreferences(userId: string): Promise<NotificationPreference[]> {
+    return await db.select().from(notificationPreferences)
+      .where(eq(notificationPreferences.userId, userId));
+  }
+
+  async createNotificationPreference(insertPreference: InsertNotificationPreference): Promise<NotificationPreference> {
+    const [preference] = await db.insert(notificationPreferences).values(insertPreference).returning();
+    return preference;
+  }
+
+  async updateNotificationPreference(userId: string, type: string, enabled: boolean): Promise<void> {
+    await db.update(notificationPreferences)
+      .set({ enabled })
+      .where(and(
+        eq(notificationPreferences.userId, userId),
+        eq(notificationPreferences.type, type)
+      ));
   }
 }
 

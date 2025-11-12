@@ -7,6 +7,7 @@ import { agentService } from "./agent";
 import { activityService } from "./activity";
 import { githubIssuesService } from "./github-issues";
 import { initializeSyncScheduler } from "./sync-scheduler";
+import { NotificationService } from "./notification";
 import { randomBytes, createHmac } from "crypto";
 import { z } from "zod";
 import { insertProjectSchema, insertTaskSchema, insertConversationSchema, insertGithubActivitySchema, insertApiKeySchema, insertAgentConnectionSchema, insertAgentChatMessageSchema } from "@shared/schema";
@@ -53,6 +54,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize the sync scheduler
   const syncScheduler = initializeSyncScheduler(storage);
   console.log("SyncScheduler initialized and started");
+
+  // Initialize notification service
+  const notificationService = new NotificationService(storage);
+  console.log("NotificationService initialized");
   
   // ============= Projects API =============
   
@@ -348,6 +353,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const data = insertTaskSchema.parse(req.body);
       const task = await storage.createTask({ ...data, source: "manual" });
+      
+      // Create notification for urgent tasks
+      if (task.priority === "urgent") {
+        // Use default user (single-user app for now, TODO: implement auth)
+        await notificationService.createUrgentTaskNotification("default-user", task);
+      }
+      
       res.json(task);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -364,6 +376,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const task = await storage.updateTask(req.params.id, updates);
       if (!task) {
         return res.status(404).json({ error: "Task not found" });
+      }
+      
+      // Create notification if task changed to urgent priority
+      if (updates.priority === "urgent") {
+        // Use default user (single-user app for now, TODO: implement auth)
+        await notificationService.createUrgentTaskNotification("default-user", task);
       }
       
       // Trigger sync if status or priority changed and sync is enabled
@@ -628,6 +646,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching activities:", error);
       res.status(500).json({ error: "Failed to fetch activities" });
+    }
+  });
+
+  // ============= Notifications API =============
+
+  // Get notifications for current user
+  app.get("/api/notifications", async (req, res) => {
+    try {
+      // Use default user (single-user app for now, TODO: implement auth)
+      const userId = "default-user";
+      
+      const notifications = await storage.getNotifications(userId);
+      
+      // Add unread count in response header
+      const unreadCount = notifications.filter(n => !n.read).length;
+      res.set("X-Unread-Count", unreadCount.toString());
+      
+      res.json(notifications);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      res.status(500).json({ error: "Failed to fetch notifications" });
+    }
+  });
+
+  // Mark notification as read
+  app.patch("/api/notifications/:id/read", async (req, res) => {
+    try {
+      await storage.markNotificationAsRead(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      res.status(500).json({ error: "Failed to mark notification as read" });
+    }
+  });
+
+  // Bulk mark as read
+  app.post("/api/notifications/bulk-read", async (req, res) => {
+    try {
+      const { ids } = req.body;
+      if (!Array.isArray(ids)) {
+        return res.status(400).json({ error: "ids must be an array" });
+      }
+
+      await Promise.all(ids.map(id => storage.markNotificationAsRead(id)));
+      res.json({ success: true, count: ids.length });
+    } catch (error) {
+      console.error("Error bulk marking notifications as read:", error);
+      res.status(500).json({ error: "Failed to bulk mark notifications as read" });
+    }
+  });
+
+  // Delete notification
+  app.delete("/api/notifications/:id", async (req, res) => {
+    try {
+      await storage.deleteNotification(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+      res.status(500).json({ error: "Failed to delete notification" });
+    }
+  });
+
+  // Get notification preferences
+  app.get("/api/notification-preferences", async (req, res) => {
+    try {
+      // Use default user (single-user app for now, TODO: implement auth)
+      const userId = "default-user";
+      
+      const preferences = await storage.getNotificationPreferences(userId);
+      res.json(preferences);
+    } catch (error) {
+      console.error("Error fetching notification preferences:", error);
+      res.status(500).json({ error: "Failed to fetch notification preferences" });
+    }
+  });
+
+  // Update notification preference
+  app.patch("/api/notification-preferences/:type", async (req, res) => {
+    try {
+      // Use default user (single-user app for now, TODO: implement auth)
+      const userId = "default-user";
+      const { enabled } = req.body;
+      
+      await storage.updateNotificationPreference(userId, req.params.type, enabled);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error updating notification preference:", error);
+      res.status(500).json({ error: "Failed to update notification preference" });
     }
   });
 
