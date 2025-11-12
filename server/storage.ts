@@ -12,6 +12,7 @@ import {
   agentChatMessages,
   notifications,
   notificationPreferences,
+  taskTemplates,
   type User,
   type InsertUser,
   type Project,
@@ -36,6 +37,8 @@ import {
   type InsertNotification,
   type NotificationPreference,
   type InsertNotificationPreference,
+  type TaskTemplate,
+  type InsertTaskTemplate,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql } from "drizzle-orm";
@@ -117,6 +120,13 @@ export interface IStorage {
   getNotificationPreferences(userId: string): Promise<NotificationPreference[]>;
   createNotificationPreference(preference: InsertNotificationPreference): Promise<NotificationPreference>;
   updateNotificationPreference(userId: string, type: string, enabled: boolean): Promise<void>;
+
+  // Task Templates
+  getTaskTemplates(projectId: string): Promise<TaskTemplate[]>;
+  getTaskTemplate(id: string): Promise<TaskTemplate | undefined>;
+  createTaskTemplate(template: InsertTaskTemplate): Promise<TaskTemplate>;
+  updateTaskTemplate(id: string, updates: Partial<InsertTaskTemplate>): Promise<TaskTemplate | undefined>;
+  deleteTaskTemplate(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -415,6 +425,36 @@ export class DatabaseStorage implements IStorage {
         eq(notificationPreferences.userId, userId),
         eq(notificationPreferences.type, type)
       ));
+  }
+
+  // Task Templates
+  async getTaskTemplates(projectId: string): Promise<TaskTemplate[]> {
+    return await db.select().from(taskTemplates)
+      .where(eq(taskTemplates.projectId, projectId))
+      .orderBy(desc(taskTemplates.createdAt));
+  }
+
+  async getTaskTemplate(id: string): Promise<TaskTemplate | undefined> {
+    const [template] = await db.select().from(taskTemplates).where(eq(taskTemplates.id, id));
+    return template || undefined;
+  }
+
+  async createTaskTemplate(insertTemplate: InsertTaskTemplate): Promise<TaskTemplate> {
+    const [template] = await db.insert(taskTemplates).values(insertTemplate).returning();
+    return template;
+  }
+
+  async updateTaskTemplate(id: string, updates: Partial<InsertTaskTemplate>): Promise<TaskTemplate | undefined> {
+    const [template] = await db
+      .update(taskTemplates)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(taskTemplates.id, id))
+      .returning();
+    return template || undefined;
+  }
+
+  async deleteTaskTemplate(id: string): Promise<void> {
+    await db.delete(taskTemplates).where(eq(taskTemplates.id, id));
   }
 }
 

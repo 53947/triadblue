@@ -161,6 +161,21 @@ export const notificationPreferences = pgTable("notification_preferences", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Task Templates - project-specific templates for creating standardized tasks
+export const taskTemplates = pgTable("task_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  projectId: varchar("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  description: text("description"),
+  defaultPriority: text("default_priority").notNull().default("medium"),
+  defaultSource: text("default_source").notNull().default("manual"),
+  customFields: text("custom_fields"), // JSON string for custom field definitions
+  isActive: boolean("is_active").notNull().default(true),
+  createdById: varchar("created_by_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 // Project permissions for users
 export const projectPermissions = pgTable("project_permissions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -192,6 +207,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   webhooks: many(webhooks),
   agentConnections: many(agentConnections),
   permissions: many(projectPermissions),
+  taskTemplates: many(taskTemplates),
 }));
 
 export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
@@ -260,6 +276,17 @@ export const agentChatMessagesRelations = relations(agentChatMessages, ({ one })
   connection: one(agentConnections, {
     fields: [agentChatMessages.connectionId],
     references: [agentConnections.id],
+  }),
+}));
+
+export const taskTemplatesRelations = relations(taskTemplates, ({ one }) => ({
+  project: one(projects, {
+    fields: [taskTemplates.projectId],
+    references: [projects.id],
+  }),
+  createdBy: one(users, {
+    fields: [taskTemplates.createdById],
+    references: [users.id],
   }),
 }));
 
@@ -367,3 +394,12 @@ export const insertNotificationPreferenceSchema = createInsertSchema(notificatio
 });
 export type InsertNotificationPreference = z.infer<typeof insertNotificationPreferenceSchema>;
 export type NotificationPreference = typeof notificationPreferences.$inferSelect;
+
+export const insertTaskTemplateSchema = createInsertSchema(taskTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  createdById: true,
+});
+export type InsertTaskTemplate = z.infer<typeof insertTaskTemplateSchema>;
+export type TaskTemplate = typeof taskTemplates.$inferSelect;

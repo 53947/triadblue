@@ -11,7 +11,7 @@ import { NotificationService } from "./notification";
 import { analyticsService } from "./analytics";
 import { randomBytes, createHmac } from "crypto";
 import { z } from "zod";
-import { insertProjectSchema, insertTaskSchema, insertConversationSchema, insertGithubActivitySchema, insertApiKeySchema, insertAgentConnectionSchema, insertAgentChatMessageSchema } from "@shared/schema";
+import { insertProjectSchema, insertTaskSchema, insertConversationSchema, insertGithubActivitySchema, insertApiKeySchema, insertAgentConnectionSchema, insertAgentChatMessageSchema, insertTaskTemplateSchema } from "@shared/schema";
 
 // Helper function to create HMAC signature for webhook payloads
 function createHmacSignature(payload: string, secret: string): string {
@@ -322,6 +322,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error processing webhook event:", error);
       res.status(500).json({ error: "Failed to process webhook event" });
+    }
+  });
+
+  // ============= Task Templates API =============
+
+  app.get("/api/projects/:projectId/templates", async (req, res) => {
+    try {
+      const templates = await storage.getTaskTemplates(req.params.projectId);
+      res.json(templates);
+    } catch (error) {
+      console.error("Error fetching task templates:", error);
+      res.status(500).json({ error: "Failed to fetch task templates" });
+    }
+  });
+
+  app.post("/api/projects/:projectId/templates", async (req, res) => {
+    try {
+      const { projectId } = req.params;
+      const data = req.body;
+      
+      const template = await storage.createTaskTemplate({
+        ...data,
+        projectId,
+        createdById: "default-user", // TODO: Get from auth when implemented
+      });
+      
+      res.json(template);
+    } catch (error) {
+      console.error("Error creating task template:", error);
+      res.status(500).json({ error: "Failed to create task template" });
+    }
+  });
+
+  app.get("/api/templates/:id", async (req, res) => {
+    try {
+      const template = await storage.getTaskTemplate(req.params.id);
+      if (!template) {
+        return res.status(404).json({ error: "Template not found" });
+      }
+      res.json(template);
+    } catch (error) {
+      console.error("Error fetching template:", error);
+      res.status(500).json({ error: "Failed to fetch template" });
+    }
+  });
+
+  app.put("/api/templates/:id", async (req, res) => {
+    try {
+      const template = await storage.updateTaskTemplate(req.params.id, req.body);
+      if (!template) {
+        return res.status(404).json({ error: "Template not found" });
+      }
+      res.json(template);
+    } catch (error) {
+      console.error("Error updating template:", error);
+      res.status(500).json({ error: "Failed to update template" });
+    }
+  });
+
+  app.delete("/api/templates/:id", async (req, res) => {
+    try {
+      await storage.deleteTaskTemplate(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting template:", error);
+      res.status(500).json({ error: "Failed to delete template" });
+    }
+  });
+
+  app.post("/api/templates/:id/instantiate", async (req, res) => {
+    try {
+      const template = await storage.getTaskTemplate(req.params.id);
+      if (!template) {
+        return res.status(404).json({ error: "Template not found" });
+      }
+
+      const overrides = req.body || {};
+      
+      const task = await storage.createTask({
+        projectId: template.projectId,
+        title: overrides.title || template.name,
+        description: overrides.description || template.description || "",
+        priority: overrides.priority || template.defaultPriority,
+        source: template.defaultSource,
+        status: overrides.status || "pending",
+      });
+
+      res.json(task);
+    } catch (error) {
+      console.error("Error instantiating template:", error);
+      res.status(500).json({ error: "Failed to instantiate template" });
     }
   });
 
