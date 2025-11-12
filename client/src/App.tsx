@@ -10,6 +10,7 @@ import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import Projects from "@/pages/projects";
 import ProjectDetail from "@/pages/project-detail";
+import AgentChat from "@/pages/agent-chat";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { CreateProjectModal } from "@/components/modals/create-project-modal";
@@ -24,6 +25,7 @@ function Router() {
       <Route path="/" component={Dashboard} />
       <Route path="/projects" component={Projects} />
       <Route path="/project/:id" component={ProjectDetail} />
+      <Route path="/agent-chat" component={AgentChat} />
       <Route path="/conversations">
         <div className="p-8 text-center text-muted-foreground">
           Conversations page - Coming soon

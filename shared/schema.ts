@@ -95,6 +95,28 @@ export const webhooks = pgTable("webhooks", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Agent Connections - stores connection info for agents in other Replit projects
+export const agentConnections = pgTable("agent_connections", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  projectId: varchar("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  name: text("name").notNull(), // Friendly name for the agent connection
+  agentEndpointUrl: text("agent_endpoint_url").notNull(), // URL to send messages to
+  agentApiKey: text("agent_api_key"), // Optional API key for authentication
+  isActive: boolean("is_active").notNull().default(true),
+  lastMessageAt: timestamp("last_message_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Agent Chat Messages - stores chat messages between user and agents
+export const agentChatMessages = pgTable("agent_chat_messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  connectionId: varchar("connection_id").notNull().references(() => agentConnections.id, { onDelete: "cascade" }),
+  role: text("role").notNull(), // 'user' or 'assistant'
+  content: text("content").notNull(), // Message text
+  metadata: text("metadata"), // JSON string for additional data
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Project permissions for users
 export const projectPermissions = pgTable("project_permissions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -124,6 +146,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   conversations: many(conversations),
   githubActivity: many(githubActivity),
   webhooks: many(webhooks),
+  agentConnections: many(agentConnections),
   permissions: many(projectPermissions),
 }));
 
@@ -181,6 +204,21 @@ export const projectPermissionsRelations = relations(projectPermissions, ({ one 
   }),
 }));
 
+export const agentConnectionsRelations = relations(agentConnections, ({ one, many }) => ({
+  project: one(projects, {
+    fields: [agentConnections.projectId],
+    references: [projects.id],
+  }),
+  messages: many(agentChatMessages),
+}));
+
+export const agentChatMessagesRelations = relations(agentChatMessages, ({ one }) => ({
+  connection: one(agentConnections, {
+    fields: [agentChatMessages.connectionId],
+    references: [agentConnections.id],
+  }),
+}));
+
 // Zod schemas for inserts
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -230,6 +268,17 @@ export const insertWebhookSchema = createInsertSchema(webhooks).omit({
   lastTriggeredAt: true,
 });
 
+export const insertAgentConnectionSchema = createInsertSchema(agentConnections).omit({
+  id: true,
+  createdAt: true,
+  lastMessageAt: true,
+});
+
+export const insertAgentChatMessageSchema = createInsertSchema(agentChatMessages).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -254,3 +303,9 @@ export type ProjectPermission = typeof projectPermissions.$inferSelect;
 
 export type InsertWebhook = z.infer<typeof insertWebhookSchema>;
 export type Webhook = typeof webhooks.$inferSelect;
+
+export type InsertAgentConnection = z.infer<typeof insertAgentConnectionSchema>;
+export type AgentConnection = typeof agentConnections.$inferSelect;
+
+export type InsertAgentChatMessage = z.infer<typeof insertAgentChatMessageSchema>;
+export type AgentChatMessage = typeof agentChatMessages.$inferSelect;

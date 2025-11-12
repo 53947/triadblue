@@ -11,7 +11,7 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { Link, useLocation } from "wouter";
-import { Home, FolderKanban, MessageSquare, Settings, Plus, Github } from "lucide-react";
+import { Home, FolderKanban, MessageSquare, Settings, Plus, Github, MessagesSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { Project } from "@shared/schema";
@@ -20,6 +20,7 @@ import triadBlueLogo from "@assets/Triad Blue Icon_1762915681862.png";
 const navigation = [
   { title: "Dashboard", url: "/", icon: Home },
   { title: "Projects", url: "/projects", icon: FolderKanban },
+  { title: "Agent Chat", url: "/agent-chat", icon: MessagesSquare },
   { title: "Conversations", url: "/conversations", icon: MessageSquare },
   { title: "GitHub Activity", url: "/github", icon: Github },
   { title: "Settings", url: "/settings", icon: Settings },

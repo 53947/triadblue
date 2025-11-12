@@ -8,6 +8,8 @@ import {
   githubActivity,
   projectPermissions,
   webhooks,
+  agentConnections,
+  agentChatMessages,
   type User,
   type InsertUser,
   type Project,
@@ -24,6 +26,10 @@ import {
   type InsertProjectPermission,
   type Webhook,
   type InsertWebhook,
+  type AgentConnection,
+  type InsertAgentConnection,
+  type AgentChatMessage,
+  type InsertAgentChatMessage,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql } from "drizzle-orm";
@@ -80,6 +86,18 @@ export interface IStorage {
   updateWebhook(id: string, updates: Partial<InsertWebhook>): Promise<Webhook | undefined>;
   deleteWebhook(id: string): Promise<void>;
   updateWebhookLastTriggered(id: string): Promise<void>;
+
+  // Agent Connections
+  getAgentConnections(projectId: string): Promise<AgentConnection[]>;
+  getAgentConnection(id: string): Promise<AgentConnection | undefined>;
+  createAgentConnection(connection: InsertAgentConnection): Promise<AgentConnection>;
+  updateAgentConnection(id: string, updates: Partial<InsertAgentConnection>): Promise<AgentConnection | undefined>;
+  deleteAgentConnection(id: string): Promise<void>;
+  updateAgentConnectionLastMessage(id: string): Promise<void>;
+
+  // Agent Chat Messages
+  getAgentChatMessages(connectionId: string): Promise<AgentChatMessage[]>;
+  createAgentChatMessage(message: InsertAgentChatMessage): Promise<AgentChatMessage>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -274,6 +292,55 @@ export class DatabaseStorage implements IStorage {
       .update(webhooks)
       .set({ lastTriggeredAt: new Date() })
       .where(eq(webhooks.id, id));
+  }
+
+  // Agent Connections
+  async getAgentConnections(projectId: string): Promise<AgentConnection[]> {
+    return await db.select().from(agentConnections).where(eq(agentConnections.projectId, projectId)).orderBy(desc(agentConnections.createdAt));
+  }
+
+  async getAgentConnection(id: string): Promise<AgentConnection | undefined> {
+    const [connection] = await db.select().from(agentConnections).where(eq(agentConnections.id, id));
+    return connection || undefined;
+  }
+
+  async createAgentConnection(insertConnection: InsertAgentConnection): Promise<AgentConnection> {
+    const [connection] = await db.insert(agentConnections).values(insertConnection).returning();
+    return connection;
+  }
+
+  async updateAgentConnection(id: string, updates: Partial<InsertAgentConnection>): Promise<AgentConnection | undefined> {
+    const [connection] = await db
+      .update(agentConnections)
+      .set(updates)
+      .where(eq(agentConnections.id, id))
+      .returning();
+    return connection || undefined;
+  }
+
+  async deleteAgentConnection(id: string): Promise<void> {
+    await db.delete(agentConnections).where(eq(agentConnections.id, id));
+  }
+
+  async updateAgentConnectionLastMessage(id: string): Promise<void> {
+    await db
+      .update(agentConnections)
+      .set({ lastMessageAt: new Date() })
+      .where(eq(agentConnections.id, id));
+  }
+
+  // Agent Chat Messages
+  async getAgentChatMessages(connectionId: string): Promise<AgentChatMessage[]> {
+    return await db
+      .select()
+      .from(agentChatMessages)
+      .where(eq(agentChatMessages.connectionId, connectionId))
+      .orderBy(agentChatMessages.createdAt);
+  }
+
+  async createAgentChatMessage(insertMessage: InsertAgentChatMessage): Promise<AgentChatMessage> {
+    const [message] = await db.insert(agentChatMessages).values(insertMessage).returning();
+    return message;
   }
 }
 

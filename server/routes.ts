@@ -3,9 +3,10 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { extractActionItemsFromConversation } from "./ai";
 import { syncGitHubActivity } from "./github";
+import { agentService } from "./agent";
 import { randomBytes, createHmac } from "crypto";
 import { z } from "zod";
-import { insertProjectSchema, insertTaskSchema, insertConversationSchema, insertGithubActivitySchema, insertApiKeySchema } from "@shared/schema";
+import { insertProjectSchema, insertTaskSchema, insertConversationSchema, insertGithubActivitySchema, insertApiKeySchema, insertAgentConnectionSchema, insertAgentChatMessageSchema } from "@shared/schema";
 
 // Helper function to create HMAC signature for webhook payloads
 function createHmacSignature(payload: string, secret: string): string {
@@ -567,6 +568,161 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error reporting GitHub activity:", error);
       res.status(500).json({ error: "Failed to report GitHub activity" });
+    }
+  });
+
+  // ============= Agent Connections API =============
+  
+  // Get agent connections for a project
+  app.get("/api/projects/:projectId/agent-connections", async (req, res) => {
+    try {
+      const connections = await storage.getAgentConnections(req.params.projectId);
+      res.json(connections);
+    } catch (error) {
+      console.error("Error fetching agent connections:", error);
+      res.status(500).json({ error: "Failed to fetch agent connections" });
+    }
+  });
+
+  // Get a specific agent connection
+  app.get("/api/agent-connections/:id", async (req, res) => {
+    try {
+      const connection = await storage.getAgentConnection(req.params.id);
+      if (!connection) {
+        return res.status(404).json({ error: "Agent connection not found" });
+      }
+      res.json(connection);
+    } catch (error) {
+      console.error("Error fetching agent connection:", error);
+      res.status(500).json({ error: "Failed to fetch agent connection" });
+    }
+  });
+
+  // Create a new agent connection
+  app.post("/api/projects/:projectId/agent-connections", async (req, res) => {
+    try {
+      const validated = insertAgentConnectionSchema.parse({
+        ...req.body,
+        projectId: req.params.projectId,
+      });
+
+      const connection = await storage.createAgentConnection(validated);
+      res.json(connection);
+    } catch (error: any) {
+      console.error("Error creating agent connection:", error);
+      if (error.name === "ZodError") {
+        return res.status(400).json({ error: "Invalid agent connection data", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to create agent connection" });
+    }
+  });
+
+  // Update an agent connection
+  app.put("/api/agent-connections/:id", async (req, res) => {
+    try {
+      const updates = insertAgentConnectionSchema.partial().parse(req.body);
+      const connection = await storage.updateAgentConnection(req.params.id, updates);
+      
+      if (!connection) {
+        return res.status(404).json({ error: "Agent connection not found" });
+      }
+      
+      res.json(connection);
+    } catch (error: any) {
+      console.error("Error updating agent connection:", error);
+      if (error.name === "ZodError") {
+        return res.status(400).json({ error: "Invalid agent connection data", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to update agent connection" });
+    }
+  });
+
+  // Delete an agent connection
+  app.delete("/api/agent-connections/:id", async (req, res) => {
+    try {
+      await storage.deleteAgentConnection(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting agent connection:", error);
+      res.status(500).json({ error: "Failed to delete agent connection" });
+    }
+  });
+
+  // Test an agent connection
+  app.post("/api/agent-connections/:id/test", async (req, res) => {
+    try {
+      const connection = await storage.getAgentConnection(req.params.id);
+      if (!connection) {
+        return res.status(404).json({ error: "Agent connection not found" });
+      }
+
+      const isConnected = await agentService.testConnection(connection);
+      res.json({ success: isConnected });
+    } catch (error) {
+      console.error("Error testing agent connection:", error);
+      res.status(500).json({ error: "Failed to test agent connection" });
+    }
+  });
+
+  // ============= Agent Chat Messages API =============
+
+  // Get messages for a connection
+  app.get("/api/agent-connections/:connectionId/messages", async (req, res) => {
+    try {
+      const messages = await storage.getAgentChatMessages(req.params.connectionId);
+      res.json(messages);
+    } catch (error) {
+      console.error("Error fetching agent chat messages:", error);
+      res.status(500).json({ error: "Failed to fetch messages" });
+    }
+  });
+
+  // Send a message to an agent
+  app.post("/api/agent-connections/:connectionId/messages", async (req, res) => {
+    try {
+      const { content } = req.body;
+      const connectionId = req.params.connectionId;
+
+      if (!content) {
+        return res.status(400).json({ error: "Message content is required" });
+      }
+
+      // Get the connection
+      const connection = await storage.getAgentConnection(connectionId);
+      if (!connection) {
+        return res.status(404).json({ error: "Agent connection not found" });
+      }
+
+      // Get conversation history
+      const history = await storage.getAgentChatMessages(connectionId);
+
+      // Save user message
+      const userMessage = await storage.createAgentChatMessage({
+        connectionId,
+        role: "user",
+        content,
+      });
+
+      // Send message to agent and get response
+      const agentReply = await agentService.sendMessage(connection, content, history);
+
+      // Save agent response
+      const assistantMessage = await storage.createAgentChatMessage({
+        connectionId,
+        role: "assistant",
+        content: agentReply,
+      });
+
+      // Update last message timestamp
+      await storage.updateAgentConnectionLastMessage(connectionId);
+
+      res.json({
+        userMessage,
+        assistantMessage,
+      });
+    } catch (error: any) {
+      console.error("Error sending message to agent:", error);
+      res.status(500).json({ error: "Failed to send message", details: error.message });
     }
   });
 
