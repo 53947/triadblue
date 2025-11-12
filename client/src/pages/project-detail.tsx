@@ -12,6 +12,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Project, ApiKey } from "@shared/schema";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ProjectTemplates } from "@/components/project-templates";
 
 export default function ProjectDetail() {
   const { toast } = useToast();
@@ -409,6 +410,12 @@ export default function ProjectDetail() {
 }`}
             </code>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="pt-6">
+          <ProjectTemplates projectId={projectId} />
         </CardContent>
       </Card>
     </div>
