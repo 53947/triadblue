@@ -13,6 +13,7 @@ import {
   notifications,
   notificationPreferences,
   taskTemplates,
+  conversationTemplates,
   type User,
   type InsertUser,
   type Project,
@@ -39,9 +40,11 @@ import {
   type InsertNotificationPreference,
   type TaskTemplate,
   type InsertTaskTemplate,
+  type ConversationTemplate,
+  type InsertConversationTemplate,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, sql } from "drizzle-orm";
+import { eq, desc, and, sql, isNull } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -127,6 +130,13 @@ export interface IStorage {
   createTaskTemplate(template: InsertTaskTemplate): Promise<TaskTemplate>;
   updateTaskTemplate(id: string, updates: Partial<InsertTaskTemplate>): Promise<TaskTemplate | undefined>;
   deleteTaskTemplate(id: string): Promise<void>;
+
+  // Conversation Templates
+  getConversationTemplates(projectId: string | null): Promise<ConversationTemplate[]>;
+  getConversationTemplate(id: string): Promise<ConversationTemplate | undefined>;
+  createConversationTemplate(template: InsertConversationTemplate): Promise<ConversationTemplate>;
+  updateConversationTemplate(id: string, updates: Partial<InsertConversationTemplate>): Promise<ConversationTemplate | undefined>;
+  deleteConversationTemplate(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -455,6 +465,41 @@ export class DatabaseStorage implements IStorage {
 
   async deleteTaskTemplate(id: string): Promise<void> {
     await db.delete(taskTemplates).where(eq(taskTemplates.id, id));
+  }
+
+  // Conversation Templates
+  async getConversationTemplates(projectId: string | null): Promise<ConversationTemplate[]> {
+    if (projectId === null) {
+      return await db.select().from(conversationTemplates)
+        .where(isNull(conversationTemplates.projectId))
+        .orderBy(desc(conversationTemplates.createdAt));
+    }
+    return await db.select().from(conversationTemplates)
+      .where(eq(conversationTemplates.projectId, projectId))
+      .orderBy(desc(conversationTemplates.createdAt));
+  }
+
+  async getConversationTemplate(id: string): Promise<ConversationTemplate | undefined> {
+    const [template] = await db.select().from(conversationTemplates).where(eq(conversationTemplates.id, id));
+    return template || undefined;
+  }
+
+  async createConversationTemplate(insertTemplate: InsertConversationTemplate): Promise<ConversationTemplate> {
+    const [template] = await db.insert(conversationTemplates).values(insertTemplate).returning();
+    return template;
+  }
+
+  async updateConversationTemplate(id: string, updates: Partial<InsertConversationTemplate>): Promise<ConversationTemplate | undefined> {
+    const [template] = await db
+      .update(conversationTemplates)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(conversationTemplates.id, id))
+      .returning();
+    return template || undefined;
+  }
+
+  async deleteConversationTemplate(id: string): Promise<void> {
+    await db.delete(conversationTemplates).where(eq(conversationTemplates.id, id));
   }
 }
 

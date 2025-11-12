@@ -1,5 +1,5 @@
 import { sql, relations } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, boolean, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, boolean, integer, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -176,6 +176,25 @@ export const taskTemplates = pgTable("task_templates", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+// Conversation Templates - templates for creating standardized conversation prompts
+// Note: projectId can be null for global templates, non-null for project-specific templates
+export const conversationTemplates = pgTable("conversation_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  projectId: varchar("project_id").references(() => projects.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  description: text("description"),
+  defaultTitle: text("default_title"),
+  defaultContent: text("default_content"),
+  defaultAgentName: text("default_agent_name"),
+  tags: text("tags").array().default(sql`ARRAY[]::text[]`),
+  isActive: boolean("is_active").notNull().default(true),
+  createdById: varchar("created_by_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  uniqueProjectName: unique().on(table.projectId, table.name),
+}));
+
 // Project permissions for users
 export const projectPermissions = pgTable("project_permissions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -208,6 +227,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   agentConnections: many(agentConnections),
   permissions: many(projectPermissions),
   taskTemplates: many(taskTemplates),
+  conversationTemplates: many(conversationTemplates),
 }));
 
 export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
@@ -286,6 +306,17 @@ export const taskTemplatesRelations = relations(taskTemplates, ({ one }) => ({
   }),
   createdBy: one(users, {
     fields: [taskTemplates.createdById],
+    references: [users.id],
+  }),
+}));
+
+export const conversationTemplatesRelations = relations(conversationTemplates, ({ one }) => ({
+  project: one(projects, {
+    fields: [conversationTemplates.projectId],
+    references: [projects.id],
+  }),
+  createdBy: one(users, {
+    fields: [conversationTemplates.createdById],
     references: [users.id],
   }),
 }));
@@ -403,3 +434,12 @@ export const insertTaskTemplateSchema = createInsertSchema(taskTemplates).omit({
 });
 export type InsertTaskTemplate = z.infer<typeof insertTaskTemplateSchema>;
 export type TaskTemplate = typeof taskTemplates.$inferSelect;
+
+export const insertConversationTemplateSchema = createInsertSchema(conversationTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  createdById: true,
+});
+export type InsertConversationTemplate = z.infer<typeof insertConversationTemplateSchema>;
+export type ConversationTemplate = typeof conversationTemplates.$inferSelect;

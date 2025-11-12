@@ -11,7 +11,7 @@ import { NotificationService } from "./notification";
 import { analyticsService } from "./analytics";
 import { randomBytes, createHmac } from "crypto";
 import { z } from "zod";
-import { insertProjectSchema, insertTaskSchema, insertConversationSchema, insertGithubActivitySchema, insertApiKeySchema, insertAgentConnectionSchema, insertAgentChatMessageSchema, insertTaskTemplateSchema } from "@shared/schema";
+import { insertProjectSchema, insertTaskSchema, insertConversationSchema, insertGithubActivitySchema, insertApiKeySchema, insertAgentConnectionSchema, insertAgentChatMessageSchema, insertTaskTemplateSchema, insertConversationTemplateSchema } from "@shared/schema";
 
 // Helper function to create HMAC signature for webhook payloads
 function createHmacSignature(payload: string, secret: string): string {
@@ -1103,6 +1103,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error exporting analytics:", error);
       res.status(500).json({ error: "Failed to export analytics" });
+    }
+  });
+
+  // ============= Conversation Templates API =============
+  
+  app.get("/api/projects/:projectId/conversation-templates", async (req, res) => {
+    try {
+      const templates = await storage.getConversationTemplates(req.params.projectId);
+      res.json(templates);
+    } catch (error) {
+      console.error("Error fetching conversation templates:", error);
+      res.status(500).json({ error: "Failed to fetch conversation templates" });
+    }
+  });
+
+  app.get("/api/conversation-templates/global", async (req, res) => {
+    try {
+      const templates = await storage.getConversationTemplates(null);
+      res.json(templates);
+    } catch (error) {
+      console.error("Error fetching global conversation templates:", error);
+      res.status(500).json({ error: "Failed to fetch global conversation templates" });
+    }
+  });
+
+  app.post("/api/projects/:projectId/conversation-templates", async (req, res) => {
+    try {
+      const { projectId } = req.params;
+      
+      const result = insertConversationTemplateSchema.safeParse({
+        ...req.body,
+        projectId,
+      });
+
+      if (!result.success) {
+        return res.status(400).json({ error: "Invalid input", details: result.error.errors });
+      }
+
+      const template = await storage.createConversationTemplate({
+        ...result.data,
+        createdById: "default-user",
+      });
+      res.json(template);
+    } catch (error) {
+      console.error("Error creating conversation template:", error);
+      res.status(500).json({ error: "Failed to create conversation template" });
+    }
+  });
+
+  app.put("/api/conversation-templates/:id", async (req, res) => {
+    try {
+      const result = insertConversationTemplateSchema
+        .partial()
+        .omit({ projectId: true, createdById: true })
+        .safeParse(req.body);
+
+      if (!result.success) {
+        return res.status(400).json({ error: "Invalid input", details: result.error.errors });
+      }
+
+      const template = await storage.updateConversationTemplate(req.params.id, result.data);
+      if (!template) {
+        return res.status(404).json({ error: "Template not found" });
+      }
+      res.json(template);
+    } catch (error) {
+      console.error("Error updating conversation template:", error);
+      res.status(500).json({ error: "Failed to update conversation template" });
+    }
+  });
+
+  app.delete("/api/conversation-templates/:id", async (req, res) => {
+    try {
+      await storage.deleteConversationTemplate(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting conversation template:", error);
+      res.status(500).json({ error: "Failed to delete conversation template" });
     }
   });
 
