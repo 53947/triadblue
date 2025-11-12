@@ -100,7 +100,7 @@ function AppContent() {
               <img 
                 src={triadBlueLockup} 
                 alt="TriadBlue" 
-                className="h-9 w-auto object-contain"
+                className="h-11 w-auto object-contain"
               />
             </div>
           </header>

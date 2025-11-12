@@ -22,11 +22,11 @@ const navigation = [
   { title: "Dashboard", url: "/", icon: Home },
   { title: "Tasks", url: "/tasks", icon: ListTodo },
   { title: "Projects", url: "/projects", icon: FolderKanban },
+  { title: "Conversations", url: "/conversations", icon: MessageSquare },
   { title: "Agent Chat", url: "/agent-chat", icon: MessagesSquare },
   { title: "Activity Timeline", url: "/timeline", icon: Clock },
-  { title: "Analytics", url: "/analytics", icon: BarChart3 },
-  { title: "Conversations", url: "/conversations", icon: MessageSquare },
   { title: "GitHub Activity", url: "/github", icon: Github },
+  { title: "Analytics", url: "/analytics", icon: BarChart3 },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
 
@@ -41,13 +41,13 @@ export function AppSidebar({ projects = [], onNewProject }: AppSidebarProps) {
   return (
     <Sidebar data-testid="sidebar-main">
       <SidebarHeader className="p-4">
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 items-center">
           <img 
             src={consoleBlueLogo} 
             alt="ConsoleBlue" 
             className="h-10 w-auto object-contain"
           />
-          <p className="text-xs text-muted-foreground">Project Build Management</p>
+          <p className="text-xs text-muted-foreground">App Building Console</p>
         </div>
       </SidebarHeader>
 
