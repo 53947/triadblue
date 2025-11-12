@@ -12,6 +12,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Task, Conversation, GithubActivity, Project } from "@shared/schema";
 import { Inbox } from "lucide-react";
+import triadBlueLogo from "@assets/Triad Blue Lockup_1762915681863.png";
 
 type FeedItem = 
   | { type: 'task'; data: Task & { projectName?: string; projectColor?: string } }
@@ -135,14 +136,14 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-7xl mx-auto p-4 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">Unified Dashboard</h1>
+          <h1 className="text-2xl font-semibold" style={{ fontFamily: 'var(--font-heading)' }}>Dashboard</h1>
           <p className="text-sm text-muted-foreground">
             All tasks, conversations, and GitHub activity in one place
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <Button onClick={() => setShowConversationModal(true)} variant="outline" data-testid="button-log-conversation">
             <Plus className="w-4 h-4 mr-2" />
             Log Conversation
@@ -151,6 +152,11 @@ export default function Dashboard() {
             <Plus className="w-4 h-4 mr-2" />
             New Task
           </Button>
+          <img 
+            src={triadBlueLogo} 
+            alt="TriadBlue" 
+            className="h-8 w-auto object-contain ml-2"
+          />
         </div>
       </div>
 

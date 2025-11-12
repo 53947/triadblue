@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { Project } from "@shared/schema";
 import triadBlueLogo from "@assets/Triad Blue Icon_1762915681862.png";
+import consoleBlueLogo from "@assets/Console_1762956063531.png";
 
 const navigation = [
   { title: "Dashboard", url: "/", icon: Home },
@@ -39,16 +40,13 @@ export function AppSidebar({ projects = [], onNewProject }: AppSidebarProps) {
   return (
     <Sidebar data-testid="sidebar-main">
       <SidebarHeader className="p-4">
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col gap-2">
           <img 
-            src={triadBlueLogo} 
-            alt="Triad Blue" 
-            className="w-8 h-8"
+            src={consoleBlueLogo} 
+            alt="ConsoleBlue" 
+            className="h-10 w-auto object-contain"
           />
-          <div>
-            <h2 className="text-base font-semibold">Triad Blue Hub</h2>
-            <p className="text-xs text-muted-foreground">Project Management</p>
-          </div>
+          <p className="text-xs text-muted-foreground">Project Build Management</p>
         </div>
       </SidebarHeader>
 

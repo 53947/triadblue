@@ -9,25 +9,25 @@
   --opaque-button-border-intensity: -8;
   --elevate-1: rgba(0,0,0, .03);
   --elevate-2: rgba(0,0,0, .08);
-  --background: 0 0% 100%;
-  --foreground: 222 15% 12%;
-  --border: 0 0% 89%;
-  --card: 0 0% 98%;
-  --card-foreground: 222 15% 12%;
-  --card-border: 0 0% 94%;
-  --sidebar: 0 0% 96%;
-  --sidebar-foreground: 222 15% 12%;
-  --sidebar-border: 0 0% 92%;
-  --sidebar-primary: 225 100% 50%;
-  --sidebar-primary-foreground: 225 100% 98%;
-  --sidebar-accent: 225 15% 88%;
-  --sidebar-accent-foreground: 222 15% 12%;
-  --sidebar-ring: 225 100% 50%;
-  --popover: 0 0% 94%;
-  --popover-foreground: 222 15% 12%;
-  --popover-border: 0 0% 90%;
-  --primary: 225 100% 50%;
-  --primary-foreground: 225 100% 98%;
+  --background: 240 30% 98%;
+  --foreground: 220 20% 15%;
+  --border: 240 15% 88%;
+  --card: 0 0% 100%;
+  --card-foreground: 220 20% 15%;
+  --card-border: 240 10% 92%;
+  --sidebar: 240 20% 97%;
+  --sidebar-foreground: 220 20% 15%;
+  --sidebar-border: 240 10% 90%;
+  --sidebar-primary: 240 100% 55%;
+  --sidebar-primary-foreground: 240 100% 98%;
+  --sidebar-accent: 240 15% 92%;
+  --sidebar-accent-foreground: 220 20% 15%;
+  --sidebar-ring: 240 100% 55%;
+  --popover: 240 20% 97%;
+  --popover-foreground: 220 20% 15%;
+  --popover-border: 240 10% 88%;
+  --primary: 240 100% 55%;
+  --primary-foreground: 240 100% 98%;
   --secondary: 225 8% 92%;
   --secondary-foreground: 222 15% 12%;
   --muted: 225 10% 90%;
@@ -43,7 +43,8 @@
   --chart-3: 173 58% 28%;
   --chart-4: 142 70% 25%;
   --chart-5: 28 80% 32%;
-  --font-sans: Inter, system-ui, sans-serif;
+  --font-sans: 'Archivo', system-ui, sans-serif;
+  --font-heading: 'Archivo Semi Expanded', system-ui, sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: 'JetBrains Mono', Menlo, monospace;
   --radius: .5rem;
@@ -93,8 +94,8 @@
   --opaque-button-border-intensity: 9;
   --elevate-1: rgba(255,255,255, .04);
   --elevate-2: rgba(255,255,255, .09);
-  --background: 222 15% 8%;
-  --foreground: 222 15% 96%;
+  --background: 220 30% 5%;
+  --foreground: 225 100% 95%;
   --border: 222 12% 18%;
   --card: 222 15% 10%;
   --card-foreground: 222 15% 96%;
@@ -102,16 +103,16 @@
   --sidebar: 222 15% 12%;
   --sidebar-foreground: 222 15% 96%;
   --sidebar-border: 222 12% 16%;
-  --sidebar-primary: 225 100% 60%;
-  --sidebar-primary-foreground: 225 100% 98%;
+  --sidebar-primary: 240 100% 65%;
+  --sidebar-primary-foreground: 240 100% 98%;
   --sidebar-accent: 225 15% 18%;
   --sidebar-accent-foreground: 222 15% 96%;
   --sidebar-ring: 225 100% 60%;
   --popover: 222 15% 14%;
   --popover-foreground: 222 15% 96%;
   --popover-border: 222 12% 18%;
-  --primary: 225 100% 50%;
-  --primary-foreground: 225 100% 98%;
+  --primary: 240 100% 60%;
+  --primary-foreground: 240 100% 98%;
   --secondary: 225 10% 20%;
   --secondary-foreground: 222 15% 96%;
   --muted: 225 12% 18%;
@@ -284,5 +285,22 @@
   .border.active-elevate-2:not(.no-active-interaction-elevate)::after,
   .border.hover-elevate:not(.no-hover-interaction-elevate)::after {
     inset: -1px;
+  }
+
+  /* ConsoleBlue Glow Effects */
+  .glow-primary {
+    box-shadow: 0 0 10px hsl(var(--primary) / 0.3), 0 0 20px hsl(var(--primary) / 0.15);
+  }
+
+  .glow-primary-intense {
+    box-shadow: 0 0 15px hsl(var(--primary) / 0.5), 0 0 30px hsl(var(--primary) / 0.25), 0 0 45px hsl(var(--primary) / 0.1);
+  }
+
+  .glow-card {
+    box-shadow: 0 0 8px hsl(var(--primary) / 0.15);
+  }
+
+  .hover\:glow-primary:hover {
+    box-shadow: 0 0 10px hsl(var(--primary) / 0.3), 0 0 20px hsl(var(--primary) / 0.15);
   }
 }
