@@ -13,6 +13,7 @@ import Projects from "@/pages/projects";
 import ProjectDetail from "@/pages/project-detail";
 import AgentChat from "@/pages/agent-chat";
 import ActivityTimeline from "@/pages/activity-timeline";
+import Analytics from "@/pages/analytics";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { CreateProjectModal } from "@/components/modals/create-project-modal";
@@ -29,6 +30,7 @@ function Router() {
       <Route path="/project/:id" component={ProjectDetail} />
       <Route path="/agent-chat" component={AgentChat} />
       <Route path="/timeline" component={ActivityTimeline} />
+      <Route path="/analytics" component={Analytics} />
       <Route path="/conversations">
         <div className="p-8 text-center text-muted-foreground">
           Conversations page - Coming soon

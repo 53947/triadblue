@@ -8,6 +8,7 @@ import { activityService } from "./activity";
 import { githubIssuesService } from "./github-issues";
 import { initializeSyncScheduler } from "./sync-scheduler";
 import { NotificationService } from "./notification";
+import { analyticsService } from "./analytics";
 import { randomBytes, createHmac } from "crypto";
 import { z } from "zod";
 import { insertProjectSchema, insertTaskSchema, insertConversationSchema, insertGithubActivitySchema, insertApiKeySchema, insertAgentConnectionSchema, insertAgentChatMessageSchema } from "@shared/schema";
@@ -966,6 +967,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error sending message to agent:", error);
       res.status(500).json({ error: "Failed to send message", details: error.message });
+    }
+  });
+
+  // ============= Analytics API =============
+
+  // Get analytics summary
+  app.get("/api/analytics", async (req, res) => {
+    try {
+      const { startDate, endDate } = req.query;
+      
+      const filters: any = {};
+      if (startDate) filters.startDate = new Date(startDate as string);
+      if (endDate) filters.endDate = new Date(endDate as string);
+      
+      const analytics = await analyticsService.getAnalyticsSummary(filters);
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+      res.status(500).json({ error: "Failed to fetch analytics" });
+    }
+  });
+
+  // Export analytics data
+  app.get("/api/analytics/export", async (req, res) => {
+    try {
+      const { format = "json", startDate, endDate } = req.query;
+      
+      const filters: any = {};
+      if (startDate) filters.startDate = new Date(startDate as string);
+      if (endDate) filters.endDate = new Date(endDate as string);
+      
+      const exportData = await analyticsService.exportAnalytics(format as "json" | "csv", filters);
+      
+      if (format === "csv") {
+        res.setHeader("Content-Type", "text/csv");
+        res.setHeader("Content-Disposition", "attachment; filename=analytics-export.csv");
+        res.send(exportData);
+      } else {
+        res.setHeader("Content-Type", "application/json");
+        res.setHeader("Content-Disposition", "attachment; filename=analytics-export.json");
+        res.send(exportData);
+      }
+    } catch (error) {
+      console.error("Error exporting analytics:", error);
+      res.status(500).json({ error: "Failed to export analytics" });
     }
   });
 
