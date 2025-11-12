@@ -119,6 +119,22 @@ Preferred communication style: Simple, everyday language.
 - Returns 401 for missing/invalid signatures, 403 for disallowed event types
 - Backend properly uses raw body for HMAC verification (avoids JSON re-serialization issues)
 
+**Multi-Project Agent Chat Interface** *(Completed - Task 2)*
+- Database schema for agent connections (agentConnections table) and messages (agentChatMessages table)
+- Project-scoped agent connection management with CRUD operations
+- AgentService (server/agent.ts) handles external HTTP communication with bearer token authentication
+- Complete REST API: connection CRUD, message sending/retrieval, connection testing
+- Frontend chat UI (client/src/pages/agent-chat.tsx) with agent selector dropdown
+- Add agent connection dialog with form validation (project, name, endpoint, optional API key)
+- Real-time message display with user/assistant role differentiation
+- Message input with send button and Enter key support
+- Conversation history persistence and retrieval ordered by timestamp
+- Agent communication: Hub forwards user messages to external agent endpoints with full conversation context
+- External agents expected to accept JSON with message + history, respond with "reply" field
+- Empty states for no agent selected and no messages
+- Project context display showing selected agent's project and endpoint URL
+- Enables chatting with AI agents running in other Replit projects from centralized hub interface
+
 ### External Dependencies
 
 **Package Management**

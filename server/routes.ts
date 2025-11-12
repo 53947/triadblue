@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { extractActionItemsFromConversation } from "./ai";
 import { syncGitHubActivity } from "./github";
 import { agentService } from "./agent";
+import { initializeSyncScheduler } from "./sync-scheduler";
 import { randomBytes, createHmac } from "crypto";
 import { z } from "zod";
 import { insertProjectSchema, insertTaskSchema, insertConversationSchema, insertGithubActivitySchema, insertApiKeySchema, insertAgentConnectionSchema, insertAgentChatMessageSchema } from "@shared/schema";
@@ -47,6 +48,9 @@ function requirePermission(permission: string) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize the sync scheduler
+  const syncScheduler = initializeSyncScheduler(storage);
+  console.log("SyncScheduler initialized and started");
   
   // ============= Projects API =============
   
@@ -262,6 +266,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (eventType === "task.created" || eventType === "task_created") {
         const taskData = event.data || event.task;
         if (taskData) {
+          // Fetch project to get default sync configuration
+          const project = await storage.getProject(projectId);
+          
           await storage.createTask({
             projectId,
             title: taskData.title || "Untitled Task",
@@ -270,6 +277,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             priority: taskData.priority || "medium",
             source: "api",
             sourceUrl: taskData.sourceUrl || taskData.url,
+            // Auto-configure sync from project defaults (allow task-level override)
+            syncEnabled: taskData.syncEnabled ?? project?.defaultSyncEnabled ?? false,
+            syncUrl: taskData.syncUrl || project?.defaultSyncUrl || undefined,
           });
         }
       } else if (eventType === "task.updated" || eventType === "task_updated") {
@@ -353,6 +363,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!task) {
         return res.status(404).json({ error: "Task not found" });
       }
+      
+      // Trigger sync if status or priority changed and sync is enabled
+      if ((updates.status || updates.priority) && task.syncEnabled) {
+        await syncScheduler.enqueue(task, false);
+      }
+      
       res.json(task);
     } catch (error) {
       console.error("Error updating task:", error);
@@ -367,6 +383,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting task:", error);
       res.status(500).json({ error: "Failed to delete task" });
+    }
+  });
+
+  // Manual sync trigger
+  app.post("/api/tasks/:id/sync", async (req, res) => {
+    try {
+      const result = await syncScheduler.manualSync(req.params.id);
+      if (!result.success) {
+        return res.status(400).json({ error: result.message });
+      }
+      res.json({ success: true, message: result.message });
+    } catch (error) {
+      console.error("Error triggering manual sync:", error);
+      res.status(500).json({ error: "Failed to trigger sync" });
+    }
+  });
+
+  // Get sync status for a task
+  app.get("/api/tasks/:id/sync-status", async (req, res) => {
+    try {
+      const task = await storage.getTask(req.params.id);
+      if (!task) {
+        return res.status(404).json({ error: "Task not found" });
+      }
+
+      const queueStatus = syncScheduler.getSyncStatus(req.params.id);
+      
+      res.json({
+        syncEnabled: task.syncEnabled,
+        syncUrl: task.syncUrl,
+        syncStatus: task.syncStatus,
+        lastSyncAt: task.lastSyncAt,
+        syncRetryCount: task.syncRetryCount,
+        syncError: task.syncError,
+        inQueue: queueStatus.inQueue,
+        queueJob: queueStatus.job,
+      });
+    } catch (error) {
+      console.error("Error fetching sync status:", error);
+      res.status(500).json({ error: "Failed to fetch sync status" });
     }
   });
 
@@ -505,7 +561,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Submit task from external project
   app.post("/api/external/tasks", validateApiKey, requirePermission("write_tasks"), async (req, res) => {
     try {
-      const { title, description, priority = "medium", status = "pending" } = req.body;
+      const { title, description, priority = "medium", status = "pending", syncUrl, syncEnabled } = req.body;
+      
+      // Fetch project to get default sync configuration
+      const project = await storage.getProject(req.apiKey.projectId);
       
       const task = await storage.createTask({
         projectId: req.apiKey.projectId,
@@ -514,6 +573,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         priority,
         status,
         source: "api",
+        // Auto-configure sync from project defaults (allow task-level override)
+        syncEnabled: syncEnabled ?? project?.defaultSyncEnabled ?? false,
+        syncUrl: syncUrl || project?.defaultSyncUrl || undefined,
       });
 
       res.json(task);

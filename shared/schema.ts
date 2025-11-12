@@ -25,6 +25,10 @@ export const projects = pgTable("projects", {
   createdById: varchar("created_by_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  
+  // Default sync configuration for tasks created in this project
+  defaultSyncEnabled: boolean("default_sync_enabled").notNull().default(false),
+  defaultSyncUrl: text("default_sync_url"), // Default endpoint for task status syncs
 });
 
 // API Keys for projects - allows projects to send data to this hub
@@ -53,6 +57,14 @@ export const tasks = pgTable("tasks", {
   dueDate: timestamp("due_date"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  
+  // Sync back fields
+  syncEnabled: boolean("sync_enabled").notNull().default(false),
+  syncUrl: text("sync_url"), // Endpoint to send status updates to
+  syncStatus: text("sync_status").default("idle"), // 'idle', 'syncing', 'success', 'failed'
+  lastSyncAt: timestamp("last_sync_at"),
+  syncRetryCount: integer("sync_retry_count").default(0),
+  syncError: text("sync_error"),
 });
 
 // Conversations with agents

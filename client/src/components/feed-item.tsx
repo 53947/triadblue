@@ -1,7 +1,8 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Calendar, GitCommit, MessageSquare, CheckCircle2, Circle, Clock } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import { Calendar, GitCommit, MessageSquare, CheckCircle2, Circle, Clock, RefreshCw, CheckCircle, AlertCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { Task, Conversation, GithubActivity } from "@shared/schema";
 
@@ -63,6 +64,37 @@ export function TaskFeedItem({ task }: TaskFeedItemProps) {
             <Badge variant="outline" className="text-xs">
               {task.source}
             </Badge>
+            {task.syncEnabled && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Badge 
+                      variant="outline" 
+                      className={`text-xs ${
+                        task.syncStatus === "success" ? "bg-green-500/10 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800" :
+                        task.syncStatus === "syncing" ? "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800" :
+                        task.syncStatus === "failed" ? "bg-red-500/10 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800" :
+                        ""
+                      }`}
+                      data-testid="badge-sync-status"
+                    >
+                      {task.syncStatus === "success" && <CheckCircle className="w-3 h-3 mr-1" />}
+                      {task.syncStatus === "syncing" && <RefreshCw className="w-3 h-3 mr-1 animate-spin" />}
+                      {task.syncStatus === "failed" && <AlertCircle className="w-3 h-3 mr-1" />}
+                      {task.syncStatus || "idle"}
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <div className="text-xs">
+                      <div>Sync: {task.syncStatus}</div>
+                      {task.syncUrl && <div className="truncate max-w-xs">URL: {task.syncUrl}</div>}
+                      {task.lastSyncAt && <div>Last: {formatDistanceToNow(new Date(task.lastSyncAt), { addSuffix: true })}</div>}
+                      {task.syncError && <div className="text-red-400">Error: {task.syncError}</div>}
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
             <span className="text-xs text-muted-foreground">
               {formatDistanceToNow(new Date(task.createdAt), { addSuffix: true })}
             </span>
