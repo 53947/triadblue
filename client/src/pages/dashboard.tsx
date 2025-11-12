@@ -143,19 +143,21 @@ export default function Dashboard() {
             All tasks, conversations, and GitHub activity in one place
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Button onClick={() => setShowConversationModal(true)} variant="outline" data-testid="button-log-conversation">
-            <Plus className="w-4 h-4 mr-2" />
-            Log Conversation
-          </Button>
-          <Button onClick={() => setShowTaskModal(true)} data-testid="button-create-task">
-            <Plus className="w-4 h-4 mr-2" />
-            New Task
-          </Button>
+        <div className="flex items-center gap-4 flex-1 justify-end">
+          <div className="flex items-center gap-2">
+            <Button onClick={() => setShowConversationModal(true)} variant="outline" data-testid="button-log-conversation">
+              <Plus className="w-4 h-4 mr-2" />
+              Log Conversation
+            </Button>
+            <Button onClick={() => setShowTaskModal(true)} data-testid="button-create-task">
+              <Plus className="w-4 h-4 mr-2" />
+              New Task
+            </Button>
+          </div>
           <img 
             src={triadBlueLogo} 
             alt="TriadBlue" 
-            className="h-8 w-auto object-contain ml-2"
+            className="h-10 w-auto object-contain"
           />
         </div>
       </div>

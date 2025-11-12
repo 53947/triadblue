@@ -11,7 +11,7 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { Link, useLocation } from "wouter";
-import { Home, FolderKanban, MessageSquare, Settings, Plus, Github, MessagesSquare, Clock, BarChart3 } from "lucide-react";
+import { Home, FolderKanban, MessageSquare, Settings, Plus, Github, MessagesSquare, Clock, BarChart3, ListTodo } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { Project } from "@shared/schema";
@@ -20,6 +20,7 @@ import consoleBlueLogo from "@assets/Console_1762956063531.png";
 
 const navigation = [
   { title: "Dashboard", url: "/", icon: Home },
+  { title: "Tasks", url: "/tasks", icon: ListTodo },
   { title: "Projects", url: "/projects", icon: FolderKanban },
   { title: "Agent Chat", url: "/agent-chat", icon: MessagesSquare },
   { title: "Activity Timeline", url: "/timeline", icon: Clock },

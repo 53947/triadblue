@@ -9,6 +9,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { NotificationBell } from "@/components/notification-bell";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
+import Tasks from "@/pages/tasks";
 import Projects from "@/pages/projects";
 import ProjectDetail from "@/pages/project-detail";
 import AgentChat from "@/pages/agent-chat";
@@ -26,6 +27,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Dashboard} />
+      <Route path="/tasks" component={Tasks} />
       <Route path="/projects" component={Projects} />
       <Route path="/project/:id" component={ProjectDetail} />
       <Route path="/agent-chat" component={AgentChat} />
