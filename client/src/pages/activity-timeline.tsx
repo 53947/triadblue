@@ -36,14 +36,20 @@ export default function ActivityTimeline() {
     queryKey: ["/api/projects"],
   });
 
+  // Build query string for activities
+  const buildQueryString = () => {
+    const params = new URLSearchParams();
+    if (typeFilter !== "all") params.append("type", typeFilter);
+    if (projectFilter !== "all") params.append("projectId", projectFilter);
+    if (search) params.append("search", search);
+    params.append("limit", "100");
+    const queryString = params.toString();
+    return queryString ? `/api/activities?${queryString}` : "/api/activities";
+  };
+
   // Fetch activities
   const { data: activityData, isLoading } = useQuery<ActivityResponse>({
-    queryKey: ["/api/activities", { 
-      type: typeFilter === "all" ? undefined : typeFilter,
-      projectId: projectFilter === "all" ? undefined : projectFilter,
-      search: search || undefined,
-      limit: 100,
-    }],
+    queryKey: [buildQueryString()],
   });
 
   const activities = activityData?.activities || [];
