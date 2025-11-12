@@ -65,6 +65,12 @@ export const tasks = pgTable("tasks", {
   lastSyncAt: timestamp("last_sync_at"),
   syncRetryCount: integer("sync_retry_count").default(0),
   syncError: text("sync_error"),
+  
+  // GitHub sync fields
+  githubIssueNumber: integer("github_issue_number"), // GitHub issue number if synced
+  githubIssueUrl: text("github_issue_url"), // URL to GitHub issue
+  githubIssueState: text("github_issue_state"), // 'open', 'closed'
+  githubSyncedAt: timestamp("github_synced_at"), // When task was synced to GitHub
 });
 
 // Conversations with agents

@@ -5,6 +5,7 @@ import { extractActionItemsFromConversation } from "./ai";
 import { syncGitHubActivity } from "./github";
 import { agentService } from "./agent";
 import { activityService } from "./activity";
+import { githubIssuesService } from "./github-issues";
 import { initializeSyncScheduler } from "./sync-scheduler";
 import { randomBytes, createHmac } from "crypto";
 import { z } from "zod";
@@ -384,6 +385,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting task:", error);
       res.status(500).json({ error: "Failed to delete task" });
+    }
+  });
+
+  // Create GitHub issue from task
+  app.post("/api/tasks/:id/create-github-issue", async (req, res) => {
+    try {
+      const task = await storage.getTask(req.params.id);
+      if (!task) {
+        return res.status(404).json({ error: "Task not found" });
+      }
+
+      // Check if already synced to GitHub
+      if (task.githubIssueNumber) {
+        return res.status(400).json({ 
+          error: "Task already synced to GitHub",
+          issueUrl: task.githubIssueUrl 
+        });
+      }
+
+      // Get project to access GitHub repo
+      const project = await storage.getProject(task.projectId);
+      if (!project) {
+        return res.status(404).json({ error: "Project not found" });
+      }
+
+      // Create GitHub issue
+      const issue = await githubIssuesService.createIssueFromTask(task, project);
+
+      // Update task with GitHub info
+      const updatedTask = await storage.updateTask(task.id, {
+        githubIssueNumber: issue.number,
+        githubIssueUrl: issue.html_url,
+        githubIssueState: issue.state,
+        githubSyncedAt: new Date(),
+      });
+
+      console.log(`Task ${task.id} synced to GitHub issue #${issue.number}`);
+
+      res.json({
+        success: true,
+        issue: {
+          number: issue.number,
+          url: issue.html_url,
+          state: issue.state,
+        },
+        task: updatedTask,
+      });
+    } catch (error: any) {
+      console.error("Error creating GitHub issue:", error);
+      res.status(500).json({ error: error.message || "Failed to create GitHub issue" });
     }
   });
 

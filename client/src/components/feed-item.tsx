@@ -1,9 +1,13 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
-import { Calendar, GitCommit, MessageSquare, CheckCircle2, Circle, Clock, RefreshCw, CheckCircle, AlertCircle } from "lucide-react";
+import { Calendar, GitCommit, MessageSquare, CheckCircle2, Circle, Clock, RefreshCw, CheckCircle, AlertCircle, Github, ExternalLink } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import type { Task, Conversation, GithubActivity } from "@shared/schema";
 
 interface TaskFeedItemProps {
@@ -11,6 +15,8 @@ interface TaskFeedItemProps {
 }
 
 export function TaskFeedItem({ task }: TaskFeedItemProps) {
+  const { toast } = useToast();
+
   const statusIcons = {
     pending: Circle,
     in_progress: Clock,
@@ -26,6 +32,45 @@ export function TaskFeedItem({ task }: TaskFeedItemProps) {
     high: "bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800",
     urgent: "bg-red-500/10 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800",
   };
+
+  // GitHub sync mutation
+  const createGithubIssueMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("POST", `/api/tasks/${task.id}/create-github-issue`, {});
+    },
+    onSuccess: (data: any) => {
+      // Optimistic update - immediately update the task in cache
+      queryClient.setQueryData(["/api/tasks"], (old: any) => {
+        if (!old) return old;
+        return old.map((t: Task) => 
+          t.id === task.id 
+            ? { 
+                ...t, 
+                githubIssueNumber: data.issue.number,
+                githubIssueUrl: data.issue.url,
+                githubIssueState: data.issue.state,
+                githubSyncedAt: new Date().toISOString()
+              }
+            : t
+        );
+      });
+      
+      // Also invalidate to ensure fresh data
+      queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
+      
+      toast({
+        title: "GitHub issue created",
+        description: "Task successfully synced to GitHub",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create GitHub issue",
+        variant: "destructive",
+      });
+    },
+  });
 
   return (
     <Card className="p-4 hover-elevate" data-testid={`task-${task.id}`}>
@@ -91,6 +136,48 @@ export function TaskFeedItem({ task }: TaskFeedItemProps) {
                       {task.lastSyncAt && <div>Last: {formatDistanceToNow(new Date(task.lastSyncAt), { addSuffix: true })}</div>}
                       {task.syncError && <div className="text-red-400">Error: {task.syncError}</div>}
                     </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            {task.githubIssueUrl ? (
+              <a 
+                href={task.githubIssueUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex"
+              >
+                <Badge 
+                  variant="outline" 
+                  className="text-xs bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800 cursor-pointer hover-elevate"
+                  data-testid="badge-github-issue"
+                >
+                  <Github className="w-3 h-3 mr-1" />
+                  #{task.githubIssueNumber}
+                  <ExternalLink className="w-3 h-3 ml-1" />
+                </Badge>
+              </a>
+            ) : (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => createGithubIssueMutation.mutate()}
+                      disabled={createGithubIssueMutation.isPending}
+                      data-testid="button-create-github-issue"
+                    >
+                      {createGithubIssueMutation.isPending ? (
+                        <RefreshCw className="w-4 h-4 mr-1 animate-spin" />
+                      ) : (
+                        <Github className="w-4 h-4 mr-1" />
+                      )}
+                      <span className="text-xs">Push to GitHub</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">Create GitHub issue from this task</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
