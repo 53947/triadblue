@@ -137,28 +137,16 @@ export default function Dashboard() {
   return (
     <div className="max-w-7xl mx-auto p-4 space-y-6">
       <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold" style={{ fontFamily: 'var(--font-heading)' }}>Dashboard</h1>
-          <p className="text-sm text-muted-foreground">
-            All tasks, conversations, and GitHub activity in one place
-          </p>
-        </div>
-        <div className="flex items-center gap-4 flex-1 justify-end">
-          <div className="flex items-center gap-2">
-            <Button onClick={() => setShowConversationModal(true)} variant="outline" data-testid="button-log-conversation">
-              <Plus className="w-4 h-4 mr-2" />
-              Log Conversation
-            </Button>
-            <Button onClick={() => setShowTaskModal(true)} data-testid="button-create-task">
-              <Plus className="w-4 h-4 mr-2" />
-              New Task
-            </Button>
-          </div>
-          <img 
-            src={triadBlueLogo} 
-            alt="TriadBlue" 
-            className="h-10 w-auto object-contain"
-          />
+        <h1 className="text-2xl font-semibold" style={{ fontFamily: 'var(--font-heading)' }}>Dashboard</h1>
+        <div className="flex items-center gap-2">
+          <Button onClick={() => setShowConversationModal(true)} variant="outline" data-testid="button-log-conversation">
+            <Plus className="w-4 h-4 mr-2" />
+            Log Conversation
+          </Button>
+          <Button onClick={() => setShowTaskModal(true)} data-testid="button-create-task">
+            <Plus className="w-4 h-4 mr-2" />
+            New Task
+          </Button>
         </div>
       </div>
 

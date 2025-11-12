@@ -93,17 +93,15 @@ function AppContent() {
         />
         <div className="flex flex-col flex-1 min-w-0">
           <header className="flex items-center justify-between gap-4 px-4 py-2 border-b">
+            <SidebarTrigger data-testid="button-sidebar-toggle" />
             <div className="flex items-center gap-3">
-              <SidebarTrigger data-testid="button-sidebar-toggle" />
-              <img 
-                src={triadBlueLockup} 
-                alt="Triad Blue" 
-                className="h-7 hidden sm:block"
-              />
-            </div>
-            <div className="flex items-center gap-2">
               <NotificationBell />
               <ThemeToggle />
+              <img 
+                src={triadBlueLockup} 
+                alt="TriadBlue" 
+                className="h-9 w-auto object-contain"
+              />
             </div>
           </header>
           <main className="flex-1 overflow-auto">
