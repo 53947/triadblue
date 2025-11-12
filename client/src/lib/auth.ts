@@ -9,8 +9,8 @@ export async function checkAuth(): Promise<boolean> {
 
   authCheckPromise = (async () => {
     try {
-      await fetch("/api/auth/me", { credentials: "include" });
-      return true;
+      const response = await fetch("/api/auth/me", { credentials: "include" });
+      return response.ok;
     } catch {
       return false;
     }

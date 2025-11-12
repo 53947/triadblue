@@ -1,14 +1,45 @@
-# Project Hub - Centralized Task Management & Documentation System
+# ConsoleBlue - Centralized Task Management & Documentation Hub
 
 ## Overview
 
-This is a unified task management and documentation hub designed to manage multiple Replit projects from a centralized dashboard. The application serves as a command center for tracking tasks, conversations, GitHub activity, and project-related data across different applications. It features AI-powered conversation extraction to identify undocumented action items and provides API key-based integration for external projects to push data to the hub.
+ConsoleBlue is a unified task management and documentation hub designed to manage multiple Replit projects from a centralized, password-protected dashboard. The application features a public landing page showcasing the TriadBlue ecosystem (BusinessBlueprint, HostsBlue, SwipesBlue platforms) and serves as a command center for tracking tasks, conversations, GitHub activity, and project-related data across different applications.
+
+The system includes AI-powered conversation extraction to identify undocumented action items and provides API key-based integration for external projects to push data to the hub. Built with ConsoleBlue command console branding featuring fluorescent blue (#0000FF) accents, Archivo typography, and dark-first design aesthetic.
 
 The system is built as a full-stack web application with a modern React frontend and Express.js backend, designed with productivity and information density in mind, following design principles inspired by Linear, Notion, and GitHub.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+
+## Authentication System
+
+**Public Access:**
+- Landing page (`/`) - Publicly accessible TriadBlue ecosystem showcase
+- Login page (`/login`) - Password authentication portal
+
+**Protected Access:**
+- All dashboard routes (`/dashboard`, `/tasks`, `/projects`, `/agent-chat`, `/timeline`, `/analytics`, etc.) require authentication
+- Password stored securely in `DASHBOARD_PASSWORD` environment variable
+- Server-side session management with httpOnly cookies (7-day expiry, sameSite=lax)
+- Constant-time password comparison prevents timing attacks
+- All dashboard API routes protected with `authRequired` middleware
+
+**Authentication Flow:**
+1. User visits landing page at `/`
+2. Clicks "Dashboard Login" to access `/login`
+3. Enters password (validated against DASHBOARD_PASSWORD env var)
+4. Server creates session with `{ user: { role: "admin" } }`
+5. Session cookie automatically sent with subsequent requests
+6. Protected routes check session via `/api/auth/me` endpoint
+7. Logout button destroys server session and redirects to landing page
+
+**Security Features:**
+- Password never exposed in frontend bundle (server-side only)
+- HttpOnly cookies prevent client-side JavaScript access
+- Session-based auth (not localStorage) prevents client tampering
+- Protected API routes return 401 for unauthenticated requests
+- ProtectedRoute wrapper redirects to `/login` if auth check fails
 
 ## System Architecture
 
