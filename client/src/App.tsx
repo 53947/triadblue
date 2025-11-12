@@ -16,6 +16,7 @@ import { CreateProjectModal } from "@/components/modals/create-project-modal";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Project } from "@shared/schema";
+import triadBlueLockup from "@assets/Triad Blue Lockup_1762915681863.png";
 
 function Router() {
   return (
@@ -82,8 +83,15 @@ function AppContent() {
           onNewProject={() => setShowCreateProjectModal(true)}
         />
         <div className="flex flex-col flex-1 min-w-0">
-          <header className="flex items-center justify-between p-2 border-b">
-            <SidebarTrigger data-testid="button-sidebar-toggle" />
+          <header className="flex items-center justify-between gap-4 px-4 py-2 border-b">
+            <div className="flex items-center gap-3">
+              <SidebarTrigger data-testid="button-sidebar-toggle" />
+              <img 
+                src={triadBlueLockup} 
+                alt="Triad Blue" 
+                className="h-7 hidden sm:block"
+              />
+            </div>
             <ThemeToggle />
           </header>
           <main className="flex-1 overflow-auto">
