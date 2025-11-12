@@ -135,6 +135,26 @@ Preferred communication style: Simple, everyday language.
 - Project context display showing selected agent's project and endpoint URL
 - Enables chatting with AI agents running in other Replit projects from centralized hub interface
 
+**Task Status Sync Back** *(Completed - Task 3)*
+- Bidirectional task update synchronization to source projects via HTTP API
+- Database schema extensions: sync tracking fields (syncEnabled, syncUrl, syncStatus, lastSyncAt, syncRetryCount, syncError)
+- Project-level default sync configuration (defaultSyncEnabled, defaultSyncUrl) with per-task overrides
+- SyncService (server/sync.ts): HTTP client sending PATCH requests with task data to external endpoints
+- SyncScheduler (server/sync-scheduler.ts): In-memory job queue with background worker processing
+- Dual-snapshot tracking system (currentTask + latestSnapshot) ensures correct ordering of concurrent updates
+- Automatic sync triggering when task status or priority changes via PUT /api/tasks/:id
+- Manual sync API (POST /api/tasks/:id/sync) for on-demand synchronization
+- Sync status query API (GET /api/tasks/:id/sync-status) for frontend status display
+- Exponential backoff retry logic: 2s, 4s, 8s delays with max 3 attempts per sync job
+- Auto-configuration: Tasks created from webhooks/API automatically inherit project sync defaults
+- Frontend UI indicators (client/src/components/feed-item.tsx):
+  - Color-coded sync status badges (green=success, blue=syncing, red=failed, gray=idle)
+  - Status-specific icons (CheckCircle, RefreshCw with spin animation, AlertCircle)
+  - Detailed tooltips showing sync URL, last sync time, and error messages
+  - Only visible when task has syncEnabled=true
+- Enables external projects to receive real-time task updates as changes occur in the Hub
+- Resilient sync pipeline handles network failures and concurrent task modifications
+
 ### External Dependencies
 
 **Package Management**
