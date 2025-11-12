@@ -4,24 +4,29 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import consoleBlueLockup from "@assets/consoleblue-lockup.png";
+import { login } from "@/lib/auth";
 
 export default function Login() {
   const [, setLocation] = useLocation();
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+    setIsLoading(true);
     
-    const correctPassword = "consolblue"; // Simple password for now
+    const result = await login(password);
     
-    if (password === correctPassword) {
-      localStorage.setItem("consoleblue_auth", "true");
+    if (result.success) {
       setLocation("/dashboard");
     } else {
-      setError("Incorrect password");
+      setError(result.error || "Incorrect password");
       setPassword("");
     }
+    
+    setIsLoading(false);
   };
 
   return (
@@ -57,8 +62,8 @@ export default function Login() {
                 </p>
               )}
             </div>
-            <Button type="submit" className="w-full" data-testid="button-login">
-              Access Dashboard
+            <Button type="submit" className="w-full" data-testid="button-login" disabled={isLoading}>
+              {isLoading ? "Authenticating..." : "Access Dashboard"}
             </Button>
             <Button
               type="button"

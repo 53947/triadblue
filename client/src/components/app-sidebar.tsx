@@ -41,8 +41,8 @@ export function AppSidebar({ projects = [], onNewProject }: AppSidebarProps) {
   const [location] = useLocation();
   const [, setWouterLocation] = useWouterLocation();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     setWouterLocation("/");
   };
 

@@ -12,6 +12,7 @@ import { analyticsService } from "./analytics";
 import { randomBytes, createHmac } from "crypto";
 import { z } from "zod";
 import { insertProjectSchema, insertTaskSchema, insertConversationSchema, insertGithubActivitySchema, insertApiKeySchema, insertAgentConnectionSchema, insertAgentChatMessageSchema, insertTaskTemplateSchema, insertConversationTemplateSchema } from "@shared/schema";
+import { authRequired, constantTimeCompare, type AuthRequest } from "./auth";
 
 // Helper function to create HMAC signature for webhook payloads
 function createHmacSignature(payload: string, secret: string): string {
@@ -60,9 +61,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const notificationService = new NotificationService(storage);
   console.log("NotificationService initialized");
   
+  // ============= Authentication API =============
+  
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { password } = req.body;
+      const correctPassword = process.env.DASHBOARD_PASSWORD;
+
+      if (!correctPassword) {
+        console.error("DASHBOARD_PASSWORD not configured");
+        return res.status(500).json({ error: "Authentication not configured" });
+      }
+
+      if (!password || !constantTimeCompare(password, correctPassword)) {
+        return res.status(401).json({ error: "Invalid password" });
+      }
+
+      const authReq = req as AuthRequest;
+      authReq.session.user = { role: "admin" };
+      
+      authReq.session.save((err: any) => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.status(500).json({ error: "Failed to save session" });
+        }
+        res.json({ success: true, user: { role: "admin" } });
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ error: "Login failed" });
+    }
+  });
+
+  app.post("/api/auth/logout", async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      authReq.session.destroy((err: any) => {
+        if (err) {
+          console.error("Session destroy error:", err);
+          return res.status(500).json({ error: "Failed to logout" });
+        }
+        res.json({ success: true });
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
+      res.status(500).json({ error: "Logout failed" });
+    }
+  });
+
+  app.get("/api/auth/me", async (req, res) => {
+    const authReq = req as AuthRequest;
+    if (!authReq.session?.user) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+    res.json({ user: authReq.session.user });
+  });
+  
   // ============= Projects API =============
   
-  app.get("/api/projects", async (req, res) => {
+  app.get("/api/projects", authRequired, async (req, res) => {
     try {
       const projects = await storage.getProjects();
       res.json(projects);
@@ -72,7 +129,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/projects/:id", async (req, res) => {
+  app.get("/api/projects/:id", authRequired, async (req, res) => {
     try {
       const project = await storage.getProject(req.params.id);
       if (!project) {
@@ -85,7 +142,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/projects", async (req, res) => {
+  app.post("/api/projects", authRequired, async (req, res) => {
     try {
       const data = insertProjectSchema.parse(req.body);
       // For now, use a default user ID. In a real app, this would come from auth
@@ -100,7 +157,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/projects/:id", async (req, res) => {
+  app.put("/api/projects/:id", authRequired, async (req, res) => {
     try {
       const updates = req.body;
       const project = await storage.updateProject(req.params.id, updates);
@@ -114,7 +171,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/projects/:id", async (req, res) => {
+  app.delete("/api/projects/:id", authRequired, async (req, res) => {
     try {
       await storage.deleteProject(req.params.id);
       res.json({ success: true });
@@ -126,7 +183,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ============= API Keys =============
 
-  app.get("/api/projects/:projectId/api-keys", async (req, res) => {
+  app.get("/api/projects/:projectId/api-keys", authRequired, async (req, res) => {
     try {
       const keys = await storage.getApiKeys(req.params.projectId);
       res.json(keys);
@@ -136,7 +193,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/projects/:projectId/api-keys", async (req, res) => {
+  app.post("/api/projects/:projectId/api-keys", authRequired, async (req, res) => {
     try {
       const { name, permissions } = req.body;
       
@@ -160,7 +217,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ============= Webhooks API =============
 
-  app.get("/api/projects/:projectId/webhooks", async (req, res) => {
+  app.get("/api/projects/:projectId/webhooks", authRequired, async (req, res) => {
     try {
       const webhooks = await storage.getWebhooks(req.params.projectId);
       res.json(webhooks);
@@ -170,7 +227,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/projects/:projectId/webhooks", async (req, res) => {
+  app.post("/api/projects/:projectId/webhooks", authRequired, async (req, res) => {
     try {
       const { name, url, events } = req.body;
       
@@ -193,7 +250,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/webhooks/:id", async (req, res) => {
+  app.put("/api/webhooks/:id", authRequired, async (req, res) => {
     try {
       const updates = req.body;
       const webhook = await storage.updateWebhook(req.params.id, updates);
@@ -207,7 +264,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/webhooks/:id", async (req, res) => {
+  app.delete("/api/webhooks/:id", authRequired, async (req, res) => {
     try {
       await storage.deleteWebhook(req.params.id);
       res.json({ success: true });
@@ -327,7 +384,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ============= Task Templates API =============
 
-  app.get("/api/projects/:projectId/templates", async (req, res) => {
+  app.get("/api/projects/:projectId/templates", authRequired, async (req, res) => {
     try {
       const templates = await storage.getTaskTemplates(req.params.projectId);
       res.json(templates);
@@ -337,7 +394,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/projects/:projectId/templates", async (req, res) => {
+  app.post("/api/projects/:projectId/templates", authRequired, async (req, res) => {
     try {
       const { projectId } = req.params;
       const data = req.body;
@@ -355,7 +412,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/templates/:id", async (req, res) => {
+  app.get("/api/templates/:id", authRequired, async (req, res) => {
     try {
       const template = await storage.getTaskTemplate(req.params.id);
       if (!template) {
@@ -368,7 +425,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/templates/:id", async (req, res) => {
+  app.put("/api/templates/:id", authRequired, async (req, res) => {
     try {
       const template = await storage.updateTaskTemplate(req.params.id, req.body);
       if (!template) {
@@ -381,7 +438,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/templates/:id", async (req, res) => {
+  app.delete("/api/templates/:id", authRequired, async (req, res) => {
     try {
       await storage.deleteTaskTemplate(req.params.id);
       res.json({ success: true });
@@ -391,7 +448,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/templates/:id/instantiate", async (req, res) => {
+  app.post("/api/templates/:id/instantiate", authRequired, async (req, res) => {
     try {
       const template = await storage.getTaskTemplate(req.params.id);
       if (!template) {
@@ -418,7 +475,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ============= Tasks API =============
 
-  app.get("/api/tasks", async (req, res) => {
+  app.get("/api/tasks", authRequired, async (req, res) => {
     try {
       const tasks = await storage.getTasks();
       res.json(tasks);
@@ -428,7 +485,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/tasks/:id", async (req, res) => {
+  app.get("/api/tasks/:id", authRequired, async (req, res) => {
     try {
       const task = await storage.getTask(req.params.id);
       if (!task) {
@@ -441,7 +498,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/tasks", async (req, res) => {
+  app.post("/api/tasks", authRequired, async (req, res) => {
     try {
       const data = insertTaskSchema.parse(req.body);
       const task = await storage.createTask({ ...data, source: "manual" });
@@ -462,7 +519,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/tasks/:id", async (req, res) => {
+  app.put("/api/tasks/:id", authRequired, async (req, res) => {
     try {
       const updates = req.body;
       const task = await storage.updateTask(req.params.id, updates);
@@ -488,7 +545,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/tasks/:id", async (req, res) => {
+  app.delete("/api/tasks/:id", authRequired, async (req, res) => {
     try {
       await storage.deleteTask(req.params.id);
       res.json({ success: true });
@@ -499,7 +556,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create GitHub issue from task
-  app.post("/api/tasks/:id/create-github-issue", async (req, res) => {
+  app.post("/api/tasks/:id/create-github-issue", authRequired, async (req, res) => {
     try {
       const task = await storage.getTask(req.params.id);
       if (!task) {
@@ -549,7 +606,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Manual sync trigger
-  app.post("/api/tasks/:id/sync", async (req, res) => {
+  app.post("/api/tasks/:id/sync", authRequired, async (req, res) => {
     try {
       const result = await syncScheduler.manualSync(req.params.id);
       if (!result.success) {
@@ -563,7 +620,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get sync status for a task
-  app.get("/api/tasks/:id/sync-status", async (req, res) => {
+  app.get("/api/tasks/:id/sync-status", authRequired, async (req, res) => {
     try {
       const task = await storage.getTask(req.params.id);
       if (!task) {
@@ -590,7 +647,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ============= Conversations API =============
 
-  app.get("/api/conversations", async (req, res) => {
+  app.get("/api/conversations", authRequired, async (req, res) => {
     try {
       const conversations = await storage.getConversations();
       res.json(conversations);
@@ -600,7 +657,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/conversations/:id", async (req, res) => {
+  app.get("/api/conversations/:id", authRequired, async (req, res) => {
     try {
       const conversation = await storage.getConversation(req.params.id);
       if (!conversation) {
@@ -613,7 +670,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/conversations", async (req, res) => {
+  app.post("/api/conversations", authRequired, async (req, res) => {
     try {
       const data = req.body;
       
@@ -646,7 +703,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ============= GitHub Activity API =============
 
-  app.get("/api/github-activity", async (req, res) => {
+  app.get("/api/github-activity", authRequired, async (req, res) => {
     try {
       const activity = await storage.getGithubActivity();
       res.json(activity);
@@ -720,7 +777,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ============= Activity Timeline API =============
 
-  app.get("/api/activities", async (req, res) => {
+  app.get("/api/activities", authRequired, async (req, res) => {
     try {
       const { projectId, type, search, startDate, endDate, limit, offset } = req.query;
       
@@ -744,7 +801,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============= Notifications API =============
 
   // Get notifications for current user
-  app.get("/api/notifications", async (req, res) => {
+  app.get("/api/notifications", authRequired, async (req, res) => {
     try {
       // Use default user (single-user app for now, TODO: implement auth)
       const userId = "default-user";
@@ -920,7 +977,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get a specific agent connection
-  app.get("/api/agent-connections/:id", async (req, res) => {
+  app.get("/api/agent-connections/:id", authRequired, async (req, res) => {
     try {
       const connection = await storage.getAgentConnection(req.params.id);
       if (!connection) {
@@ -953,7 +1010,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update an agent connection
-  app.put("/api/agent-connections/:id", async (req, res) => {
+  app.put("/api/agent-connections/:id", authRequired, async (req, res) => {
     try {
       const updates = insertAgentConnectionSchema.partial().parse(req.body);
       const connection = await storage.updateAgentConnection(req.params.id, updates);
@@ -973,7 +1030,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete an agent connection
-  app.delete("/api/agent-connections/:id", async (req, res) => {
+  app.delete("/api/agent-connections/:id", authRequired, async (req, res) => {
     try {
       await storage.deleteAgentConnection(req.params.id);
       res.json({ success: true });
@@ -1002,7 +1059,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============= Agent Chat Messages API =============
 
   // Get messages for a connection
-  app.get("/api/agent-connections/:connectionId/messages", async (req, res) => {
+  app.get("/api/agent-connections/:connectionId/messages", authRequired, async (req, res) => {
     try {
       const messages = await storage.getAgentChatMessages(req.params.connectionId);
       res.json(messages);
@@ -1013,7 +1070,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Send a message to an agent
-  app.post("/api/agent-connections/:connectionId/messages", async (req, res) => {
+  app.post("/api/agent-connections/:connectionId/messages", authRequired, async (req, res) => {
     try {
       const { content } = req.body;
       const connectionId = req.params.connectionId;
@@ -1108,7 +1165,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ============= Conversation Templates API =============
   
-  app.get("/api/projects/:projectId/conversation-templates", async (req, res) => {
+  app.get("/api/projects/:projectId/conversation-templates", authRequired, async (req, res) => {
     try {
       const templates = await storage.getConversationTemplates(req.params.projectId);
       res.json(templates);
@@ -1118,7 +1175,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/conversation-templates/global", async (req, res) => {
+  app.get("/api/conversation-templates/global", authRequired, async (req, res) => {
     try {
       const templates = await storage.getConversationTemplates(null);
       res.json(templates);
@@ -1128,7 +1185,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/projects/:projectId/conversation-templates", async (req, res) => {
+  app.post("/api/projects/:projectId/conversation-templates", authRequired, async (req, res) => {
     try {
       const { projectId } = req.params;
       
@@ -1152,7 +1209,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/conversation-templates/:id", async (req, res) => {
+  app.put("/api/conversation-templates/:id", authRequired, async (req, res) => {
     try {
       const result = insertConversationTemplateSchema
         .partial()
@@ -1174,7 +1231,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/conversation-templates/:id", async (req, res) => {
+  app.delete("/api/conversation-templates/:id", authRequired, async (req, res) => {
     try {
       await storage.deleteConversationTemplate(req.params.id);
       res.status(204).send();
