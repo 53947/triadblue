@@ -14,6 +14,7 @@ import { ListTodo } from "lucide-react";
 
 export default function Tasks() {
   const { toast } = useToast();
+  const [sourceFilter, setSourceFilter] = useState("all");
   const [projectFilter, setProjectFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
@@ -39,6 +40,7 @@ export default function Tasks() {
   });
 
   const filteredTasks = tasksWithProject.filter(task => {
+    if (sourceFilter !== "all" && task.source !== sourceFilter) return false;
     if (projectFilter !== "all" && task.projectId !== projectFilter) return false;
     if (statusFilter !== "all" && task.status !== statusFilter) return false;
     if (priorityFilter !== "all" && task.priority !== priorityFilter) return false;
@@ -85,8 +87,8 @@ export default function Tasks() {
       </div>
 
       <FilterBar
-        sourceFilter="all"
-        onSourceFilterChange={() => {}}
+        sourceFilter={sourceFilter}
+        onSourceFilterChange={setSourceFilter}
         projectFilter={projectFilter}
         onProjectFilterChange={setProjectFilter}
         statusFilter={statusFilter}
