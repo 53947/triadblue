@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { extractActionItemsFromConversation } from "./ai";
 import { syncGitHubActivity } from "./github";
 import { agentService } from "./agent";
+import { activityService } from "./activity";
 import { initializeSyncScheduler } from "./sync-scheduler";
 import { randomBytes, createHmac } from "crypto";
 import { z } from "zod";
@@ -553,6 +554,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error syncing GitHub activity:", error);
       res.status(500).json({ error: error.message || "Failed to sync GitHub activity" });
+    }
+  });
+
+  // ============= Activity Timeline API =============
+
+  app.get("/api/activities", async (req, res) => {
+    try {
+      const { projectId, type, search, startDate, endDate, limit, offset } = req.query;
+      
+      const result = await activityService.getActivities({
+        projectId: projectId as string | undefined,
+        type: type as string | undefined,
+        search: search as string | undefined,
+        startDate: startDate as string | undefined,
+        endDate: endDate as string | undefined,
+        limit: limit ? parseInt(limit as string) : undefined,
+        offset: offset ? parseInt(offset as string) : undefined,
+      });
+
+      res.json(result);
+    } catch (error) {
+      console.error("Error fetching activities:", error);
+      res.status(500).json({ error: "Failed to fetch activities" });
     }
   });
 
