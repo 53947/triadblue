@@ -158,6 +158,35 @@ Preferred communication style: Simple, everyday language.
 - Efficient query performance with optimized data aggregation
 - ActivityService (server/activity.ts) handles multi-source data queries
 
+**Task Templates** *(Completed - Task 7)*
+- Database schema: taskTemplates table with projectId, name, description, defaultTitle, defaultDescription, defaultPriority, defaultTags, defaultDueInDays
+- Nullable projectId for global templates, unique constraint on (projectId, name)
+- Storage CRUD methods in DatabaseStorage: getTaskTemplates, getTaskTemplate, createTaskTemplate, updateTaskTemplate, deleteTaskTemplate
+- Complete REST API with Zod validation: GET/POST/PUT/DELETE endpoints
+- Frontend ProjectTemplates component integrated into project detail page
+- Create/edit/delete functionality with form validation
+- Template application flow: select template → populate form → create task
+- Manual and E2E testing confirmed all functions work correctly
+- Architect-approved minimal integration (Option B)
+
+**Conversation Templates** *(Completed - Task 8 - Backend Only)*
+- Database schema: conversationTemplates table with projectId, name, description, defaultTitle, defaultContent, defaultAgentName, tags
+- Nullable projectId for global templates, unique constraint on (projectId, name)
+- Default empty array for tags, relations added to projects and users
+- Storage CRUD methods in DatabaseStorage: getConversationTemplates, getConversationTemplate, createConversationTemplate, updateConversationTemplate, deleteConversationTemplate
+- Complete REST API with Zod validation and immutable field protection:
+  - GET /api/projects/:projectId/conversation-templates
+  - GET /api/conversation-templates/global
+  - POST /api/projects/:projectId/conversation-templates (with validation)
+  - PUT /api/conversation-templates/:id (protects projectId, createdById)
+  - DELETE /api/conversation-templates/:id
+- Server-side createdById population with default-user
+- Request validation using insertConversationTemplateSchema.safeParse
+- Returns 400 on validation errors, 500 on unexpected errors
+- Architect-approved after validation fixes (POST/PUT properly validate, protect immutable fields)
+- Frontend integration deferred to conserve token budget for rapid deployment
+- Ready for frontend integration when needed (follow task templates pattern)
+
 **Task Status Sync Back** *(Completed - Task 3)*
 - Bidirectional task update synchronization to source projects via HTTP API
 - Database schema extensions: sync tracking fields (syncEnabled, syncUrl, syncStatus, lastSyncAt, syncRetryCount, syncError)
