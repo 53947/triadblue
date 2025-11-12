@@ -43,8 +43,8 @@
   --chart-3: 173 58% 28%;
   --chart-4: 142 70% 25%;
   --chart-5: 28 80% 32%;
-  --font-sans: 'Anybody', system-ui, sans-serif;
-  --font-heading: 'Expletus Sans', system-ui, sans-serif;
+  --font-sans: 'Expletus Sans', system-ui, sans-serif;
+  --font-heading: 'Chivo', system-ui, sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: 'JetBrains Mono', Menlo, monospace;
   --radius: .5rem;
@@ -308,7 +308,7 @@
   .landing-page {
     min-height: 100vh;
     background: #09080e;
-    font-family: 'Anybody', system-ui, sans-serif;
+    font-family: 'Expletus Sans', system-ui, sans-serif;
   }
 
   .landing-page h1,
@@ -317,16 +317,17 @@
   .landing-page h4,
   .landing-page h5,
   .landing-page h6 {
-    font-family: 'Expletus Sans', system-ui, sans-serif;
+    font-family: 'Chivo', system-ui, sans-serif;
     font-weight: 600;
   }
 
-  .landing-page a {
+  /* Only text hyperlinks are red, not buttons */
+  .landing-page a:not([class*="landing-cta"]) {
     color: #FF0040;
     text-decoration: none;
   }
 
-  .landing-page a:hover {
+  .landing-page a:not([class*="landing-cta"]):hover {
     text-decoration: underline;
   }
 
@@ -392,8 +393,8 @@
     gap: 12px;
   }
 
-  /* Single button style - green */
-  .landing-cta {
+  /* Green button style */
+  .landing-cta-green {
     display: inline-block;
     padding: 0.85rem 1.5rem;
     border-radius: 6px;
@@ -407,15 +408,15 @@
     box-shadow: 0 0 15px rgba(0, 255, 64, 0.3);
   }
 
-  .landing-cta:hover {
+  .landing-cta-green:hover {
     background: rgba(0, 255, 64, 0.1);
     box-shadow: 0 0 25px rgba(0, 255, 64, 0.5);
     transform: translateY(-2px);
     text-decoration: none;
   }
 
-  /* Two button style - yellow */
-  .landing-cta-dual {
+  /* Yellow button style */
+  .landing-cta-yellow {
     display: inline-block;
     padding: 0.85rem 1.5rem;
     border-radius: 6px;
@@ -429,7 +430,7 @@
     box-shadow: 0 0 15px rgba(255, 239, 69, 0.3);
   }
 
-  .landing-cta-dual:hover {
+  .landing-cta-yellow:hover {
     background: rgba(255, 239, 69, 0.1);
     box-shadow: 0 0 25px rgba(255, 239, 69, 0.5);
     transform: translateY(-2px);
@@ -457,8 +458,8 @@
   }
 
   .landing-hero h1 {
-    font-family: 'Expletus Sans', system-ui, sans-serif;
-    font-weight: 600;
+    font-family: 'Chivo', system-ui, sans-serif;
+    font-weight: 700;
     font-size: clamp(42px, 6vw, 72px);
     letter-spacing: -0.5px;
     margin: 0 0 20px;
@@ -469,7 +470,7 @@
 
   .landing-hero h2,
   .landing-section h2 {
-    font-family: 'Expletus Sans', system-ui, sans-serif;
+    font-family: 'Chivo', system-ui, sans-serif;
     font-weight: 600;
     font-size: clamp(28px, 4vw, 48px);
     letter-spacing: -0.3px;

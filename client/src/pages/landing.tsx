@@ -1,8 +1,8 @@
 import triadBlueLockup from "@assets/triadblue-lockup.png";
-import businessBlueprintLockup from "@assets/businessblueprint-lockup.png";
-import hostsBlueLockup from "@assets/hostsblue-lockup.png";
-import swipesBlueLockup from "@assets/swipesblue-lockup.png";
-import consoleBlueLockup from "@assets/consoleblue-lockup.png";
+import businessBlueprintLogo from "@assets/Blueprint_Logo_1762989341853.png";
+import hostsBlueLogo from "@assets/HostsBlue Logo_1762989341854.png";
+import swipesBlueLogo from "@assets/SwipesBlue Logo_1762989341855.png";
+import consoleBlueLogo from "@assets/ConsoleBlue_1762989387897.png";
 import { Link } from "wouter";
 import { ArrowRight, CheckCircle2, Zap, Shield, Globe } from "lucide-react";
 
@@ -26,7 +26,7 @@ export default function Landing() {
             <a href="#faq">FAQ</a>
           </nav>
           <div className="landing-actions">
-            <Link href="/login" className="landing-cta" data-testid="link-dashboard-login">
+            <Link href="/login" className="landing-cta-green" data-testid="link-dashboard-login">
               Dashboard Login
             </Link>
           </div>
@@ -50,16 +50,16 @@ export default function Landing() {
           </div>
 
           <div className="landing-logo-row" style={{ justifyContent: 'center', marginTop: '48px' }}>
-            <img src={businessBlueprintLockup} alt="BusinessBlueprint.io - Digital IQ & Strategy Platform" />
-            <img src={hostsBlueLockup} alt="HostsBlue.com - Cloud Hosting Infrastructure" />
-            <img src={swipesBlueLockup} alt="SwipesBlue.com - Payment Processing Platform" />
+            <img src={businessBlueprintLogo} alt="BusinessBlueprint.io - Digital IQ & Strategy Platform" />
+            <img src={hostsBlueLogo} alt="HostsBlue.com - Cloud Hosting Infrastructure" />
+            <img src={swipesBlueLogo} alt="SwipesBlue.com - Payment Processing Platform" />
           </div>
 
           <div style={{ marginTop: '48px', display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
-            <a className="landing-cta-dual" href="https://businessblueprint.io" target="_blank" rel="noopener noreferrer">
+            <a className="landing-cta-yellow" href="https://businessblueprint.io" target="_blank" rel="noopener noreferrer">
               Start Your Blueprint
             </a>
-            <a className="landing-cta-dual" href="#platforms">
+            <a className="landing-cta-yellow" href="#platforms">
               Explore Platforms
             </a>
           </div>
@@ -115,7 +115,7 @@ export default function Landing() {
       {/* BusinessBlueprint Section */}
       <section id="blueprint" className="landing-section landing-container">
         <article className="landing-mod">
-          <img src={businessBlueprintLockup} alt="BusinessBlueprint.io Platform Dashboard" />
+          <img src={businessBlueprintLogo} alt="BusinessBlueprint.io Platform Dashboard" />
           <div>
             <h2>BusinessBlueprint.io<br />Diagnose & Prescribe</h2>
             <ul>
@@ -125,7 +125,7 @@ export default function Landing() {
               <li>Unified login with HostsBlue and SwipesBlue for seamless workflow</li>
             </ul>
             <div style={{ marginTop: '24px' }}>
-              <a className="landing-cta" href="https://businessblueprint.io" target="_blank" rel="noopener noreferrer">
+              <a className="landing-cta-green" href="https://businessblueprint.io" target="_blank" rel="noopener noreferrer">
                 Get Your Digital IQ™ Score
               </a>
             </div>
@@ -145,19 +145,19 @@ export default function Landing() {
               <li>Website deployment, management, and automated daily backups</li>
             </ul>
             <div style={{ marginTop: '24px' }}>
-              <a className="landing-cta" href="https://hostsblue.com" target="_blank" rel="noopener noreferrer">
+              <a className="landing-cta-green" href="https://hostsblue.com" target="_blank" rel="noopener noreferrer">
                 Launch Your Infrastructure
               </a>
             </div>
           </div>
-          <img src={hostsBlueLockup} alt="HostsBlue.com Hosting Platform" />
+          <img src={hostsBlueLogo} alt="HostsBlue.com Hosting Platform" />
         </article>
       </section>
 
       {/* SwipesBlue Section */}
       <section id="swipes" className="landing-section landing-container">
         <article className="landing-mod">
-          <img src={swipesBlueLockup} alt="SwipesBlue.com Payment Platform" />
+          <img src={swipesBlueLogo} alt="SwipesBlue.com Payment Platform" />
           <div>
             <h2>SwipesBlue.com<br />Simplify How You Get Paid</h2>
             <ul>
@@ -167,7 +167,7 @@ export default function Landing() {
               <li>Real-time analytics and seamless integration with BusinessBlueprint</li>
             </ul>
             <div style={{ marginTop: '24px' }}>
-              <a className="landing-cta" href="https://swipesblue.com" target="_blank" rel="noopener noreferrer">
+              <a className="landing-cta-green" href="https://swipesblue.com" target="_blank" rel="noopener noreferrer">
                 Start Accepting Payments
               </a>
             </div>
@@ -205,12 +205,12 @@ export default function Landing() {
               <li>Centralized command center for managing all your TriadBlue services</li>
             </ul>
             <div style={{ marginTop: '24px' }}>
-              <Link href="/login" className="landing-cta">
+              <Link href="/login" className="landing-cta-green">
                 Access ConsoleBlue Dashboard
               </Link>
             </div>
           </div>
-          <img src={consoleBlueLockup} alt="ConsoleBlue Development Platform" />
+          <img src={consoleBlueLogo} alt="ConsoleBlue Development Platform" />
         </article>
       </section>
 
@@ -287,9 +287,9 @@ export default function Landing() {
       <footer className="landing-footer">
         <div className="landing-container">
           <div className="landing-logo-row" style={{ justifyContent: 'center' }}>
-            <img src={businessBlueprintLockup} alt="BusinessBlueprint.io" />
-            <img src={hostsBlueLockup} alt="HostsBlue.com" />
-            <img src={swipesBlueLockup} alt="SwipesBlue.com" />
+            <img src={businessBlueprintLogo} alt="BusinessBlueprint.io" />
+            <img src={hostsBlueLogo} alt="HostsBlue.com" />
+            <img src={swipesBlueLogo} alt="SwipesBlue.com" />
           </div>
           <p style={{ marginTop: '24px', fontSize: '0.9rem' }}>
             © {currentYear} TriadBlue. PCI Compliant • SSL Secure • Cloud Hosting • NMI Powered
