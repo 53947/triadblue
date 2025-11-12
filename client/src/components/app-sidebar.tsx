@@ -11,15 +11,17 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { Link, useLocation } from "wouter";
-import { Home, FolderKanban, MessageSquare, Settings, Plus, Github, MessagesSquare, Clock, BarChart3, ListTodo } from "lucide-react";
+import { Home, FolderKanban, MessageSquare, Settings, Plus, Github, MessagesSquare, Clock, BarChart3, ListTodo, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { Project } from "@shared/schema";
 import triadBlueLogo from "@assets/Triad Blue Icon_1762915681862.png";
 import consoleBlueLogo from "@assets/Console_1762956063531.png";
+import { logout } from "@/lib/auth";
+import { useLocation as useWouterLocation } from "wouter";
 
 const navigation = [
-  { title: "Dashboard", url: "/", icon: Home },
+  { title: "Dashboard", url: "/dashboard", icon: Home },
   { title: "Tasks", url: "/tasks", icon: ListTodo },
   { title: "Projects", url: "/projects", icon: FolderKanban },
   { title: "Conversations", url: "/conversations", icon: MessageSquare },
@@ -37,6 +39,12 @@ interface AppSidebarProps {
 
 export function AppSidebar({ projects = [], onNewProject }: AppSidebarProps) {
   const [location] = useLocation();
+  const [, setWouterLocation] = useWouterLocation();
+
+  const handleLogout = () => {
+    logout();
+    setWouterLocation("/");
+  };
 
   return (
     <Sidebar data-testid="sidebar-main">
@@ -111,7 +119,16 @@ export function AppSidebar({ projects = [], onNewProject }: AppSidebarProps) {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4">
+      <SidebarFooter className="p-4 border-t space-y-2">
+        <Button 
+          variant="ghost" 
+          className="w-full justify-start" 
+          onClick={handleLogout}
+          data-testid="button-logout"
+        >
+          <LogOut className="w-4 h-4 mr-2" />
+          Logout
+        </Button>
         <div className="flex items-center gap-2 hover-elevate rounded-md p-2">
           <Avatar className="w-8 h-8">
             <AvatarFallback className="text-xs">ME</AvatarFallback>

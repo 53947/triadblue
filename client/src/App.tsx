@@ -8,6 +8,8 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { NotificationBell } from "@/components/notification-bell";
 import NotFound from "@/pages/not-found";
+import Landing from "@/pages/landing";
+import Login from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
 import Tasks from "@/pages/tasks";
 import Projects from "@/pages/projects";
@@ -15,6 +17,7 @@ import ProjectDetail from "@/pages/project-detail";
 import AgentChat from "@/pages/agent-chat";
 import ActivityTimeline from "@/pages/activity-timeline";
 import Analytics from "@/pages/analytics";
+import { ProtectedRoute } from "@/components/protected-route";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { CreateProjectModal } from "@/components/modals/create-project-modal";
@@ -23,10 +26,20 @@ import { useToast } from "@/hooks/use-toast";
 import type { Project } from "@shared/schema";
 import triadBlueLockup from "@assets/Triad Blue Lockup_1762915681863.png";
 
-function Router() {
+function PublicRouter() {
   return (
     <Switch>
-      <Route path="/" component={Dashboard} />
+      <Route path="/" component={Landing} />
+      <Route path="/login" component={Login} />
+      <Route component={NotFound} />
+    </Switch>
+  );
+}
+
+function ProtectedRouter() {
+  return (
+    <Switch>
+      <Route path="/dashboard" component={Dashboard} />
       <Route path="/tasks" component={Tasks} />
       <Route path="/projects" component={Projects} />
       <Route path="/project/:id" component={ProjectDetail} />
@@ -53,7 +66,7 @@ function Router() {
   );
 }
 
-function AppContent() {
+function ProtectedApp() {
   const { toast } = useToast();
   const [showCreateProjectModal, setShowCreateProjectModal] = useState(false);
   
@@ -105,7 +118,7 @@ function AppContent() {
             </div>
           </header>
           <main className="flex-1 overflow-auto">
-            <Router />
+            <ProtectedRouter />
           </main>
         </div>
       </div>
@@ -116,6 +129,20 @@ function AppContent() {
         onSubmit={handleCreateProject}
       />
     </SidebarProvider>
+  );
+}
+
+function AppContent() {
+  return (
+    <Switch>
+      <Route path="/" component={Landing} />
+      <Route path="/login" component={Login} />
+      <Route>
+        <ProtectedRoute>
+          <ProtectedApp />
+        </ProtectedRoute>
+      </Route>
+    </Switch>
   );
 }
 
