@@ -38,6 +38,8 @@ export default function DocumentationGenerator() {
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [selectedTemplates, setSelectedTemplates] = useState<string[]>([]);
   const [metadata, setMetadata] = useState<Record<string, any>>({});
+  const [metadataDisplay, setMetadataDisplay] = useState<Record<string, string>>({});
+  const [metadataErrors, setMetadataErrors] = useState<Record<string, string>>({});
 
   const { data: projects } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
@@ -81,12 +83,23 @@ export default function DocumentationGenerator() {
   useEffect(() => {
     setSelectedTemplates([]);
     setMetadata({});
+    setMetadataDisplay({});
+    setMetadataErrors({});
   }, [selectedProjectId]);
 
   useEffect(() => {
     if (configStatus === "success" && config && selectedProjectId) {
       setSelectedTemplates(config.selectedTemplates);
       setMetadata(config.metadata);
+      
+      const displayValues: Record<string, string> = {};
+      for (const [key, value] of Object.entries(config.metadata)) {
+        displayValues[key] = typeof value === 'string' 
+          ? value 
+          : JSON.stringify(value, null, 2);
+      }
+      setMetadataDisplay(displayValues);
+      setMetadataErrors({});
     }
   }, [config, configStatus, selectedProjectId]);
 
@@ -106,11 +119,74 @@ export default function DocumentationGenerator() {
     );
   };
 
+  const handleMetadataDisplayChange = (key: string, displayValue: string) => {
+    setMetadataDisplay({ ...metadataDisplay, [key]: displayValue });
+    setMetadataErrors({ ...metadataErrors, [key]: "" });
+  };
+
+  const handleMetadataBlur = (key: string) => {
+    const displayValue = metadataDisplay[key] || "";
+    const trimmed = displayValue.trim();
+    
+    if (!trimmed) {
+      setMetadata({ ...metadata, [key]: "" });
+      setMetadataErrors({ ...metadataErrors, [key]: "" });
+      return;
+    }
+    
+    const looksLikeJSON = trimmed.startsWith('[') || trimmed.startsWith('{');
+    
+    if (looksLikeJSON) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        
+        if (Array.isArray(parsed)) {
+          setMetadata({ ...metadata, [key]: parsed });
+          setMetadataErrors({ ...metadataErrors, [key]: "" });
+        } else if (typeof parsed === 'object' && parsed !== null) {
+          setMetadata({ ...metadata, [key]: parsed });
+          setMetadataErrors({ ...metadataErrors, [key]: "" });
+        } else {
+          setMetadata({ ...metadata, [key]: trimmed });
+          setMetadataErrors({ ...metadataErrors, [key]: "" });
+        }
+      } catch (e) {
+        setMetadataErrors({ 
+          ...metadataErrors, 
+          [key]: `Invalid JSON format. Please check syntax: ${(e as Error).message}` 
+        });
+      }
+    } else {
+      setMetadata({ ...metadata, [key]: trimmed });
+      setMetadataErrors({ ...metadataErrors, [key]: "" });
+    }
+  };
+
+  const hasMetadataErrors = Object.values(metadataErrors).some(error => error !== "");
+
   const handleSaveConfig = () => {
+    if (!selectedProjectId) return;
+    if (hasMetadataErrors) {
+      toast({
+        title: "Validation Error",
+        description: "Please fix invalid metadata fields before saving.",
+        variant: "destructive",
+      });
+      return;
+    }
     saveConfigMutation.mutate({ selectedTemplates, metadata });
   };
 
   const handleGenerate = () => {
+    if (!selectedProjectId) return;
+    if (hasMetadataErrors) {
+      toast({
+        title: "Validation Error",
+        description: "Please fix invalid metadata fields before generating.",
+        variant: "destructive",
+      });
+      return;
+    }
     generateMutation.mutate({ metadata });
   };
 
@@ -208,41 +284,63 @@ export default function DocumentationGenerator() {
                       <Label htmlFor="PROJECT_NAME">Project Name</Label>
                       <Input
                         id="PROJECT_NAME"
-                        value={metadata.PROJECT_NAME || ""}
-                        onChange={e => setMetadata({ ...metadata, PROJECT_NAME: e.target.value })}
+                        value={metadataDisplay.PROJECT_NAME || ""}
+                        onChange={e => handleMetadataDisplayChange("PROJECT_NAME", e.target.value)}
+                        onBlur={() => handleMetadataBlur("PROJECT_NAME")}
                         placeholder="ConsoleBlue"
                         data-testid="input-project-name"
                       />
+                      {metadataErrors.PROJECT_NAME && (
+                        <p className="text-sm text-destructive">{metadataErrors.PROJECT_NAME}</p>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="PROJECT_DESCRIPTION">Project Description</Label>
                       <Textarea
                         id="PROJECT_DESCRIPTION"
-                        value={metadata.PROJECT_DESCRIPTION || ""}
-                        onChange={e => setMetadata({ ...metadata, PROJECT_DESCRIPTION: e.target.value })}
+                        value={metadataDisplay.PROJECT_DESCRIPTION || ""}
+                        onChange={e => handleMetadataDisplayChange("PROJECT_DESCRIPTION", e.target.value)}
+                        onBlur={() => handleMetadataBlur("PROJECT_DESCRIPTION")}
                         placeholder="A unified task management and documentation hub"
                         data-testid="input-project-description"
                       />
+                      {metadataErrors.PROJECT_DESCRIPTION && (
+                        <p className="text-sm text-destructive">{metadataErrors.PROJECT_DESCRIPTION}</p>
+                      )}
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="FEATURES">Features (comma-separated)</Label>
+                      <Label htmlFor="FEATURES">
+                        Features
+                        <span className="text-xs text-muted-foreground ml-2">(JSON array format)</span>
+                      </Label>
                       <Textarea
                         id="FEATURES"
-                        value={metadata.FEATURES || ""}
-                        onChange={e => setMetadata({ ...metadata, FEATURES: e.target.value })}
-                        placeholder="Task tracking, GitHub integration, Documentation generator"
+                        value={metadataDisplay.FEATURES || ""}
+                        onChange={e => handleMetadataDisplayChange("FEATURES", e.target.value)}
+                        onBlur={() => handleMetadataBlur("FEATURES")}
+                        placeholder='["Task tracking", "GitHub integration", "Documentation generator"]'
                         data-testid="input-features"
                       />
+                      {metadataErrors.FEATURES && (
+                        <p className="text-sm text-destructive">{metadataErrors.FEATURES}</p>
+                      )}
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="TECH_STACK">Tech Stack (comma-separated)</Label>
+                      <Label htmlFor="TECH_STACK">
+                        Tech Stack
+                        <span className="text-xs text-muted-foreground ml-2">(JSON array format)</span>
+                      </Label>
                       <Textarea
                         id="TECH_STACK"
-                        value={metadata.TECH_STACK || ""}
-                        onChange={e => setMetadata({ ...metadata, TECH_STACK: e.target.value })}
-                        placeholder="React, TypeScript, Express, PostgreSQL"
+                        value={metadataDisplay.TECH_STACK || ""}
+                        onChange={e => handleMetadataDisplayChange("TECH_STACK", e.target.value)}
+                        onBlur={() => handleMetadataBlur("TECH_STACK")}
+                        placeholder='["React", "TypeScript", "Express", "PostgreSQL"]'
                         data-testid="input-tech-stack"
                       />
+                      {metadataErrors.TECH_STACK && (
+                        <p className="text-sm text-destructive">{metadataErrors.TECH_STACK}</p>
+                      )}
                     </div>
                   </div>
                 </CardContent>
