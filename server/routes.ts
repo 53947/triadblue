@@ -9,6 +9,7 @@ import { githubIssuesService } from "./github-issues";
 import { initializeSyncScheduler } from "./sync-scheduler";
 import { NotificationService } from "./notification";
 import { analyticsService } from "./analytics";
+import { templatingService } from "./templating";
 import { randomBytes, createHmac } from "crypto";
 import { z } from "zod";
 import { insertProjectSchema, insertTaskSchema, insertConversationSchema, insertGithubActivitySchema, insertApiKeySchema, insertAgentConnectionSchema, insertAgentChatMessageSchema, insertTaskTemplateSchema, insertConversationTemplateSchema } from "@shared/schema";
@@ -1238,6 +1239,187 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting conversation template:", error);
       res.status(500).json({ error: "Failed to delete conversation template" });
+    }
+  });
+
+  // ============= Documentation Generator API =============
+
+  app.get("/api/documentation/templates", authRequired, async (req, res) => {
+    try {
+      const templates = await storage.getDocumentationTemplates();
+      res.json(templates);
+    } catch (error) {
+      console.error("Error fetching documentation templates:", error);
+      res.status(500).json({ error: "Failed to fetch documentation templates" });
+    }
+  });
+
+  app.get("/api/documentation/templates/:id", authRequired, async (req, res) => {
+    try {
+      const template = await storage.getDocumentationTemplate(req.params.id);
+      if (!template) {
+        return res.status(404).json({ error: "Template not found" });
+      }
+      res.json(template);
+    } catch (error) {
+      console.error("Error fetching documentation template:", error);
+      res.status(500).json({ error: "Failed to fetch documentation template" });
+    }
+  });
+
+  app.get("/api/projects/:projectId/documentation/config", authRequired, async (req, res) => {
+    try {
+      const { projectId } = req.params;
+      const config = await storage.getProjectDocumentationConfig(projectId);
+      if (!config) {
+        return res.status(404).json({ error: "Documentation config not found" });
+      }
+      res.json(config);
+    } catch (error) {
+      console.error("Error fetching documentation config:", error);
+      res.status(500).json({ error: "Failed to fetch documentation config" });
+    }
+  });
+
+  app.post("/api/projects/:projectId/documentation/config", authRequired, async (req, res) => {
+    try {
+      const { projectId } = req.params;
+      const { selectedTemplates, metadata } = req.body;
+
+      if (!Array.isArray(selectedTemplates)) {
+        return res.status(400).json({ error: "selectedTemplates must be an array" });
+      }
+
+      const config = await storage.upsertProjectDocumentationConfig({
+        projectId,
+        selectedTemplates,
+        metadata: metadata || {},
+        createdById: "default-user",
+      });
+
+      res.json(config);
+    } catch (error) {
+      console.error("Error saving documentation config:", error);
+      res.status(500).json({ error: "Failed to save documentation config" });
+    }
+  });
+
+  app.get("/api/projects/:projectId/documentation/outputs", authRequired, async (req, res) => {
+    try {
+      const { projectId } = req.params;
+      const outputs = await storage.getProjectDocumentationOutputs(projectId);
+      res.json(outputs);
+    } catch (error) {
+      console.error("Error fetching documentation outputs:", error);
+      res.status(500).json({ error: "Failed to fetch documentation outputs" });
+    }
+  });
+
+  app.post("/api/projects/:projectId/documentation/generate", authRequired, async (req, res) => {
+    try {
+      const { projectId } = req.params;
+      const { metadata } = req.body;
+
+      if (!metadata || typeof metadata !== "object") {
+        return res.status(400).json({ error: "metadata object is required" });
+      }
+
+      const config = await storage.getProjectDocumentationConfig(projectId);
+      if (!config) {
+        return res.status(400).json({ error: "Documentation config not found. Please configure templates first." });
+      }
+
+      const allTemplates = await storage.getDocumentationTemplates();
+      const selectedTemplates = allTemplates.filter(t => 
+        config.selectedTemplates.includes(t.id)
+      );
+
+      if (selectedTemplates.length === 0) {
+        return res.status(400).json({ error: "No templates selected in configuration" });
+      }
+
+      const outputs = [];
+      const mergedMetadata = { ...config.metadata, ...metadata };
+
+      for (const template of selectedTemplates) {
+        const result = templatingService.render(
+          template.body,
+          mergedMetadata,
+          { detectMissingVariables: true }
+        );
+
+        if (!result.success) {
+          return res.status(500).json({
+            error: `Failed to render template ${template.label}`,
+            details: result.error,
+          });
+        }
+
+        const output = await storage.createProjectDocumentationOutput({
+          projectId,
+          templateId: template.id,
+          fileName: template.label,
+          content: result.output!,
+          metadata: mergedMetadata,
+          createdById: "default-user",
+        });
+
+        outputs.push({
+          ...output,
+          missingVariables: result.missingVariables,
+        });
+      }
+
+      res.json({
+        success: true,
+        outputs,
+        message: `Generated ${outputs.length} documentation files`,
+      });
+    } catch (error) {
+      console.error("Error generating documentation:", error);
+      res.status(500).json({ error: "Failed to generate documentation" });
+    }
+  });
+
+  app.post("/api/documentation/preview", authRequired, async (req, res) => {
+    try {
+      const { templateId, metadata } = req.body;
+
+      if (!templateId) {
+        return res.status(400).json({ error: "templateId is required" });
+      }
+
+      if (!metadata || typeof metadata !== "object") {
+        return res.status(400).json({ error: "metadata object is required" });
+      }
+
+      const template = await storage.getDocumentationTemplate(templateId);
+      if (!template) {
+        return res.status(404).json({ error: "Template not found" });
+      }
+
+      const result = templatingService.render(
+        template.body,
+        metadata,
+        { detectMissingVariables: true }
+      );
+
+      if (!result.success) {
+        return res.status(500).json({
+          error: "Failed to render template",
+          details: result.error,
+        });
+      }
+
+      res.json({
+        success: true,
+        output: result.output,
+        missingVariables: result.missingVariables,
+        extractedVariables: templatingService.extractVariables(template.body),
+      });
+    } catch (error) {
+      console.error("Error previewing documentation:", error);
+      res.status(500).json({ error: "Failed to preview documentation" });
     }
   });
 

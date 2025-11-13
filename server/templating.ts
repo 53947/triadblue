@@ -132,65 +132,8 @@ export class TemplatingService {
       const missingVariables: string[] = [];
 
       if (options.detectMissingVariables) {
-        const variablePattern = /\{\{\{?([^{}]+)\}\}\}?/g;
-        let match;
-        const requiredVars: string[] = [];
-        const seenVars = new Set<string>();
-
-        while ((match = variablePattern.exec(template)) !== null) {
-          const varExpression = match[1].trim();
-          
-          if (
-            varExpression.startsWith("/") || 
-            varExpression.startsWith("!") ||
-            varExpression === "else" ||
-            varExpression === "this" ||
-            varExpression.startsWith("@") ||
-            varExpression.startsWith("this.")
-          ) {
-            continue;
-          }
-
-          const parts = varExpression.split(/[\s.]/);
-          const firstToken = parts[0];
-          
-          if (varExpression.startsWith("#") || varExpression.startsWith("^")) {
-            const withoutPrefix = varExpression.substring(1).trim();
-            const blockParts = withoutPrefix.split(/[\s.]/);
-            const helperName = blockParts[0];
-            
-            if (this.builtInHelpers.has(helperName)) {
-              for (let i = 1; i < blockParts.length; i++) {
-                const arg = blockParts[i];
-                if (arg && arg !== "this" && !arg.startsWith("@") && !this.builtInHelpers.has(arg) && !seenVars.has(arg)) {
-                  requiredVars.push(arg);
-                  seenVars.add(arg);
-                }
-              }
-              continue;
-            } else {
-              if (!seenVars.has(helperName)) {
-                requiredVars.push(helperName);
-                seenVars.add(helperName);
-              }
-            }
-          } else if (this.builtInHelpers.has(firstToken)) {
-            for (let i = 1; i < parts.length; i++) {
-              const arg = parts[i];
-              if (arg && arg !== "this" && !arg.startsWith("@") && !arg.startsWith('"') && !arg.startsWith("'") && isNaN(Number(arg)) && !seenVars.has(arg)) {
-                requiredVars.push(arg);
-                seenVars.add(arg);
-              }
-            }
-          } else {
-            const rootVar = firstToken;
-            if (rootVar && rootVar !== "this" && !rootVar.startsWith("@") && !seenVars.has(rootVar)) {
-              requiredVars.push(rootVar);
-              seenVars.add(rootVar);
-            }
-          }
-        }
-
+        const requiredVars = this.extractVariables(template);
+        
         for (let i = 0; i < requiredVars.length; i++) {
           const varName = requiredVars[i];
           if (!(varName in data) || data[varName] === undefined || data[varName] === null) {
@@ -241,66 +184,47 @@ export class TemplatingService {
   }
 
   extractVariables(template: string): string[] {
-    const variablePattern = /\{\{\{?([^{}]+)\}\}\}?/g;
-    const variables: string[] = [];
-    const seen = new Set<string>();
-    let match;
+    try {
+      const ast = this.handlebars.parse(template);
+      const variables = new Set<string>();
 
-    while ((match = variablePattern.exec(template)) !== null) {
-      const varExpression = match[1].trim();
-      
-      if (
-        varExpression.startsWith("/") || 
-        varExpression.startsWith("!") ||
-        varExpression === "else" ||
-        varExpression === "this" ||
-        varExpression.startsWith("@") ||
-        varExpression.startsWith("this.")
-      ) {
-        continue;
-      }
+      const visit = (node: any) => {
+        if (!node) return;
 
-      const parts = varExpression.split(/[\s.]/);
-      const firstToken = parts[0];
-      
-      if (varExpression.startsWith("#") || varExpression.startsWith("^")) {
-        const withoutPrefix = varExpression.substring(1).trim();
-        const blockParts = withoutPrefix.split(/[\s.]/);
-        const helperName = blockParts[0];
-        
-        if (this.builtInHelpers.has(helperName)) {
-          for (let i = 1; i < blockParts.length; i++) {
-            const arg = blockParts[i];
-            if (arg && arg !== "this" && !arg.startsWith("@") && !this.builtInHelpers.has(arg) && !seen.has(arg)) {
-              variables.push(arg);
-              seen.add(arg);
+        if (node.type === "PathExpression" && node.data === false) {
+          const parts = node.parts || [];
+          if (parts.length > 0) {
+            const rootPart = parts[0];
+            if (rootPart !== "this" && !this.builtInHelpers.has(rootPart)) {
+              variables.add(rootPart);
             }
           }
-          continue;
-        } else {
-          if (!seen.has(helperName)) {
-            variables.push(helperName);
-            seen.add(helperName);
-          }
         }
-      } else if (this.builtInHelpers.has(firstToken)) {
-        for (let i = 1; i < parts.length; i++) {
-          const arg = parts[i];
-          if (arg && arg !== "this" && !arg.startsWith("@") && !arg.startsWith('"') && !arg.startsWith("'") && isNaN(Number(arg)) && !seen.has(arg)) {
-            variables.push(arg);
-            seen.add(arg);
-          }
-        }
-      } else {
-        const rootVar = firstToken;
-        if (rootVar && rootVar !== "this" && !rootVar.startsWith("@") && !seen.has(rootVar)) {
-          variables.push(rootVar);
-          seen.add(rootVar);
-        }
-      }
-    }
 
-    return variables;
+        if (node.type === "MustacheStatement" || node.type === "BlockStatement") {
+          if (node.path) visit(node.path);
+          if (node.params) {
+            for (const param of node.params) {
+              visit(param);
+            }
+          }
+        }
+
+        if (node.type === "Program" && node.body) {
+          for (const statement of node.body) {
+            visit(statement);
+          }
+        }
+
+        if (node.program) visit(node.program);
+        if (node.inverse) visit(node.inverse);
+      };
+
+      visit(ast);
+      return Array.from(variables);
+    } catch (error) {
+      return [];
+    }
   }
 }
 
