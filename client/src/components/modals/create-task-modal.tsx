@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import type { Project } from "@shared/schema";
+import { VoiceInput } from "@/components/voice-input";
 
 interface CreateTaskModalProps {
   open: boolean;
@@ -81,24 +82,38 @@ export function CreateTaskModal({
 
           <div>
             <Label htmlFor="task-title">Task Title</Label>
-            <Input
-              id="task-title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Fix login bug"
-              required
-              className="text-lg"
-              data-testid="input-task-title"
-            />
+            <div className="flex gap-2">
+              <Input
+                id="task-title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Fix login bug or speak..."
+                required
+                className="text-lg"
+                data-testid="input-task-title"
+              />
+              <VoiceInput
+                onTranscript={(text) => setTitle(prev => prev ? `${prev} ${text}` : text)}
+                variant="outline"
+                size="icon"
+              />
+            </div>
           </div>
 
           <div>
-            <Label htmlFor="task-description">Description</Label>
+            <Label htmlFor="task-description" className="flex items-center justify-between">
+              <span>Description</span>
+              <VoiceInput
+                onTranscript={(text) => setDescription(prev => prev ? `${prev} ${text}` : text)}
+                variant="ghost"
+                size="sm"
+              />
+            </Label>
             <Textarea
               id="task-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe the task in detail..."
+              placeholder="Describe the task in detail or use voice..."
               rows={4}
               data-testid="input-task-description"
             />

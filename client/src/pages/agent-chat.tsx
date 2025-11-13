@@ -15,6 +15,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertAgentConnectionSchema } from "@shared/schema";
 import { Plus, Send, Bot, User, MessagesSquare } from "lucide-react";
 import { z } from "zod";
+import { VoiceInput } from "@/components/voice-input";
 
 const formSchema = insertAgentConnectionSchema.extend({
   projectId: z.string(),
@@ -293,7 +294,7 @@ export default function AgentChat() {
                 <Input
                   value={messageInput}
                   onChange={(e) => setMessageInput(e.target.value)}
-                  placeholder="Type your message..."
+                  placeholder="Type your message or use voice..."
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
                       e.preventDefault();
@@ -302,6 +303,11 @@ export default function AgentChat() {
                   }}
                   disabled={sendMessageMutation.isPending}
                   data-testid="input-message"
+                />
+                <VoiceInput
+                  onTranscript={(text) => setMessageInput(prev => prev ? `${prev} ${text}` : text)}
+                  variant="outline"
+                  size="icon"
                 />
                 <Button
                   onClick={handleSendMessage}
