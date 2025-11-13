@@ -43,7 +43,7 @@ Preferred communication style: Simple, everyday language.
 - **Task Templates:** Project-specific and global templates for pre-populating task creation forms.
 - **Conversation Templates:** Backend-only API for project-specific and global conversation templates, ready for frontend integration.
 - **Task Status Sync Back:** Bidirectional task update synchronization to source projects via HTTP API with configurable sync behavior, retry logic, and UI indicators.
-- **Project Documentation Generator:** Handlebars-based templating system with 9 seeded templates (README, replit.md, architecture, standards, etc.), metadata-driven generation, AST-based variable extraction, preview rendering, ZIP export support, and optional GitHub integration. Backend API complete with template listing, project config management, documentation generation, and preview endpoints.
+- **Project Documentation Generator:** Complete Handlebars-based documentation system with multi-step wizard UI. Features include 9 seeded templates (README.md, replit.md, ARCHITECTURE.md, CODING_STANDARDS.md, etc.), dynamic metadata form with JSON type detection, AST-based variable extraction, live preview rendering with missing variable warnings, atomic configuration upsert, ZIP export with fetch/Blob download, and GitHub push integration with enhanced error handling for protected branches. Full backend API with template listing, config persistence, generation, preview, export, and GitHub push endpoints. Frontend implements project selection, template selection with categories, type-aware metadata inputs, real-time preview, save/generate/export/push workflows with proper loading states and error handling.
 
 ## External Dependencies
 
