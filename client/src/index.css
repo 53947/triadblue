@@ -622,14 +622,16 @@
   }
 
   .landing-pill {
-    background: rgba(0, 0, 255, 0.1);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.08));
     padding: 20px 32px;
     border-radius: 8px;
     text-align: center;
     font-weight: 600;
     color: #0000FF;
-    border: 1px solid rgba(0, 0, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.25);
     font-size: 1.1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
   }
 
   .landing-faq {
