@@ -19,6 +19,7 @@ import ActivityTimeline from "@/pages/activity-timeline";
 import Analytics from "@/pages/analytics";
 import DocumentationGenerator from "@/pages/documentation-generator";
 import AssetManagement from "@/pages/asset-management";
+import Conversations from "@/pages/conversations";
 import { ProtectedRoute } from "@/components/protected-route";
 import { DynamicFavicon } from "@/components/dynamic-favicon";
 import { useQuery } from "@tanstack/react-query";
@@ -51,11 +52,7 @@ function ProtectedRouter() {
       <Route path="/analytics" component={Analytics} />
       <Route path="/documentation" component={DocumentationGenerator} />
       <Route path="/assets" component={AssetManagement} />
-      <Route path="/conversations">
-        <div className="p-8 text-center text-muted-foreground">
-          Conversations page - Coming soon
-        </div>
-      </Route>
+      <Route path="/conversations" component={Conversations} />
       <Route path="/github">
         <div className="p-8 text-center text-muted-foreground">
           GitHub Activity page - Coming soon
