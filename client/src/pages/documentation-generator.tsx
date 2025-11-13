@@ -40,6 +40,7 @@ export default function DocumentationGenerator() {
   const [metadata, setMetadata] = useState<Record<string, any>>({});
   const [metadataDisplay, setMetadataDisplay] = useState<Record<string, string>>({});
   const [metadataErrors, setMetadataErrors] = useState<Record<string, string>>({});
+  const [previewTemplateId, setPreviewTemplateId] = useState<string>("");
 
   const { data: projects } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
@@ -80,12 +81,38 @@ export default function DocumentationGenerator() {
     },
   });
 
+  const { data: previewData, isLoading: isPreviewLoading, error: previewError } = useQuery<{
+    success: boolean;
+    output: string;
+    missingVariables: string[];
+    extractedVariables: string[];
+  } | null>({
+    queryKey: ["/api/documentation/preview", previewTemplateId, metadata],
+    queryFn: async () => {
+      if (!previewTemplateId) return null;
+      const response = await apiRequest("POST", "/api/documentation/preview", {
+        templateId: previewTemplateId,
+        metadata,
+      });
+      return await response.json();
+    },
+    enabled: !!previewTemplateId,
+    retry: false,
+  });
+
   useEffect(() => {
     setSelectedTemplates([]);
     setMetadata({});
     setMetadataDisplay({});
     setMetadataErrors({});
+    setPreviewTemplateId("");
   }, [selectedProjectId]);
+
+  useEffect(() => {
+    if (previewTemplateId && !selectedTemplates.includes(previewTemplateId)) {
+      setPreviewTemplateId("");
+    }
+  }, [selectedTemplates, previewTemplateId]);
 
   useEffect(() => {
     if (configStatus === "success" && config && selectedProjectId) {
@@ -345,6 +372,67 @@ export default function DocumentationGenerator() {
                   </div>
                 </CardContent>
               </Card>
+
+              {selectedTemplates.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Preview</CardTitle>
+                    <CardDescription>Select a template to preview the generated output</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Select value={previewTemplateId} onValueChange={setPreviewTemplateId}>
+                      <SelectTrigger data-testid="select-preview-template">
+                        <SelectValue placeholder="Select a template to preview" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {templates
+                          ?.filter(t => selectedTemplates.includes(t.id))
+                          .map(template => (
+                            <SelectItem key={template.id} value={template.id}>
+                              {template.label}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+
+                    {previewTemplateId && (
+                      <div className="space-y-3">
+                        {isPreviewLoading && (
+                          <div className="flex items-center justify-center py-8">
+                            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                          </div>
+                        )}
+
+                        {previewError && (
+                          <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3">
+                            <p className="text-sm font-medium text-destructive">
+                              Failed to load preview: {(previewError as Error).message}
+                            </p>
+                          </div>
+                        )}
+
+                        {!isPreviewLoading && !previewError && previewData && previewData.success && (
+                          <>
+                            {previewData.missingVariables && previewData.missingVariables.length > 0 && (
+                              <div className="rounded-md bg-yellow-500/10 border border-yellow-500/20 p-3">
+                                <p className="text-sm font-medium text-yellow-600 dark:text-yellow-500">
+                                  Missing Variables: {previewData.missingVariables.join(", ")}
+                                </p>
+                              </div>
+                            )}
+
+                            <div className="rounded-md border bg-muted/50">
+                              <pre className="p-4 text-sm overflow-x-auto" data-testid="preview-output">
+                                <code>{previewData.output}</code>
+                              </pre>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
 
               <div className="flex gap-3">
                 <Button
