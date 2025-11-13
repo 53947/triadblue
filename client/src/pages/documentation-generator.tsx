@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { FileText, Loader2, CheckCircle2, Download } from "lucide-react";
+import { FileText, Loader2, CheckCircle2, Download, FileArchive } from "lucide-react";
 
 interface DocumentationTemplate {
   id: string;
@@ -215,6 +215,52 @@ export default function DocumentationGenerator() {
       return;
     }
     generateMutation.mutate({ metadata });
+  };
+
+  const handleExportZip = async () => {
+    if (!selectedProjectId) return;
+    
+    try {
+      const exportUrl = `/api/projects/${selectedProjectId}/documentation/export`;
+      const response = await fetch(exportUrl, { credentials: "include" });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        const errorData = errorText ? JSON.parse(errorText) : {};
+        toast({
+          title: "Export failed",
+          description: errorData.error || "Failed to export documentation. Please generate documentation first.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const blob = await response.blob();
+      const contentDisposition = response.headers.get("Content-Disposition");
+      const filenameMatch = contentDisposition?.match(/filename="(.+)"/);
+      const filename = filenameMatch?.[1] || `documentation-${new Date().toISOString().split('T')[0]}.zip`;
+      
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Documentation exported",
+        description: `Downloaded ${filename}`,
+      });
+    } catch (error) {
+      console.error("Export error:", error);
+      toast({
+        title: "Export failed",
+        description: "An error occurred while exporting documentation.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -465,10 +511,19 @@ export default function DocumentationGenerator() {
                     </>
                   ) : (
                     <>
-                      <Download className="w-4 h-4 mr-2" />
+                      <FileText className="w-4 h-4 mr-2" />
                       Generate Documentation
                     </>
                   )}
+                </Button>
+                <Button
+                  onClick={handleExportZip}
+                  variant="secondary"
+                  disabled={!selectedProjectId}
+                  data-testid="button-export-zip"
+                >
+                  <FileArchive className="w-4 h-4 mr-2" />
+                  Export to ZIP
                 </Button>
               </div>
             </>

@@ -11,6 +11,7 @@ import { NotificationService } from "./notification";
 import { analyticsService } from "./analytics";
 import { templatingService } from "./templating";
 import { randomBytes, createHmac } from "crypto";
+import AdmZip from "adm-zip";
 import { z } from "zod";
 import { insertProjectSchema, insertTaskSchema, insertConversationSchema, insertGithubActivitySchema, insertApiKeySchema, insertAgentConnectionSchema, insertAgentChatMessageSchema, insertTaskTemplateSchema, insertConversationTemplateSchema } from "@shared/schema";
 import { authRequired, constantTimeCompare, type AuthRequest } from "./auth";
@@ -1397,6 +1398,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error generating documentation:", error);
       res.status(500).json({ error: "Failed to generate documentation" });
+    }
+  });
+
+  app.get("/api/projects/:projectId/documentation/export", authRequired, async (req, res) => {
+    try {
+      const { projectId } = req.params;
+
+      const outputs = await storage.getProjectDocumentationOutputs(projectId);
+
+      if (outputs.length === 0) {
+        return res.status(404).json({ error: "No documentation outputs found. Please generate documentation first." });
+      }
+
+      const zip = new AdmZip();
+
+      for (const output of outputs) {
+        zip.addFile(output.fileName, Buffer.from(output.content, "utf-8"));
+      }
+
+      const zipBuffer = zip.toBuffer();
+
+      const project = await storage.getProject(projectId);
+      const projectName = project?.name || "project";
+      const timestamp = new Date().toISOString().split('T')[0];
+      const zipFileName = `${projectName}-documentation-${timestamp}.zip`;
+
+      res.setHeader("Content-Type", "application/zip");
+      res.setHeader("Content-Disposition", `attachment; filename="${zipFileName}"`);
+      res.setHeader("Content-Length", zipBuffer.length);
+      res.send(zipBuffer);
+    } catch (error) {
+      console.error("Error exporting documentation:", error);
+      res.status(500).json({ error: "Failed to export documentation" });
     }
   });
 
