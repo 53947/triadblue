@@ -48,12 +48,6 @@ export default function Landing() {
             <span className="landing-badge"><Globe size={16} style={{ display: 'inline', marginRight: '6px' }} />Built for SMBs</span>
           </div>
 
-          <div className="landing-logo-row" style={{ justifyContent: 'center', marginTop: '48px' }}>
-            <img src={businessBlueprintLogo} alt="BusinessBlueprint.io - Digital IQ & Strategy Platform" />
-            <img src={hostsBlueLogo} alt="HostsBlue.com - Cloud Hosting Infrastructure" />
-            <img src={swipesBlueLogo} alt="SwipesBlue.com - Payment Processing Platform" />
-          </div>
-
           <div style={{ marginTop: '48px', display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
             <a className="landing-cta-yellow" href="https://businessblueprint.io" target="_blank" rel="noopener noreferrer">
               Start Your Blueprint
@@ -78,7 +72,9 @@ export default function Landing() {
         
         <div className="landing-cards" style={{ marginTop: '48px' }}>
           <article className="landing-card">
-            <h3>BusinessBlueprint.io</h3>
+            <a href="https://businessblueprint.io" target="_blank" rel="noopener noreferrer" style={{ display: 'block', marginBottom: '20px' }}>
+              <img src={businessBlueprintLogo} alt="BusinessBlueprint.io" style={{ height: '50px', width: 'auto' }} />
+            </a>
             <p>
               Diagnose and prescribe your path to growth with a comprehensive Digital IQ™ score and custom strategic blueprint tailored to your business.
             </p>
@@ -88,7 +84,9 @@ export default function Landing() {
           </article>
 
           <article className="landing-card">
-            <h3>HostsBlue.com</h3>
+            <a href="https://hostsblue.com" target="_blank" rel="noopener noreferrer" style={{ display: 'block', marginBottom: '20px' }}>
+              <img src={hostsBlueLogo} alt="HostsBlue.com" style={{ height: '50px', width: 'auto' }} />
+            </a>
             <p>
               Fast, secure cloud infrastructure—domains, SSL certificates, email, and hosting with one-click deployment and automated backups.
             </p>
@@ -98,7 +96,9 @@ export default function Landing() {
           </article>
 
           <article className="landing-card">
-            <h3>SwipesBlue.com</h3>
+            <a href="https://swipesblue.com" target="_blank" rel="noopener noreferrer" style={{ display: 'block', marginBottom: '20px' }}>
+              <img src={swipesBlueLogo} alt="SwipesBlue.com" style={{ height: '50px', width: 'auto' }} />
+            </a>
             <p>
               Embedded payment processing online and in-person—subscriptions, invoices, and real-time tracking with PCI-compliant security.
             </p>
