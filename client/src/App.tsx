@@ -17,6 +17,7 @@ import ProjectDetail from "@/pages/project-detail";
 import AgentChat from "@/pages/agent-chat";
 import ActivityTimeline from "@/pages/activity-timeline";
 import Analytics from "@/pages/analytics";
+import DocumentationGenerator from "@/pages/documentation-generator";
 import { ProtectedRoute } from "@/components/protected-route";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -46,6 +47,7 @@ function ProtectedRouter() {
       <Route path="/agent-chat" component={AgentChat} />
       <Route path="/timeline" component={ActivityTimeline} />
       <Route path="/analytics" component={Analytics} />
+      <Route path="/documentation" component={DocumentationGenerator} />
       <Route path="/conversations">
         <div className="p-8 text-center text-muted-foreground">
           Conversations page - Coming soon

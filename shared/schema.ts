@@ -236,8 +236,11 @@ export const projectDocumentationOutputs = pgTable("project_documentation_output
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   projectId: varchar("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
   configId: varchar("config_id").notNull().references(() => projectDocumentationConfigs.id, { onDelete: "cascade" }),
-  templateKey: text("template_key").notNull(), // Which template was rendered
-  renderedBody: text("rendered_body").notNull(), // Final rendered content
+  templateKey: text("template_key").notNull(), // Immutable template identifier for historical fidelity
+  fileName: text("file_name").notNull(), // Output file name for ZIP export
+  content: text("content").notNull(), // Rendered documentation content
+  metadata: text("metadata").notNull().default('{}'), // JSON snapshot of generation-time metadata
+  createdById: varchar("created_by_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   renderedAt: timestamp("rendered_at").notNull().defaultNow(),
   githubCommitSha: text("github_commit_sha"), // If pushed to GitHub
 });

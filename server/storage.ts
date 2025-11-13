@@ -159,6 +159,7 @@ export interface IStorage {
   getProjectDocumentationConfig(id: string): Promise<ProjectDocumentationConfig | undefined>;
   createProjectDocumentationConfig(config: InsertProjectDocumentationConfig): Promise<ProjectDocumentationConfig>;
   updateProjectDocumentationConfig(id: string, updates: Partial<InsertProjectDocumentationConfig>): Promise<ProjectDocumentationConfig | undefined>;
+  upsertProjectDocumentationConfig(config: InsertProjectDocumentationConfig): Promise<ProjectDocumentationConfig>;
   deleteProjectDocumentationConfig(id: string): Promise<void>;
 
   // Project Documentation Outputs
@@ -602,6 +603,22 @@ export class DatabaseStorage implements IStorage {
       .where(eq(projectDocumentationConfigs.id, id))
       .returning();
     return config || undefined;
+  }
+
+  async upsertProjectDocumentationConfig(insertConfig: InsertProjectDocumentationConfig): Promise<ProjectDocumentationConfig> {
+    const [config] = await db
+      .insert(projectDocumentationConfigs)
+      .values(insertConfig)
+      .onConflictDoUpdate({
+        target: projectDocumentationConfigs.projectId,
+        set: {
+          metadata: insertConfig.metadata,
+          selectedTemplates: insertConfig.selectedTemplates,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return config;
   }
 
   async deleteProjectDocumentationConfig(id: string): Promise<void> {

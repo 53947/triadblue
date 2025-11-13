@@ -1270,11 +1270,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/projects/:projectId/documentation/config", authRequired, async (req, res) => {
     try {
       const { projectId } = req.params;
-      const config = await storage.getProjectDocumentationConfig(projectId);
-      if (!config) {
+      const configs = await storage.getProjectDocumentationConfigs(projectId);
+      if (configs.length === 0) {
         return res.status(404).json({ error: "Documentation config not found" });
       }
-      res.json(config);
+      const config = configs[0];
+      res.json({
+        ...config,
+        metadata: JSON.parse(config.metadata),
+      });
     } catch (error) {
       console.error("Error fetching documentation config:", error);
       res.status(500).json({ error: "Failed to fetch documentation config" });
@@ -1290,14 +1294,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "selectedTemplates must be an array" });
       }
 
+      if (metadata && typeof metadata !== "object") {
+        return res.status(400).json({ error: "metadata must be an object" });
+      }
+
       const config = await storage.upsertProjectDocumentationConfig({
         projectId,
         selectedTemplates,
-        metadata: metadata || {},
+        metadata: JSON.stringify(metadata || {}),
         createdById: "default-user",
       });
 
-      res.json(config);
+      res.json({
+        ...config,
+        metadata: JSON.parse(config.metadata),
+      });
     } catch (error) {
       console.error("Error saving documentation config:", error);
       res.status(500).json({ error: "Failed to save documentation config" });
@@ -1308,7 +1319,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { projectId } = req.params;
       const outputs = await storage.getProjectDocumentationOutputs(projectId);
-      res.json(outputs);
+      res.json(outputs.map(output => ({
+        ...output,
+        metadata: JSON.parse(output.metadata),
+      })));
     } catch (error) {
       console.error("Error fetching documentation outputs:", error);
       res.status(500).json({ error: "Failed to fetch documentation outputs" });
@@ -1324,10 +1338,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "metadata object is required" });
       }
 
-      const config = await storage.getProjectDocumentationConfig(projectId);
-      if (!config) {
+      const configs = await storage.getProjectDocumentationConfigs(projectId);
+      if (configs.length === 0) {
         return res.status(400).json({ error: "Documentation config not found. Please configure templates first." });
       }
+
+      const config = configs[0];
+      const configMetadata = JSON.parse(config.metadata);
 
       const allTemplates = await storage.getDocumentationTemplates();
       const selectedTemplates = allTemplates.filter(t => 
@@ -1339,7 +1356,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const outputs = [];
-      const mergedMetadata = { ...config.metadata, ...metadata };
+      const mergedMetadata = { ...configMetadata, ...metadata };
 
       for (const template of selectedTemplates) {
         const result = templatingService.render(
@@ -1357,15 +1374,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         const output = await storage.createProjectDocumentationOutput({
           projectId,
-          templateId: template.id,
+          configId: config.id,
+          templateKey: template.key,
           fileName: template.label,
           content: result.output!,
-          metadata: mergedMetadata,
+          metadata: JSON.stringify(mergedMetadata),
           createdById: "default-user",
         });
 
         outputs.push({
           ...output,
+          metadata: mergedMetadata,
           missingVariables: result.missingVariables,
         });
       }

@@ -2,7 +2,7 @@
 
 ## Overview
 
-ConsoleBlue is a unified, password-protected task management and documentation hub designed to manage multiple Replit projects. It features a public landing page for the TriadBlue ecosystem (BusinessBlueprint, HostsBlue, SwipesBlue) and acts as a command center for tracking tasks, conversations, GitHub activity, and project data. The system includes AI-powered conversation extraction for action items and API key-based integration for external projects. It follows a dark-first design aesthetic with fluorescent blue accents, Archivo typography, and is built as a full-stack web application with React and Express.js, drawing inspiration from Linear, Notion, and GitHub for productivity and information density.
+ConsoleBlue is a unified, password-protected task management and documentation hub designed to manage multiple Replit projects. It features a public landing page for the TriadBlue ecosystem (BusinessBlueprint, HostsBlue, SwipesBlue) and acts as a command center for tracking tasks, conversations, GitHub activity, and project data. The system includes AI-powered conversation extraction for action items, API key-based integration for external projects, and a Project Documentation Generator for creating standardized documentation using Handlebars templates. It follows a dark-first design aesthetic with fluorescent blue accents, Archivo typography, and is built as a full-stack web application with React and Express.js, drawing inspiration from Linear, Notion, and GitHub for productivity and information density.
 
 ## User Preferences
 
@@ -43,6 +43,7 @@ Preferred communication style: Simple, everyday language.
 - **Task Templates:** Project-specific and global templates for pre-populating task creation forms.
 - **Conversation Templates:** Backend-only API for project-specific and global conversation templates, ready for frontend integration.
 - **Task Status Sync Back:** Bidirectional task update synchronization to source projects via HTTP API with configurable sync behavior, retry logic, and UI indicators.
+- **Project Documentation Generator:** Handlebars-based templating system with 9 seeded templates (README, replit.md, architecture, standards, etc.), metadata-driven generation, AST-based variable extraction, preview rendering, ZIP export support, and optional GitHub integration. Backend API complete with template listing, project config management, documentation generation, and preview endpoints.
 
 ## External Dependencies
 
