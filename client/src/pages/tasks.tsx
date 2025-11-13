@@ -80,7 +80,16 @@ export default function Tasks() {
             Manage all your tasks across projects
           </p>
         </div>
-        <Button onClick={() => setShowTaskModal(true)} data-testid="button-create-task">
+        <Button 
+          onClick={() => setShowTaskModal(true)} 
+          data-testid="button-create-task"
+          variant="outline"
+          style={{
+            borderColor: '#FF44CC',
+            color: '#FF44CC',
+            background: 'transparent'
+          }}
+        >
           <Plus className="w-4 h-4 mr-2" />
           New Task
         </Button>
