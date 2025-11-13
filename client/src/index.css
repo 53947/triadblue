@@ -591,6 +591,12 @@
     margin-top: 14px;
   }
 
+  .landing-mod > div {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
   .landing-mod img {
     max-width: 100%;
     height: auto;

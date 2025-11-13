@@ -134,7 +134,8 @@ export default function Landing() {
 
       {/* HostsBlue Section */}
       <section id="hosts" className="landing-section landing-container">
-        <article className="landing-mod" style={{ gridTemplateColumns: '1fr 420px' }}>
+        <article className="landing-mod">
+          <img src={hostsBlueLogo} alt="HostsBlue.com Hosting Platform" />
           <div>
             <h2>HostsBlue.com<br />Power Your Presence</h2>
             <ul>
@@ -149,7 +150,6 @@ export default function Landing() {
               </a>
             </div>
           </div>
-          <img src={hostsBlueLogo} alt="HostsBlue.com Hosting Platform" />
         </article>
       </section>
 
@@ -194,7 +194,8 @@ export default function Landing() {
 
       {/* ConsoleBlue Section */}
       <section id="console" className="landing-section landing-container">
-        <article className="landing-mod" style={{ gridTemplateColumns: '1fr 420px' }}>
+        <article className="landing-mod">
+          <img src={consoleBlueLogo} alt="ConsoleBlue Development Platform" />
           <div>
             <h2>ConsoleBlue<br />Where New Platforms Are Born</h2>
             <ul>
@@ -209,7 +210,6 @@ export default function Landing() {
               </Link>
             </div>
           </div>
-          <img src={consoleBlueLogo} alt="ConsoleBlue Development Platform" />
         </article>
       </section>
 
