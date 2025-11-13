@@ -206,6 +206,42 @@ export const projectPermissions = pgTable("project_permissions", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Documentation Templates - stores template definitions (README, replit.md, etc.)
+export const documentationTemplates = pgTable("documentation_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  key: text("key").notNull().unique(), // 'readme', 'replit', 'architecture', etc.
+  label: text("label").notNull(), // Human-readable name
+  description: text("description"),
+  body: text("body").notNull(), // Template content with {{VARIABLES}}
+  category: text("category").notNull().default("core"), // 'core', 'brand_pack', 'optional'
+  isSystem: boolean("is_system").notNull().default(false), // System templates are protected
+  createdById: varchar("created_by_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Project Documentation Configs - stores metadata for generating project docs
+export const projectDocumentationConfigs = pgTable("project_documentation_configs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  projectId: varchar("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }).unique(),
+  metadata: text("metadata").notNull(), // JSON string with all variables (PROJECT_NAME, PLATFORMS[], etc.)
+  selectedTemplates: text("selected_templates").array().notNull().default(sql`ARRAY[]::text[]`), // Template keys to generate
+  createdById: varchar("created_by_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Project Documentation Outputs - stores generated documentation history
+export const projectDocumentationOutputs = pgTable("project_documentation_outputs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  projectId: varchar("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  configId: varchar("config_id").notNull().references(() => projectDocumentationConfigs.id, { onDelete: "cascade" }),
+  templateKey: text("template_key").notNull(), // Which template was rendered
+  renderedBody: text("rendered_body").notNull(), // Final rendered content
+  renderedAt: timestamp("rendered_at").notNull().defaultNow(),
+  githubCommitSha: text("github_commit_sha"), // If pushed to GitHub
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   createdProjects: many(projects),
@@ -228,6 +264,8 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   permissions: many(projectPermissions),
   taskTemplates: many(taskTemplates),
   conversationTemplates: many(conversationTemplates),
+  documentationConfig: one(projectDocumentationConfigs),
+  documentationOutputs: many(projectDocumentationOutputs),
 }));
 
 export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
@@ -318,6 +356,36 @@ export const conversationTemplatesRelations = relations(conversationTemplates, (
   createdBy: one(users, {
     fields: [conversationTemplates.createdById],
     references: [users.id],
+  }),
+}));
+
+export const documentationTemplatesRelations = relations(documentationTemplates, ({ one }) => ({
+  createdBy: one(users, {
+    fields: [documentationTemplates.createdById],
+    references: [users.id],
+  }),
+}));
+
+export const projectDocumentationConfigsRelations = relations(projectDocumentationConfigs, ({ one, many }) => ({
+  project: one(projects, {
+    fields: [projectDocumentationConfigs.projectId],
+    references: [projects.id],
+  }),
+  createdBy: one(users, {
+    fields: [projectDocumentationConfigs.createdById],
+    references: [users.id],
+  }),
+  outputs: many(projectDocumentationOutputs),
+}));
+
+export const projectDocumentationOutputsRelations = relations(projectDocumentationOutputs, ({ one }) => ({
+  project: one(projects, {
+    fields: [projectDocumentationOutputs.projectId],
+    references: [projects.id],
+  }),
+  config: one(projectDocumentationConfigs, {
+    fields: [projectDocumentationOutputs.configId],
+    references: [projectDocumentationConfigs.id],
   }),
 }));
 
@@ -443,3 +511,29 @@ export const insertConversationTemplateSchema = createInsertSchema(conversationT
 });
 export type InsertConversationTemplate = z.infer<typeof insertConversationTemplateSchema>;
 export type ConversationTemplate = typeof conversationTemplates.$inferSelect;
+
+// Documentation schemas
+export const insertDocumentationTemplateSchema = createInsertSchema(documentationTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  createdById: true,
+});
+export type InsertDocumentationTemplate = z.infer<typeof insertDocumentationTemplateSchema>;
+export type DocumentationTemplate = typeof documentationTemplates.$inferSelect;
+
+export const insertProjectDocumentationConfigSchema = createInsertSchema(projectDocumentationConfigs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  createdById: true,
+});
+export type InsertProjectDocumentationConfig = z.infer<typeof insertProjectDocumentationConfigSchema>;
+export type ProjectDocumentationConfig = typeof projectDocumentationConfigs.$inferSelect;
+
+export const insertProjectDocumentationOutputSchema = createInsertSchema(projectDocumentationOutputs).omit({
+  id: true,
+  renderedAt: true,
+});
+export type InsertProjectDocumentationOutput = z.infer<typeof insertProjectDocumentationOutputSchema>;
+export type ProjectDocumentationOutput = typeof projectDocumentationOutputs.$inferSelect;
