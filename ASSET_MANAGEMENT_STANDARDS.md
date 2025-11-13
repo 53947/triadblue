@@ -98,17 +98,61 @@ GET    /uploads/:filename   - Serve asset file (static route)
 2. Inject `<link rel="icon">` dynamically in HTML head
 3. Update favicon when user uploads a new one
 
-**Implementation:**
+**Implementation (React/Client-Side):**
 ```typescript
-// Server-side (Express middleware or SSR)
-app.get('*', async (req, res, next) => {
-  const activeFavicon = await storage.getActiveAsset('favicon');
-  // Inject into HTML template or set header
-  res.locals.faviconPath = activeFavicon?.filename 
-    ? `/uploads/${activeFavicon.filename}` 
-    : '/default-favicon.ico';
-  next();
-});
+// client/src/components/dynamic-favicon.tsx
+import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import type { Asset } from "@shared/schema";
+import { checkAuth } from "@/lib/auth";
+
+export function DynamicFavicon() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    checkAuth().then(setIsAuthenticated);
+  }, []);
+
+  const { data: assets = [] } = useQuery<Asset[]>({
+    queryKey: ["/api/assets"],
+    enabled: isAuthenticated,
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+
+  const activeFavicon = assets.find(
+    (asset) => asset.type === "favicon" && asset.isActive
+  );
+
+  useEffect(() => {
+    let link = document.querySelector<HTMLLinkElement>("link[rel='icon']");
+    
+    if (!link) {
+      link = document.createElement("link");
+      link.rel = "icon";
+      link.type = "image/png";
+      document.head.appendChild(link);
+    }
+
+    if (activeFavicon) {
+      link.href = `/uploads/${activeFavicon.filename}`;
+      link.type = activeFavicon.mimeType || "image/png";
+    } else {
+      // Use /favicon.png, not /favicon.ico
+      link.href = "/favicon.png";
+      link.type = "image/png";
+    }
+  }, [activeFavicon]);
+
+  return null;
+}
+```
+
+**Key Points:**
+- Default fallback is `/favicon.png` (stored in `client/public/`)
+- Set `type` attribute to match file MIME type (`image/png`, `image/svg+xml`, `image/x-icon`)
+- Only fetch assets API when authenticated to avoid 401 errors on public pages
+- Place a default `favicon.png` in `client/public/` directory
 ```
 
 ---
@@ -217,7 +261,8 @@ Refer to **ConsoleBlue** as the reference implementation:
 - `server/storage.ts` - Asset CRUD operations
 - `server/routes.ts` - Upload API with multer
 - `client/src/pages/asset-management.tsx` - Upload UI
-- `client/index.html` - Dynamic favicon injection
+- `client/src/components/dynamic-favicon.tsx` - Dynamic favicon injection component
+- `client/public/favicon.png` - Default favicon (white background for dark browser themes)
 
 ---
 
