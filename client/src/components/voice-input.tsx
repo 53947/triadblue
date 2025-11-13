@@ -25,7 +25,17 @@ export function VoiceInput({
   const [isListening, setIsListening] = useState(false);
   const [isSupported, setIsSupported] = useState(true);
   const recognitionRef = useRef<any>(null);
+  const onTranscriptRef = useRef(onTranscript);
+  const onInterimTranscriptRef = useRef(onInterimTranscript);
   const { toast } = useToast();
+
+  useEffect(() => {
+    onTranscriptRef.current = onTranscript;
+  }, [onTranscript]);
+
+  useEffect(() => {
+    onInterimTranscriptRef.current = onInterimTranscript;
+  }, [onInterimTranscript]);
 
   useEffect(() => {
     const SpeechRecognition =
@@ -54,12 +64,12 @@ export function VoiceInput({
         }
       }
 
-      if (finalTranscript) {
-        onTranscript(finalTranscript.trim());
+      if (finalTranscript && onTranscriptRef.current) {
+        onTranscriptRef.current(finalTranscript.trim());
       }
 
-      if (interimTranscript && onInterimTranscript) {
-        onInterimTranscript(interimTranscript);
+      if (interimTranscript && onInterimTranscriptRef.current) {
+        onInterimTranscriptRef.current(interimTranscript);
       }
     };
 
@@ -100,7 +110,7 @@ export function VoiceInput({
         recognitionRef.current.stop();
       }
     };
-  }, [continuous, language, onTranscript, onInterimTranscript, toast]);
+  }, [continuous, language, toast]);
 
   const toggleListening = () => {
     if (!recognitionRef.current) return;
@@ -168,7 +178,17 @@ export function VoiceInputButton({
   const [isListening, setIsListening] = useState(false);
   const [isSupported, setIsSupported] = useState(true);
   const recognitionRef = useRef<any>(null);
+  const onTranscriptRef = useRef(onTranscript);
+  const onInterimTranscriptRef = useRef(onInterimTranscript);
   const { toast } = useToast();
+
+  useEffect(() => {
+    onTranscriptRef.current = onTranscript;
+  }, [onTranscript]);
+
+  useEffect(() => {
+    onInterimTranscriptRef.current = onInterimTranscript;
+  }, [onInterimTranscript]);
 
   useEffect(() => {
     const SpeechRecognition =
@@ -197,12 +217,12 @@ export function VoiceInputButton({
         }
       }
 
-      if (finalTranscript) {
-        onTranscript(finalTranscript.trim());
+      if (finalTranscript && onTranscriptRef.current) {
+        onTranscriptRef.current(finalTranscript.trim());
       }
 
-      if (interimTranscript && onInterimTranscript) {
-        onInterimTranscript(interimTranscript);
+      if (interimTranscript && onInterimTranscriptRef.current) {
+        onInterimTranscriptRef.current(interimTranscript);
       }
     };
 
@@ -239,7 +259,7 @@ export function VoiceInputButton({
         recognitionRef.current.stop();
       }
     };
-  }, [continuous, language, onTranscript, onInterimTranscript, toast]);
+  }, [continuous, language, toast]);
 
   const toggleListening = () => {
     if (!recognitionRef.current) return;
