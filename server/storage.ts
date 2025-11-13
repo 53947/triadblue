@@ -167,6 +167,7 @@ export interface IStorage {
   getProjectDocumentationOutputsByConfig(configId: string): Promise<ProjectDocumentationOutput[]>;
   getProjectDocumentationOutput(id: string): Promise<ProjectDocumentationOutput | undefined>;
   createProjectDocumentationOutput(output: InsertProjectDocumentationOutput): Promise<ProjectDocumentationOutput>;
+  updateProjectDocumentationOutput(id: string, updates: Partial<InsertProjectDocumentationOutput>): Promise<ProjectDocumentationOutput | undefined>;
   deleteProjectDocumentationOutput(id: string): Promise<void>;
 }
 
@@ -647,6 +648,14 @@ export class DatabaseStorage implements IStorage {
   async createProjectDocumentationOutput(insertOutput: InsertProjectDocumentationOutput): Promise<ProjectDocumentationOutput> {
     const [output] = await db.insert(projectDocumentationOutputs).values(insertOutput).returning();
     return output;
+  }
+
+  async updateProjectDocumentationOutput(id: string, updates: Partial<InsertProjectDocumentationOutput>): Promise<ProjectDocumentationOutput | undefined> {
+    const [output] = await db.update(projectDocumentationOutputs)
+      .set(updates)
+      .where(eq(projectDocumentationOutputs.id, id))
+      .returning();
+    return output || undefined;
   }
 
   async deleteProjectDocumentationOutput(id: string): Promise<void> {

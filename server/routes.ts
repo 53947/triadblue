@@ -6,6 +6,7 @@ import { syncGitHubActivity } from "./github";
 import { agentService } from "./agent";
 import { activityService } from "./activity";
 import { githubIssuesService } from "./github-issues";
+import { githubDocsService } from "./github-docs";
 import { initializeSyncScheduler } from "./sync-scheduler";
 import { NotificationService } from "./notification";
 import { analyticsService } from "./analytics";
@@ -1431,6 +1432,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error exporting documentation:", error);
       res.status(500).json({ error: "Failed to export documentation" });
+    }
+  });
+
+  app.post("/api/projects/:projectId/documentation/push-to-github", authRequired, async (req, res) => {
+    try {
+      const { projectId } = req.params;
+      const { targetPath = "docs/" } = req.body;
+
+      const project = await storage.getProject(projectId);
+      if (!project) {
+        return res.status(404).json({ error: "Project not found" });
+      }
+
+      if (!project.githubRepo) {
+        return res.status(400).json({ 
+          error: "Project does not have a GitHub repository configured. Please configure a repository in project settings." 
+        });
+      }
+
+      const outputs = await storage.getProjectDocumentationOutputs(projectId);
+      if (outputs.length === 0) {
+        return res.status(400).json({ 
+          error: "No documentation outputs found. Please generate documentation first." 
+        });
+      }
+
+      const commit = await githubDocsService.pushDocumentation(outputs, project, targetPath);
+
+      for (const output of outputs) {
+        await storage.updateProjectDocumentationOutput(output.id, {
+          githubCommitSha: commit.sha,
+        });
+      }
+
+      res.json({
+        success: true,
+        commit: {
+          sha: commit.sha,
+          url: commit.html_url,
+          message: commit.commit.message,
+        },
+        filesCount: outputs.length,
+        repository: project.githubRepo,
+        branch: project.githubBranch || "main",
+        targetPath,
+      });
+    } catch (error: any) {
+      console.error("Error pushing documentation to GitHub:", error);
+      res.status(500).json({ 
+        error: error.message || "Failed to push documentation to GitHub" 
+      });
     }
   });
 

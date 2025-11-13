@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { FileText, Loader2, CheckCircle2, Download, FileArchive } from "lucide-react";
+import { FileText, Loader2, CheckCircle2, Download, FileArchive, Github } from "lucide-react";
 
 interface DocumentationTemplate {
   id: string;
@@ -261,6 +261,33 @@ export default function DocumentationGenerator() {
         variant: "destructive",
       });
     }
+  };
+
+  const pushToGithubMutation = useMutation({
+    mutationFn: async ({ targetPath }: { targetPath?: string }) => {
+      const response = await apiRequest("POST", `/api/projects/${selectedProjectId}/documentation/push-to-github`, {
+        targetPath: targetPath || "docs/",
+      });
+      return response;
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: "Documentation pushed to GitHub",
+        description: `Pushed ${data.filesCount} file${data.filesCount !== 1 ? "s" : ""} to ${data.repository}:${data.branch}`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "GitHub push failed",
+        description: error.message || "Failed to push documentation to GitHub",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handlePushToGithub = () => {
+    if (!selectedProjectId) return;
+    pushToGithubMutation.mutate({ targetPath: "docs/" });
   };
 
   return (
@@ -524,6 +551,24 @@ export default function DocumentationGenerator() {
                 >
                   <FileArchive className="w-4 h-4 mr-2" />
                   Export to ZIP
+                </Button>
+                <Button
+                  onClick={handlePushToGithub}
+                  variant="outline"
+                  disabled={pushToGithubMutation.isPending || !selectedProjectId}
+                  data-testid="button-push-github"
+                >
+                  {pushToGithubMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Pushing...
+                    </>
+                  ) : (
+                    <>
+                      <Github className="w-4 h-4 mr-2" />
+                      Push to GitHub
+                    </>
+                  )}
                 </Button>
               </div>
             </>
