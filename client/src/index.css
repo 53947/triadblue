@@ -396,22 +396,22 @@
   /* Green button style */
   .landing-cta-green {
     display: inline-block;
-    padding: 0.85rem 1.5rem;
+    padding: 0.5rem 1rem;
     border-radius: 6px;
-    background: transparent;
-    border: 2px solid #00FF40;
+    background: rgba(0, 255, 64, 0.08);
+    border: none;
     color: #00FF40;
     font-weight: 600;
     letter-spacing: 0.3px;
     text-decoration: none;
     transition: all 0.3s;
-    box-shadow: 0 0 15px rgba(0, 255, 64, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 255, 64, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
 
   .landing-cta-green:hover {
-    background: rgba(0, 255, 64, 0.1);
-    box-shadow: 0 0 25px rgba(0, 255, 64, 0.5);
-    transform: translateY(-2px);
+    background: rgba(0, 255, 64, 0.15);
+    box-shadow: 0 4px 12px rgba(0, 255, 64, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
     text-decoration: none;
   }
 
