@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { extractActionItemsFromConversation } from "./ai";
@@ -11,11 +11,17 @@ import { initializeSyncScheduler } from "./sync-scheduler";
 import { NotificationService } from "./notification";
 import { analyticsService } from "./analytics";
 import { templatingService } from "./templating";
-import { randomBytes, createHmac } from "crypto";
+import { randomBytes, createHmac, randomUUID } from "crypto";
 import AdmZip from "adm-zip";
 import { z } from "zod";
-import { insertProjectSchema, insertTaskSchema, insertConversationSchema, insertGithubActivitySchema, insertApiKeySchema, insertAgentConnectionSchema, insertAgentChatMessageSchema, insertTaskTemplateSchema, insertConversationTemplateSchema } from "@shared/schema";
+import { insertProjectSchema, insertTaskSchema, insertConversationSchema, insertGithubActivitySchema, insertApiKeySchema, insertAgentConnectionSchema, insertAgentChatMessageSchema, insertTaskTemplateSchema, insertConversationTemplateSchema, insertAssetSchema } from "@shared/schema";
 import { authRequired, constantTimeCompare, type AuthRequest } from "./auth";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+import { promisify } from "util";
+
+const unlinkAsync = promisify(fs.unlink);
 
 // Helper function to create HMAC signature for webhook payloads
 function createHmacSignature(payload: string, secret: string): string {
@@ -1525,6 +1531,174 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error previewing documentation:", error);
       res.status(500).json({ error: "Failed to preview documentation" });
+    }
+  });
+
+  // ============= Assets API =============
+
+  // Configure multer for file uploads
+  const ALLOWED_MIME_TYPES = [
+    'image/png',
+    'image/svg+xml',
+    'image/x-icon',
+    'image/vnd.microsoft.icon',
+    'image/webp',
+  ];
+  
+  const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+
+  const upload = multer({
+    storage: multer.diskStorage({
+      destination: (req, file, cb) => {
+        cb(null, 'uploads/');
+      },
+      filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname);
+        const safeFilename = `${randomUUID()}${ext}`;
+        cb(null, safeFilename);
+      },
+    }),
+    fileFilter: (req, file, cb) => {
+      if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+        return cb(new Error(`Invalid file type. Allowed: PNG, SVG, ICO, WEBP`));
+      }
+      cb(null, true);
+    },
+    limits: {
+      fileSize: MAX_FILE_SIZE,
+    },
+  });
+
+  // Serve uploaded assets
+  app.use('/uploads', express.static('uploads'));
+
+  // Upload new asset
+  app.post("/api/assets", authRequired, upload.single('file'), async (req: any, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      const { type, projectId } = req.body;
+
+      if (!type) {
+        await unlinkAsync(req.file.path);
+        return res.status(400).json({ error: "Asset type is required" });
+      }
+
+      const validTypes = ['favicon', 'logo', 'image'];
+      if (!validTypes.includes(type)) {
+        await unlinkAsync(req.file.path);
+        return res.status(400).json({ error: "Invalid asset type. Must be: favicon, logo, or image" });
+      }
+
+      const authReq = req as AuthRequest;
+      const userId = authReq.session?.user?.id || 'system';
+
+      const asset = await storage.saveAsset({
+        type,
+        projectId: projectId || null,
+        filename: req.file.filename,
+        originalFilename: req.file.originalname,
+        mimeType: req.file.mimetype,
+        size: req.file.size,
+        isActive: false,
+        uploadedById: userId,
+      });
+
+      res.json(asset);
+    } catch (error: any) {
+      if (req.file) {
+        try {
+          await unlinkAsync(req.file.path);
+        } catch (e) {
+          console.error("Failed to delete uploaded file after error:", e);
+        }
+      }
+      console.error("Error uploading asset:", error);
+      res.status(500).json({ error: error.message || "Failed to upload asset" });
+    }
+  });
+
+  // List assets
+  app.get("/api/assets", authRequired, async (req, res) => {
+    try {
+      const { type, projectId } = req.query;
+      
+      const parsedProjectId = projectId === 'null' ? null : projectId === undefined ? undefined : String(projectId);
+      
+      const assets = await storage.listAssets(
+        type ? String(type) : undefined,
+        parsedProjectId
+      );
+      
+      res.json(assets);
+    } catch (error) {
+      console.error("Error listing assets:", error);
+      res.status(500).json({ error: "Failed to list assets" });
+    }
+  });
+
+  // Get single asset
+  app.get("/api/assets/:id", authRequired, async (req, res) => {
+    try {
+      const asset = await storage.getAsset(req.params.id);
+      
+      if (!asset) {
+        return res.status(404).json({ error: "Asset not found" });
+      }
+      
+      res.json(asset);
+    } catch (error) {
+      console.error("Error getting asset:", error);
+      res.status(500).json({ error: "Failed to get asset" });
+    }
+  });
+
+  // Set asset as active
+  app.patch("/api/assets/:id/activate", authRequired, async (req, res) => {
+    try {
+      const asset = await storage.getAsset(req.params.id);
+      
+      if (!asset) {
+        return res.status(404).json({ error: "Asset not found" });
+      }
+
+      await storage.setActiveAsset(req.params.id);
+      
+      const updatedAsset = await storage.getAsset(req.params.id);
+      res.json(updatedAsset);
+    } catch (error: any) {
+      console.error("Error activating asset:", error);
+      res.status(500).json({ error: error.message || "Failed to activate asset" });
+    }
+  });
+
+  // Delete asset
+  app.delete("/api/assets/:id", authRequired, async (req, res) => {
+    try {
+      const asset = await storage.getAsset(req.params.id);
+      
+      if (!asset) {
+        return res.status(404).json({ error: "Asset not found" });
+      }
+
+      const filePath = path.join('uploads', asset.filename);
+      
+      try {
+        if (fs.existsSync(filePath)) {
+          await unlinkAsync(filePath);
+        }
+      } catch (fileError) {
+        console.error("Failed to delete file from disk:", fileError);
+      }
+
+      await storage.deleteAsset(req.params.id);
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting asset:", error);
+      res.status(500).json({ error: "Failed to delete asset" });
     }
   });
 

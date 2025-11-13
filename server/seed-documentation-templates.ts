@@ -75,6 +75,33 @@ export async function seedDocumentationTemplates(createdById: string) {
 ## Contact
 
 {{CONTACT_INFO}}
+
+## Asset Management
+
+This application includes a built-in Asset Management system accessible from the authenticated dashboard.
+
+### Upload Favicon
+
+1. Navigate to Settings → Asset Management (or Asset Management page)
+2. Click "Upload Favicon"
+3. Select an ICO, PNG, or SVG file (max 2MB)
+4. Preview and confirm
+5. Favicon updates immediately in browser tabs
+
+### Upload Company Logo
+
+1. Navigate to Settings → Asset Management
+2. Click "Upload Logo"
+3. Select a PNG or SVG file (max 2MB)
+4. Set as active to display in header
+5. Logo updates across the application
+
+### File Storage
+
+- Assets stored in \`/uploads\` directory (or Replit App Storage for production)
+- Metadata tracked in PostgreSQL \`assets\` table
+- Served via \`/uploads/:filename\` route
+- All uploads require authentication
 `,
       createdById,
     },
@@ -142,6 +169,20 @@ export async function seedDocumentationTemplates(createdById: string) {
 ## Development Guidelines
 
 {{DEVELOPMENT_GUIDELINES}}
+
+## Asset Management (MANDATORY)
+
+**All TriadBlue ecosystem applications MUST include asset upload functionality from day one.**
+
+- Build upload interface in dashboard for favicon and company logos
+- Implement backend API with file validation (PNG/SVG/ICO/WEBP, max 2MB)
+- Store assets in database with metadata tracking
+- Enable dynamic favicon injection (no hardcoded favicon in HTML)
+- Support logo management in headers/widgets via API
+
+**Reference**: See ASSET_MANAGEMENT_STANDARDS.md for complete implementation guide.
+
+**Non-negotiable**: Projects without asset upload capability are incomplete.
 
 ## Recent Changes
 
@@ -336,6 +377,52 @@ export async function seedDocumentationTemplates(createdById: string) {
 ## Security Guidelines
 
 {{SECURITY_GUIDELINES}}
+
+## Asset Management Requirements (MANDATORY)
+
+**This is a required deliverable for all TriadBlue ecosystem applications.**
+
+### Requirements
+
+You MUST implement a complete asset upload interface from day one:
+
+1. **Asset Upload Dashboard Page**
+   - Upload form for favicon (ICO, PNG, SVG, WEBP, max 2MB)
+   - Upload form for company logos (PNG, SVG, WEBP, max 2MB)
+   - File validation and preview functionality
+   - Replace/delete controls for existing assets
+
+2. **Backend Implementation**
+   - Assets table in database (id, type, filename, mimeType, size, uploadedAt, isActive)
+   - File upload API using multer middleware
+   - Storage in \`/uploads\` directory or Replit App Storage
+   - Authentication required for all asset operations
+
+3. **Dynamic Favicon Injection**
+   - Query database for active favicon
+   - Inject \`<link rel="icon">\` dynamically in HTML head
+   - NO hardcoded favicon in index.html
+
+4. **Logo Integration**
+   - Header/widget logos fetched from API
+   - Support fallback to default logo
+   - Auto-refresh when new logo activated
+
+### Acceptance Criteria
+
+- [ ] Asset Management page exists in authenticated dashboard
+- [ ] User can upload favicon and see it immediately in browser tab
+- [ ] User can upload company logo and see it in header/widgets
+- [ ] File validation prevents invalid formats and oversized files
+- [ ] Preview functionality works before confirming upload
+- [ ] Delete/replace operations work correctly
+- [ ] No hardcoded image imports for favicon or primary logos
+- [ ] All asset operations require authentication
+- [ ] Success/error feedback is clear to user
+
+**Reference Implementation**: See ConsoleBlue project for complete example.
+
+**Non-compliance**: Projects without asset upload functionality are incomplete.
 `,
       createdById,
     },
@@ -624,6 +711,37 @@ A: {{this.answer}}
 ## Getting Help
 
 {{GETTING_HELP_GUIDE}}
+
+## Asset Management Setup (MANDATORY)
+
+**This must be completed as part of initial development - not deferred.**
+
+### Quick Setup Checklist
+
+- [ ] **Database Schema**: Add \`assets\` table to \`shared/schema.ts\`
+- [ ] **Storage Layer**: Add asset CRUD methods to \`server/storage.ts\`
+- [ ] **Install Multer**: Run packager tool to install multer for file uploads
+- [ ] **API Routes**: Implement upload/list/delete endpoints in \`server/routes.ts\`
+- [ ] **Create /uploads**: Make directory and configure static serving
+- [ ] **Dashboard UI**: Build Asset Management page with upload forms
+- [ ] **Dynamic Favicon**: Implement injection based on active asset in database
+- [ ] **Test Upload Flow**: Upload favicon, verify browser tab icon updates
+- [ ] **Test Logo Flow**: Upload logo, verify header/widget display
+
+### Why This Matters
+
+Users should NEVER need to edit code to change a favicon or company logo. The upload interface is a core feature, not optional. This is standard for all TriadBlue ecosystem applications.
+
+### Reference
+
+See **ConsoleBlue** project implementation:
+- \`shared/schema.ts\` - Assets table definition
+- \`server/storage.ts\` - Asset CRUD operations  
+- \`server/routes.ts\` - Upload API with multer
+- \`client/src/pages/asset-management.tsx\` - Upload UI
+- \`client/index.html\` - Dynamic favicon injection
+
+For complete standards, see **ASSET_MANAGEMENT_STANDARDS.md** in the repository root.
 `,
       createdById,
     },

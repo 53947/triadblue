@@ -245,12 +245,34 @@ export const projectDocumentationOutputs = pgTable("project_documentation_output
   githubCommitSha: text("github_commit_sha"), // If pushed to GitHub
 });
 
+// Assets - stores uploaded files (favicons, logos, images)
+export const assets = pgTable("assets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  projectId: varchar("project_id").references(() => projects.id, { onDelete: "cascade" }), // Nullable for global assets, set for project-specific branding
+  type: varchar("type", { length: 50 }).notNull(), // 'favicon', 'logo', 'image'
+  filename: varchar("filename", { length: 255 }).notNull(), // Safe filename with extension (server-generated UUID-based)
+  originalFilename: varchar("original_filename", { length: 255 }).notNull(), // Original user-provided name
+  mimeType: varchar("mime_type", { length: 100 }).notNull(), // 'image/png', 'image/svg+xml', etc.
+  size: integer("size").notNull(), // File size in bytes
+  isActive: boolean("is_active").notNull().default(false), // Only one active per type+project
+  uploadedById: varchar("uploaded_by_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  uploadedAt: timestamp("uploaded_at").notNull().defaultNow(),
+}, (table) => ({
+  // Ensure only one active asset per type+project combination (coalescing NULL to sentinel handles global assets)
+  uniqueActiveAsset: sql`create unique index if not exists "assets_unique_active_idx" on ${table} ("type", coalesce("project_id",'00000000-0000-0000-0000-000000000000')) where "is_active" = true`,
+  // Index for filtering by type
+  typeIdx: sql`create index if not exists "assets_type_idx" on ${table} ("type", "uploaded_at" desc)`,
+  // Index for audit/user lookup
+  uploadedByIdx: sql`create index if not exists "assets_uploaded_by_idx" on ${table} ("uploaded_by_id", "uploaded_at" desc)`,
+}));
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   createdProjects: many(projects),
   assignedTasks: many(tasks),
   conversations: many(conversations),
   projectPermissions: many(projectPermissions),
+  uploadedAssets: many(assets),
 }));
 
 export const projectsRelations = relations(projects, ({ one, many }) => ({
@@ -389,6 +411,17 @@ export const projectDocumentationOutputsRelations = relations(projectDocumentati
   config: one(projectDocumentationConfigs, {
     fields: [projectDocumentationOutputs.configId],
     references: [projectDocumentationConfigs.id],
+  }),
+}));
+
+export const assetsRelations = relations(assets, ({ one }) => ({
+  uploadedBy: one(users, {
+    fields: [assets.uploadedById],
+    references: [users.id],
+  }),
+  project: one(projects, {
+    fields: [assets.projectId],
+    references: [projects.id],
   }),
 }));
 
@@ -538,3 +571,11 @@ export const insertProjectDocumentationOutputSchema = createInsertSchema(project
 });
 export type InsertProjectDocumentationOutput = z.infer<typeof insertProjectDocumentationOutputSchema>;
 export type ProjectDocumentationOutput = typeof projectDocumentationOutputs.$inferSelect;
+
+// Asset schemas
+export const insertAssetSchema = createInsertSchema(assets).omit({
+  id: true,
+  uploadedAt: true,
+});
+export type InsertAsset = z.infer<typeof insertAssetSchema>;
+export type Asset = typeof assets.$inferSelect;

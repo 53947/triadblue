@@ -17,6 +17,7 @@ import {
   documentationTemplates,
   projectDocumentationConfigs,
   projectDocumentationOutputs,
+  assets,
   type User,
   type InsertUser,
   type Project,
@@ -51,6 +52,8 @@ import {
   type InsertProjectDocumentationConfig,
   type ProjectDocumentationOutput,
   type InsertProjectDocumentationOutput,
+  type Asset,
+  type InsertAsset,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, isNull } from "drizzle-orm";
@@ -169,6 +172,14 @@ export interface IStorage {
   createProjectDocumentationOutput(output: InsertProjectDocumentationOutput): Promise<ProjectDocumentationOutput>;
   updateProjectDocumentationOutput(id: string, updates: Partial<InsertProjectDocumentationOutput>): Promise<ProjectDocumentationOutput | undefined>;
   deleteProjectDocumentationOutput(id: string): Promise<void>;
+
+  // Assets
+  saveAsset(asset: InsertAsset): Promise<Asset>;
+  listAssets(type?: string, projectId?: string | null): Promise<Asset[]>;
+  getAsset(id: string): Promise<Asset | undefined>;
+  getActiveAsset(type: string, projectId?: string | null): Promise<Asset | undefined>;
+  setActiveAsset(id: string): Promise<void>; // Atomically sets this asset as active, deactivates all others of same type+project
+  deleteAsset(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -660,6 +671,86 @@ export class DatabaseStorage implements IStorage {
 
   async deleteProjectDocumentationOutput(id: string): Promise<void> {
     await db.delete(projectDocumentationOutputs).where(eq(projectDocumentationOutputs.id, id));
+  }
+
+  // Assets
+  async saveAsset(insertAsset: InsertAsset): Promise<Asset> {
+    const [asset] = await db.insert(assets).values(insertAsset).returning();
+    return asset;
+  }
+
+  async listAssets(type?: string, projectId?: string | null): Promise<Asset[]> {
+    let query = db.select().from(assets);
+    
+    const conditions = [];
+    if (type) {
+      conditions.push(eq(assets.type, type));
+    }
+    if (projectId !== undefined) {
+      if (projectId === null) {
+        conditions.push(isNull(assets.projectId));
+      } else {
+        conditions.push(eq(assets.projectId, projectId));
+      }
+    }
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+    
+    return await query.orderBy(desc(assets.uploadedAt));
+  }
+
+  async getAsset(id: string): Promise<Asset | undefined> {
+    const [asset] = await db.select().from(assets).where(eq(assets.id, id));
+    return asset || undefined;
+  }
+
+  async getActiveAsset(type: string, projectId?: string | null): Promise<Asset | undefined> {
+    const conditions = [
+      eq(assets.type, type),
+      eq(assets.isActive, true),
+    ];
+    
+    if (projectId !== undefined) {
+      if (projectId === null) {
+        conditions.push(isNull(assets.projectId));
+      } else {
+        conditions.push(eq(assets.projectId, projectId));
+      }
+    }
+    
+    const [asset] = await db.select().from(assets)
+      .where(and(...conditions));
+    return asset || undefined;
+  }
+
+  async setActiveAsset(id: string): Promise<void> {
+    await db.transaction(async (tx) => {
+      const [targetAsset] = await tx.select().from(assets).where(eq(assets.id, id));
+      if (!targetAsset) {
+        throw new Error('Asset not found');
+      }
+
+      const conditions = [eq(assets.type, targetAsset.type)];
+      if (targetAsset.projectId) {
+        conditions.push(eq(assets.projectId, targetAsset.projectId));
+      } else {
+        conditions.push(isNull(assets.projectId));
+      }
+
+      await tx.update(assets)
+        .set({ isActive: false })
+        .where(and(...conditions));
+
+      await tx.update(assets)
+        .set({ isActive: true })
+        .where(eq(assets.id, id));
+    });
+  }
+
+  async deleteAsset(id: string): Promise<void> {
+    await db.delete(assets).where(eq(assets.id, id));
   }
 }
 

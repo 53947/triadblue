@@ -18,7 +18,9 @@ import AgentChat from "@/pages/agent-chat";
 import ActivityTimeline from "@/pages/activity-timeline";
 import Analytics from "@/pages/analytics";
 import DocumentationGenerator from "@/pages/documentation-generator";
+import AssetManagement from "@/pages/asset-management";
 import { ProtectedRoute } from "@/components/protected-route";
+import { DynamicFavicon } from "@/components/dynamic-favicon";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { CreateProjectModal } from "@/components/modals/create-project-modal";
@@ -48,6 +50,7 @@ function ProtectedRouter() {
       <Route path="/timeline" component={ActivityTimeline} />
       <Route path="/analytics" component={Analytics} />
       <Route path="/documentation" component={DocumentationGenerator} />
+      <Route path="/assets" component={AssetManagement} />
       <Route path="/conversations">
         <div className="p-8 text-center text-muted-foreground">
           Conversations page - Coming soon
@@ -136,15 +139,18 @@ function ProtectedApp() {
 
 function AppContent() {
   return (
-    <Switch>
-      <Route path="/" component={Landing} />
-      <Route path="/login" component={Login} />
-      <Route>
-        <ProtectedRoute>
-          <ProtectedApp />
-        </ProtectedRoute>
-      </Route>
-    </Switch>
+    <>
+      <DynamicFavicon />
+      <Switch>
+        <Route path="/" component={Landing} />
+        <Route path="/login" component={Login} />
+        <Route>
+          <ProtectedRoute>
+            <ProtectedApp />
+          </ProtectedRoute>
+        </Route>
+      </Switch>
+    </>
   );
 }
 
