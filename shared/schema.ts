@@ -517,7 +517,6 @@ export const insertDocumentationTemplateSchema = createInsertSchema(documentatio
   id: true,
   createdAt: true,
   updatedAt: true,
-  createdById: true,
 });
 export type InsertDocumentationTemplate = z.infer<typeof insertDocumentationTemplateSchema>;
 export type DocumentationTemplate = typeof documentationTemplates.$inferSelect;
@@ -526,7 +525,6 @@ export const insertProjectDocumentationConfigSchema = createInsertSchema(project
   id: true,
   createdAt: true,
   updatedAt: true,
-  createdById: true,
 });
 export type InsertProjectDocumentationConfig = z.infer<typeof insertProjectDocumentationConfigSchema>;
 export type ProjectDocumentationConfig = typeof projectDocumentationConfigs.$inferSelect;

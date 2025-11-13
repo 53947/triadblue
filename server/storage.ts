@@ -14,6 +14,9 @@ import {
   notificationPreferences,
   taskTemplates,
   conversationTemplates,
+  documentationTemplates,
+  projectDocumentationConfigs,
+  projectDocumentationOutputs,
   type User,
   type InsertUser,
   type Project,
@@ -42,6 +45,12 @@ import {
   type InsertTaskTemplate,
   type ConversationTemplate,
   type InsertConversationTemplate,
+  type DocumentationTemplate,
+  type InsertDocumentationTemplate,
+  type ProjectDocumentationConfig,
+  type InsertProjectDocumentationConfig,
+  type ProjectDocumentationOutput,
+  type InsertProjectDocumentationOutput,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, isNull } from "drizzle-orm";
@@ -137,6 +146,27 @@ export interface IStorage {
   createConversationTemplate(template: InsertConversationTemplate): Promise<ConversationTemplate>;
   updateConversationTemplate(id: string, updates: Partial<InsertConversationTemplate>): Promise<ConversationTemplate | undefined>;
   deleteConversationTemplate(id: string): Promise<void>;
+
+  // Documentation Templates
+  getDocumentationTemplates(): Promise<DocumentationTemplate[]>;
+  getDocumentationTemplate(id: string): Promise<DocumentationTemplate | undefined>;
+  createDocumentationTemplate(template: InsertDocumentationTemplate): Promise<DocumentationTemplate>;
+  updateDocumentationTemplate(id: string, updates: Partial<InsertDocumentationTemplate>): Promise<DocumentationTemplate | undefined>;
+  deleteDocumentationTemplate(id: string): Promise<void>;
+
+  // Project Documentation Configs
+  getProjectDocumentationConfigs(projectId: string): Promise<ProjectDocumentationConfig[]>;
+  getProjectDocumentationConfig(id: string): Promise<ProjectDocumentationConfig | undefined>;
+  createProjectDocumentationConfig(config: InsertProjectDocumentationConfig): Promise<ProjectDocumentationConfig>;
+  updateProjectDocumentationConfig(id: string, updates: Partial<InsertProjectDocumentationConfig>): Promise<ProjectDocumentationConfig | undefined>;
+  deleteProjectDocumentationConfig(id: string): Promise<void>;
+
+  // Project Documentation Outputs
+  getProjectDocumentationOutputs(projectId: string): Promise<ProjectDocumentationOutput[]>;
+  getProjectDocumentationOutputsByConfig(configId: string): Promise<ProjectDocumentationOutput[]>;
+  getProjectDocumentationOutput(id: string): Promise<ProjectDocumentationOutput | undefined>;
+  createProjectDocumentationOutput(output: InsertProjectDocumentationOutput): Promise<ProjectDocumentationOutput>;
+  deleteProjectDocumentationOutput(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -500,6 +530,110 @@ export class DatabaseStorage implements IStorage {
 
   async deleteConversationTemplate(id: string): Promise<void> {
     await db.delete(conversationTemplates).where(eq(conversationTemplates.id, id));
+  }
+
+  // Documentation Templates
+  async getDocumentationTemplates(): Promise<DocumentationTemplate[]> {
+    return await db.select().from(documentationTemplates)
+      .orderBy(desc(documentationTemplates.createdAt));
+  }
+
+  async getDocumentationTemplate(id: string): Promise<DocumentationTemplate | undefined> {
+    const [template] = await db.select().from(documentationTemplates)
+      .where(eq(documentationTemplates.id, id));
+    return template || undefined;
+  }
+
+  async createDocumentationTemplate(insertTemplate: InsertDocumentationTemplate): Promise<DocumentationTemplate> {
+    const [template] = await db.insert(documentationTemplates).values(insertTemplate).returning();
+    return template;
+  }
+
+  async updateDocumentationTemplate(id: string, updates: Partial<InsertDocumentationTemplate>): Promise<DocumentationTemplate | undefined> {
+    const updatePayload: Partial<typeof documentationTemplates.$inferInsert> = {
+      updatedAt: new Date(),
+    };
+    if (updates.key !== undefined) updatePayload.key = updates.key;
+    if (updates.label !== undefined) updatePayload.label = updates.label;
+    if (updates.description !== undefined) updatePayload.description = updates.description;
+    if (updates.body !== undefined) updatePayload.body = updates.body;
+    if (updates.category !== undefined) updatePayload.category = updates.category;
+
+    const [template] = await db
+      .update(documentationTemplates)
+      .set(updatePayload)
+      .where(eq(documentationTemplates.id, id))
+      .returning();
+    return template || undefined;
+  }
+
+  async deleteDocumentationTemplate(id: string): Promise<void> {
+    await db.delete(documentationTemplates).where(eq(documentationTemplates.id, id));
+  }
+
+  // Project Documentation Configs
+  async getProjectDocumentationConfigs(projectId: string): Promise<ProjectDocumentationConfig[]> {
+    return await db.select().from(projectDocumentationConfigs)
+      .where(eq(projectDocumentationConfigs.projectId, projectId))
+      .orderBy(desc(projectDocumentationConfigs.createdAt));
+  }
+
+  async getProjectDocumentationConfig(id: string): Promise<ProjectDocumentationConfig | undefined> {
+    const [config] = await db.select().from(projectDocumentationConfigs)
+      .where(eq(projectDocumentationConfigs.id, id));
+    return config || undefined;
+  }
+
+  async createProjectDocumentationConfig(insertConfig: InsertProjectDocumentationConfig): Promise<ProjectDocumentationConfig> {
+    const [config] = await db.insert(projectDocumentationConfigs).values(insertConfig).returning();
+    return config;
+  }
+
+  async updateProjectDocumentationConfig(id: string, updates: Partial<InsertProjectDocumentationConfig>): Promise<ProjectDocumentationConfig | undefined> {
+    const updatePayload: Partial<typeof projectDocumentationConfigs.$inferInsert> = {
+      updatedAt: new Date(),
+    };
+    if (updates.metadata !== undefined) updatePayload.metadata = updates.metadata;
+    if (updates.selectedTemplates !== undefined) updatePayload.selectedTemplates = updates.selectedTemplates;
+
+    const [config] = await db
+      .update(projectDocumentationConfigs)
+      .set(updatePayload)
+      .where(eq(projectDocumentationConfigs.id, id))
+      .returning();
+    return config || undefined;
+  }
+
+  async deleteProjectDocumentationConfig(id: string): Promise<void> {
+    await db.delete(projectDocumentationConfigs).where(eq(projectDocumentationConfigs.id, id));
+  }
+
+  // Project Documentation Outputs
+  async getProjectDocumentationOutputs(projectId: string): Promise<ProjectDocumentationOutput[]> {
+    return await db.select().from(projectDocumentationOutputs)
+      .where(eq(projectDocumentationOutputs.projectId, projectId))
+      .orderBy(desc(projectDocumentationOutputs.renderedAt));
+  }
+
+  async getProjectDocumentationOutputsByConfig(configId: string): Promise<ProjectDocumentationOutput[]> {
+    return await db.select().from(projectDocumentationOutputs)
+      .where(eq(projectDocumentationOutputs.configId, configId))
+      .orderBy(desc(projectDocumentationOutputs.renderedAt));
+  }
+
+  async getProjectDocumentationOutput(id: string): Promise<ProjectDocumentationOutput | undefined> {
+    const [output] = await db.select().from(projectDocumentationOutputs)
+      .where(eq(projectDocumentationOutputs.id, id));
+    return output || undefined;
+  }
+
+  async createProjectDocumentationOutput(insertOutput: InsertProjectDocumentationOutput): Promise<ProjectDocumentationOutput> {
+    const [output] = await db.insert(projectDocumentationOutputs).values(insertOutput).returning();
+    return output;
+  }
+
+  async deleteProjectDocumentationOutput(id: string): Promise<void> {
+    await db.delete(projectDocumentationOutputs).where(eq(projectDocumentationOutputs.id, id));
   }
 }
 
