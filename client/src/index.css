@@ -604,7 +604,8 @@
 
   .landing-mod ul {
     margin: 24px 0;
-    padding-left: 24px;
+    padding-left: 0;
+    list-style-position: inside;
     color: rgba(255, 255, 255, 0.8);
   }
 
