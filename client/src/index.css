@@ -419,22 +419,22 @@
   /* Yellow button style */
   .landing-cta-yellow {
     display: inline-block;
-    padding: 0.85rem 1.5rem;
+    font-size: 0.9rem;
+    padding: 10px 20px;
     border-radius: 6px;
-    background: transparent;
-    border: 2px solid #FFEF45;
+    border: 1px solid rgba(255, 239, 69, 0.3);
     color: #FFEF45;
-    font-weight: 600;
+    background: rgba(255, 239, 69, 0.05);
+    font-weight: 500;
     letter-spacing: 0.3px;
     text-decoration: none;
     transition: all 0.3s;
-    box-shadow: 0 0 15px rgba(255, 239, 69, 0.3);
   }
 
   .landing-cta-yellow:hover {
-    background: rgba(255, 239, 69, 0.1);
-    box-shadow: 0 0 25px rgba(255, 239, 69, 0.5);
-    transform: translateY(-2px);
+    background: rgba(255, 239, 69, 0.12);
+    border: 1px solid rgba(255, 239, 69, 0.5);
+    transform: translateY(-1px);
     text-decoration: none;
   }
 
