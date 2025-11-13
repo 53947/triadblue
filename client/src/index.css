@@ -396,12 +396,13 @@
   /* Green button style */
   .landing-cta-green {
     display: inline-block;
-    padding: 0.5rem 1rem;
+    padding: 0.4rem 0.75rem;
     border-radius: 6px;
     background: rgba(0, 255, 64, 0.08);
     border: none;
     color: #00FF40;
     font-weight: 600;
+    font-size: 0.9rem;
     letter-spacing: 0.3px;
     text-decoration: none;
     transition: all 0.3s;
