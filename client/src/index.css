@@ -376,15 +376,15 @@
     flex-wrap: wrap;
   }
 
-  .landing-nav a {
-    color: #FFEF45;
+  .landing-page .landing-nav a {
+    color: #FFEF45 !important;
     font-weight: 500;
     text-decoration: none;
     transition: color 0.2s;
   }
 
-  .landing-nav a:hover {
-    color: #00FF40;
+  .landing-page .landing-nav a:hover {
+    color: #00FF40 !important;
     text-decoration: none;
   }
 
