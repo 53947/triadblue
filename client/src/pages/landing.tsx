@@ -3,7 +3,6 @@ import businessBlueprintLogo from "@assets/Blueprint_Logo_1762989341853.png";
 import hostsBlueLogo from "@assets/HostsBlue Logo_1762989341854.png";
 import swipesBlueLogo from "@assets/SwipesBlue Logo_1762989341855.png";
 import consoleBlueLogo from "@assets/ConsoleBlue_1762989387897.png";
-import listZtLogo from "@assets/Logo_1763009422056.png";
 import { Link } from "wouter";
 import { ArrowRight, CheckCircle2, Zap, Shield, Globe } from "lucide-react";
 
@@ -17,7 +16,6 @@ export default function Landing() {
         <div className="landing-container landing-row">
           <div className="landing-brand">
             <img src={triadBlueLockup} alt="TriadBlue Logo" />
-            <strong>TriadBlue</strong>
           </div>
           <nav className="landing-nav">
             <a href="#platforms">Platforms</a>
@@ -51,7 +49,6 @@ export default function Landing() {
           </div>
 
           <div className="landing-logo-row" style={{ justifyContent: 'center', marginTop: '48px' }}>
-            <img src={listZtLogo} alt="List Zt" />
             <img src={businessBlueprintLogo} alt="BusinessBlueprint.io - Digital IQ & Strategy Platform" />
             <img src={hostsBlueLogo} alt="HostsBlue.com - Cloud Hosting Infrastructure" />
             <img src={swipesBlueLogo} alt="SwipesBlue.com - Payment Processing Platform" />

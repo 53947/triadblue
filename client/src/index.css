@@ -360,7 +360,7 @@
   }
 
   .landing-brand img {
-    height: 34px;
+    height: 48px;
     width: auto;
     filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.3));
   }
@@ -377,14 +377,14 @@
   }
 
   .landing-nav a {
-    color: #00FF40;
+    color: #FFEF45;
     font-weight: 500;
     text-decoration: none;
     transition: color 0.2s;
   }
 
   .landing-nav a:hover {
-    color: #FFEF45;
+    color: #00FF40;
     text-decoration: none;
   }
 
