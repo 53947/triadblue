@@ -44,7 +44,7 @@
   --chart-4: 142 70% 25%;
   --chart-5: 28 80% 32%;
   --font-sans: 'Expletus Sans', system-ui, sans-serif;
-  --font-heading: 'Chivo', system-ui, sans-serif;
+  --font-heading: 'Rajdhani', system-ui, sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: 'JetBrains Mono', Menlo, monospace;
   --radius: .5rem;
@@ -317,7 +317,7 @@
   .landing-page h4,
   .landing-page h5,
   .landing-page h6 {
-    font-family: 'Chivo', system-ui, sans-serif;
+    font-family: 'Rajdhani', system-ui, sans-serif;
     font-weight: 600;
   }
 
@@ -458,22 +458,23 @@
   }
 
   .landing-hero h1 {
-    font-family: 'Chivo', system-ui, sans-serif;
+    font-family: 'Rajdhani', system-ui, sans-serif;
     font-weight: 700;
     font-size: clamp(42px, 6vw, 72px);
-    letter-spacing: -0.5px;
+    letter-spacing: 0.5px;
     margin: 0 0 20px;
     color: #ffffff;
     line-height: 1.1;
     text-align: center;
+    text-transform: uppercase;
   }
 
   .landing-hero h2,
   .landing-section h2 {
-    font-family: 'Chivo', system-ui, sans-serif;
+    font-family: 'Rajdhani', system-ui, sans-serif;
     font-weight: 600;
     font-size: clamp(28px, 4vw, 48px);
-    letter-spacing: -0.3px;
+    letter-spacing: 0.5px;
     margin: 0 0 16px;
     color: #ffffff;
     line-height: 1.2;
