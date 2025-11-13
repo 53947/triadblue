@@ -18,17 +18,19 @@ app.use(express.json({
 }));
 app.use(express.urlencoded({ extended: false }));
 
-// Session configuration
+// Session configuration with mobile-friendly settings
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "consoleblue-secret-key-change-in-production",
     resave: false,
     saveUninitialized: false,
+    rolling: true, // Refresh session on each request
     cookie: {
       secure: process.env.NODE_ENV === "production",
       httpOnly: true,
       maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
       sameSite: "lax",
+      path: "/",
     },
   })
 );

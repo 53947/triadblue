@@ -55,6 +55,11 @@ export default function Login() {
                 placeholder="Enter dashboard password"
                 data-testid="input-password"
                 autoFocus
+                autoComplete="current-password"
+                autoCorrect="off"
+                autoCapitalize="none"
+                spellCheck={false}
+                required
               />
               {error && (
                 <p className="text-sm text-destructive" data-testid="text-error">
@@ -62,7 +67,12 @@ export default function Login() {
                 </p>
               )}
             </div>
-            <Button type="submit" className="w-full" data-testid="button-login" disabled={isLoading}>
+            <Button 
+              type="submit" 
+              className="w-full" 
+              data-testid="button-login" 
+              disabled={isLoading || !password.trim()}
+            >
               {isLoading ? "Authenticating..." : "Access Dashboard"}
             </Button>
             <Button
