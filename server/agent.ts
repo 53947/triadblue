@@ -7,7 +7,8 @@ export interface AgentMessageRequest {
 }
 
 export interface AgentMessageResponse {
-  reply: string;
+  reply?: string;
+  response?: string;
   metadata?: any;
 }
 
