@@ -48,9 +48,9 @@ export class AgentService {
         throw new Error(`Agent endpoint returned status ${response.status}: ${await response.text()}`);
       }
 
-      // Parse response
-      const data: AgentMessageResponse = await response.json();
-      return data.reply || "No response from agent";
+      // Parse response - support both 'reply' and 'response' field names
+      const data: any = await response.json();
+      return data.reply || data.response || "No response from agent";
     } catch (error: any) {
       console.error(`Error communicating with agent ${connection.name}:`, error);
       throw new Error(`Failed to communicate with agent: ${error.message}`);
