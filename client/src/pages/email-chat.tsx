@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from "@/components/ui/textarea";
 import { Mail, Send, User, Bot, Plus, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
+import { VoiceInput } from "@/components/voice-input";
 
 export default function EmailChat() {
   const { toast } = useToast();
@@ -47,6 +48,15 @@ export default function EmailChat() {
     queryKey: [`/api/projects/${selectedProjectId}/email-threads`],
     enabled: !!selectedProjectId,
   });
+
+  // Auto-populate agent email when email settings are available
+  useEffect(() => {
+    if (emailSettings?.agentEmail) {
+      setNewThreadTo(emailSettings.agentEmail);
+    } else {
+      setNewThreadTo("");
+    }
+  }, [emailSettings]);
 
   const { data: messages = [] } = useQuery<EmailMessage[]>({
     queryKey: [`/api/email-threads/${selectedThreadId}/messages`],
@@ -206,13 +216,22 @@ export default function EmailChat() {
                   </div>
                   <div>
                     <label className="text-sm font-medium">Message</label>
-                    <Textarea
-                      placeholder="Type your message..."
-                      rows={5}
-                      value={newThreadBody}
-                      onChange={(e) => setNewThreadBody(e.target.value)}
-                      data-testid="textarea-new-thread-body"
-                    />
+                    <div className="relative">
+                      <Textarea
+                        placeholder="Type your message..."
+                        rows={5}
+                        value={newThreadBody}
+                        onChange={(e) => setNewThreadBody(e.target.value)}
+                        data-testid="textarea-new-thread-body"
+                      />
+                      <div className="absolute bottom-2 right-2">
+                        <VoiceInput
+                          onTranscript={(text) => setNewThreadBody(prev => prev ? `${prev} ${text}` : text)}
+                          variant="ghost"
+                          size="icon"
+                        />
+                      </div>
+                    </div>
                   </div>
                   <Button
                     className="w-full"
@@ -367,6 +386,11 @@ export default function EmailChat() {
                     placeholder="Type your message..."
                     disabled={sendEmailMutation.isPending}
                     data-testid="input-message"
+                  />
+                  <VoiceInput
+                    onTranscript={(text) => setMessageInput(prev => prev ? `${prev} ${text}` : text)}
+                    variant="outline"
+                    size="icon"
                   />
                   <Button
                     onClick={handleSendMessage}
