@@ -11,7 +11,7 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { Link, useLocation } from "wouter";
-import { Home, FolderKanban, MessageSquare, Settings, Plus, Github, MessagesSquare, Clock, BarChart3, ListTodo, LogOut, ImageIcon, FileText, ExternalLink, Plug, Mail } from "lucide-react";
+import { Home, FolderKanban, MessageSquare, Settings, Plus, Github, MessagesSquare, Clock, BarChart3, ListTodo, LogOut, ImageIcon, FileText, ExternalLink, Plug, Mail, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { Project } from "@shared/schema";
@@ -26,6 +26,7 @@ const navigation = [
   { title: "Projects", url: "/projects", icon: FolderKanban },
   { title: "Conversations", url: "/conversations", icon: MessageSquare },
   { title: "Email Chat", url: "/email-chat", icon: Mail },
+  { title: "Email Settings", url: "/email-settings", icon: Settings2 },
   // { title: "Agent Chat", url: "/agent-chat", icon: MessagesSquare },
   // { title: "Agent Setup", url: "/agent-setup", icon: Plug },
   // { title: "Project Embeds", url: "/embeds", icon: ExternalLink },
