@@ -154,8 +154,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/projects", authRequired, async (req, res) => {
     try {
       const data = insertProjectSchema.parse(req.body);
-      // For now, use a default user ID. In a real app, this would come from auth
-      const project = await storage.createProject({ ...data, createdById: "default-user" });
+      const project = await storage.createProject(data);
       res.json(project);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -321,7 +320,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      if (!verified) {
+      if (!verified || !matchedWebhook) {
         return res.status(401).json({ error: "Invalid webhook signature" });
       }
 
@@ -898,7 +897,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============= External API Endpoints (for project integrations) =============
 
   // Submit task from external project
-  app.post("/api/external/tasks", validateApiKey, requirePermission("write_tasks"), async (req, res) => {
+  app.post("/api/external/tasks", validateApiKey, requirePermission("write_tasks"), async (req: any, res) => {
     try {
       const { title, description, priority = "medium", status = "pending", syncUrl, syncEnabled } = req.body;
       
@@ -925,7 +924,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Log conversation from external project
-  app.post("/api/external/conversations", validateApiKey, requirePermission("log_conversations"), async (req, res) => {
+  app.post("/api/external/conversations", validateApiKey, requirePermission("log_conversations"), async (req: any, res) => {
     try {
       const { title, content, agentName } = req.body;
 
@@ -956,7 +955,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Report GitHub activity from external project
-  app.post("/api/external/github-activity", validateApiKey, requirePermission("report_github_activity"), async (req, res) => {
+  app.post("/api/external/github-activity", validateApiKey, requirePermission("report_github_activity"), async (req: any, res) => {
     try {
       const data = req.body;
       

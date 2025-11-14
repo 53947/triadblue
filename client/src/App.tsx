@@ -21,6 +21,7 @@ import DocumentationGenerator from "@/pages/documentation-generator";
 import AssetManagement from "@/pages/asset-management";
 import Conversations from "@/pages/conversations";
 import ProjectEmbeds from "@/pages/project-embeds";
+import AgentConnectionSetup from "@/pages/agent-connection-setup";
 import { ProtectedRoute } from "@/components/protected-route";
 import { DynamicFavicon } from "@/components/dynamic-favicon";
 import { useQuery } from "@tanstack/react-query";
@@ -55,6 +56,7 @@ function ProtectedRouter() {
       <Route path="/assets" component={AssetManagement} />
       <Route path="/conversations" component={Conversations} />
       <Route path="/embeds" component={ProjectEmbeds} />
+      <Route path="/agent-setup" component={AgentConnectionSetup} />
       <Route path="/github">
         <div className="p-8 text-center text-muted-foreground">
           GitHub Activity page - Coming soon
