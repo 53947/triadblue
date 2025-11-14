@@ -162,8 +162,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/projects", authRequired, async (req, res) => {
     try {
+      const authReq = req as AuthenticatedRequest;
       const data = insertProjectSchema.parse(req.body);
-      const project = await storage.createProject(data);
+      const project = await storage.createProject({
+        ...data,
+        createdById: authReq.session.user.id,
+      });
       res.json(project);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -413,13 +417,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/projects/:projectId/templates", authRequired, async (req, res) => {
     try {
+      const authReq = req as AuthenticatedRequest;
       const { projectId } = req.params;
       const data = req.body;
       
       const template = await storage.createTaskTemplate({
         ...data,
         projectId,
-        createdById: "default-user", // TODO: Get from auth when implemented
+        createdById: authReq.session.user.id,
       });
       
       res.json(template);
@@ -1205,6 +1210,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/projects/:projectId/conversation-templates", authRequired, async (req, res) => {
     try {
+      const authReq = req as AuthenticatedRequest;
       const { projectId } = req.params;
       
       const result = insertConversationTemplateSchema.safeParse({
@@ -1216,7 +1222,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid input", details: result.error.errors });
       }
 
-      const template = await storage.createConversationTemplate(result.data);
+      const template = await storage.createConversationTemplate({
+        ...result.data,
+        createdById: authReq.session.user.id,
+      });
       res.json(template);
     } catch (error) {
       console.error("Error creating conversation template:", error);
