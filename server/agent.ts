@@ -19,14 +19,20 @@ export class AgentService {
     conversationHistory: AgentChatMessage[] = []
   ): Promise<string> {
     try {
-      // Prepare the message payload
-      const payload: AgentMessageRequest = {
-        message,
-        conversationHistory: conversationHistory.map((msg) => ({
+      // Build messages array in OpenAI format (for List It compatibility)
+      const messages = [
+        ...conversationHistory.map((msg) => ({
           role: msg.role,
           content: msg.content,
         })),
-      };
+        {
+          role: "user",
+          content: message,
+        },
+      ];
+
+      // Prepare the message payload
+      const payload = { messages };
 
       // Prepare headers
       const headers: Record<string, string> = {
