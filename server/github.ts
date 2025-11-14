@@ -36,7 +36,7 @@ export async function fetchGitHubCommits(
   };
 
   if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
+    headers["Authorization"] = `token ${token}`;
   }
 
   const sinceParam = since ? `&since=${since.toISOString()}` : "";
