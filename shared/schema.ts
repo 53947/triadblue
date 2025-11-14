@@ -116,7 +116,7 @@ export const webhooks = pgTable("webhooks", {
 // Agent Connections - stores connection info for agents in other Replit projects
 export const agentConnections = pgTable("agent_connections", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  projectId: varchar("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  projectId: varchar("project_id").references(() => projects.id, { onDelete: "cascade" }),
   name: text("name").notNull(), // Friendly name for the agent connection
   agentEndpointUrl: text("agent_endpoint_url").notNull(), // URL to send messages to
   agentApiKey: text("agent_api_key"), // Optional API key for authentication

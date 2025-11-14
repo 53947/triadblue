@@ -1001,9 +1001,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create a new agent connection
   app.post("/api/projects/:projectId/agent-connections", async (req, res) => {
     try {
+      const projectId = req.params.projectId === 'default' ? null : req.params.projectId;
       const validated = insertAgentConnectionSchema.parse({
         ...req.body,
-        projectId: req.params.projectId,
+        projectId,
       });
 
       const connection = await storage.createAgentConnection(validated);
