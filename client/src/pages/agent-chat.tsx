@@ -50,6 +50,8 @@ export default function AgentChat() {
   const { data: messages = [], isLoading: messagesLoading } = useQuery<AgentChatMessage[]>({
     queryKey: [`/api/agent-connections/${selectedConnectionId}/messages`],
     enabled: !!selectedConnectionId,
+    refetchOnWindowFocus: true,
+    refetchInterval: false,
   });
 
   // Send message mutation
