@@ -38,6 +38,11 @@ export default function EmailChat() {
     },
   });
 
+  const { data: emailSettings } = useQuery<{ agentEmail: string } | null>({
+    queryKey: [`/api/projects/${selectedProjectId}/email-settings`],
+    enabled: !!selectedProjectId,
+  });
+
   const { data: threads = [], isLoading: threadsLoading } = useQuery<EmailThread[]>({
     queryKey: [`/api/projects/${selectedProjectId}/email-threads`],
     enabled: !!selectedProjectId,
@@ -125,6 +130,18 @@ export default function EmailChat() {
     setSelectedProjectId(projectId);
     localStorage.setItem("emailChat:lastProjectId", projectId);
     setSelectedThreadId(null); // Clear thread selection when changing projects
+    
+    // Auto-populate agent email from project settings
+    queryClient.fetchQuery({
+      queryKey: [`/api/projects/${projectId}/email-settings`],
+    }).then((settings: any) => {
+      if (settings?.agentEmail) {
+        setNewThreadTo(settings.agentEmail);
+      }
+    }).catch(() => {
+      // Email settings not configured for this project
+      setNewThreadTo("");
+    });
   };
 
   const selectedThread = threads.find(t => t.id === selectedThreadId);
@@ -152,6 +169,17 @@ export default function EmailChat() {
                   <DialogTitle>Start New Conversation</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
+                  {!emailSettings?.agentEmail && (
+                    <div className="flex items-start gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-md">
+                      <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                      <div className="text-sm">
+                        <p className="font-medium text-amber-500">Email settings not configured</p>
+                        <p className="text-muted-foreground mt-1">
+                          Go to Email Settings to configure an agent email address for this project.
+                        </p>
+                      </div>
+                    </div>
+                  )}
                   <div>
                     <label className="text-sm font-medium">Agent Email</label>
                     <Input
@@ -159,7 +187,13 @@ export default function EmailChat() {
                       value={newThreadTo}
                       onChange={(e) => setNewThreadTo(e.target.value)}
                       data-testid="input-new-thread-to"
+                      readOnly={!!emailSettings?.agentEmail}
                     />
+                    {emailSettings?.agentEmail && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Using email from project settings
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="text-sm font-medium">Subject</label>
