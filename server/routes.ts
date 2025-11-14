@@ -17,7 +17,7 @@ import { randomBytes, createHmac, randomUUID } from "crypto";
 import AdmZip from "adm-zip";
 import { z } from "zod";
 import { insertProjectSchema, insertTaskSchema, insertConversationSchema, insertGithubActivitySchema, insertApiKeySchema, insertAgentConnectionSchema, insertAgentChatMessageSchema, insertTaskTemplateSchema, insertConversationTemplateSchema, insertAssetSchema } from "@shared/schema";
-import { authRequired, constantTimeCompare, type AuthRequest } from "./auth";
+import { authRequired, constantTimeCompare, setStorageForAuth, type AuthRequest } from "./auth";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -64,6 +64,9 @@ function requirePermission(permission: string) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize storage for auth middleware
+  setStorageForAuth(storage);
+  
   // Validate required environment variables for webhooks
   if (!process.env.AGENTMAIL_WEBHOOK_SECRET) {
     const errorMsg = "CRITICAL: AGENTMAIL_WEBHOOK_SECRET environment variable is not set. Email webhooks will be non-functional.";
