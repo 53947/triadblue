@@ -1,5 +1,5 @@
 import { sql, relations } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, boolean, integer, unique } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, boolean, integer, unique, json } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -267,6 +267,8 @@ export const emailThreads = pgTable("email_threads", {
   lastMessageAt: timestamp("last_message_at").notNull().defaultNow(),
   hasActionableItems: boolean("has_actionable_items").notNull().default(false), // AI detected issues/tasks
   isAnalyzed: boolean("is_analyzed").notNull().default(false), // Has AI analysis been run?
+  actionableItems: json("actionable_items"), // Structured list of detected items from AI analysis
+  analysisSummary: text("analysis_summary"), // AI-generated summary of conversation
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

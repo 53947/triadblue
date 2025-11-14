@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { extractActionItemsFromConversation } from "./ai";
 import { syncGitHubActivity } from "./github";
 import { agentService } from "./agent";
+import { analyzeConversation } from "./conversation-analyzer";
 import { activityService } from "./activity";
 import { githubIssuesService } from "./github-issues";
 import { githubDocsService } from "./github-docs";
@@ -1860,6 +1861,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Update thread last message time
       await storage.updateEmailThreadLastMessage(thread.id);
+
+      // Analyze conversation for actionable items (async, don't await to avoid blocking webhook response)
+      (async () => {
+        try {
+          const messages = await storage.getEmailThreadMessages(thread.id);
+          const analysis = await analyzeConversation(messages);
+          
+          await storage.updateEmailThread(thread.id, {
+            hasActionableItems: analysis.hasActionableItems,
+            isAnalyzed: true,
+            actionableItems: analysis.items,
+            analysisSummary: analysis.summary,
+          });
+          
+          console.log(`Thread ${thread.id} analyzed: ${analysis.hasActionableItems ? analysis.items.length + ' actionable items found' : 'no actionable items'}`);
+        } catch (error) {
+          console.error(`Failed to analyze thread ${thread.id}:`, error);
+        }
+      })();
 
       res.json({ success: true, threadId: thread.id });
     } catch (error: any) {
