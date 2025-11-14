@@ -20,7 +20,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Backend
 
-- **Server:** Express.js with TypeScript and ESM.
+- **Server:** Express.js with TypeScript and ESM, trust proxy enabled for Replit deployment.
 - **API:** RESTful endpoints, Bearer token authentication for external projects, Zod for request validation.
 - **Database:** Drizzle ORM, Neon serverless PostgreSQL, WebSocket support, schema-first design.
 - **AI Integration:** OpenAI integration via Replit AI Integrations service (GPT-5 for conversation analysis and action item extraction).
@@ -30,6 +30,7 @@ Preferred communication style: Simple, everyday language.
 - **Public Access:** Landing page (`/`), Login page (`/login`).
 - **Protected Access:** All dashboard routes require authentication.
 - **Method:** Password-based (DASHBOARD_PASSWORD env var), server-side session management with httpOnly cookies.
+- **Session Security:** Rolling sessions (7-day expiry), SameSite=lax, secure cookies in production, trust proxy for Replit deployment.
 
 ### Key Features
 

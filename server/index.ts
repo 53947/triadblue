@@ -6,6 +6,9 @@ import { seedDefaultUser } from "./seed";
 
 const app = express();
 
+// Trust proxy for secure cookies in production (Replit)
+app.set('trust proxy', 1);
+
 declare module 'http' {
   interface IncomingMessage {
     rawBody: unknown
