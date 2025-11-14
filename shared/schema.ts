@@ -572,6 +572,18 @@ export const insertProjectDocumentationOutputSchema = createInsertSchema(project
 export type InsertProjectDocumentationOutput = z.infer<typeof insertProjectDocumentationOutputSchema>;
 export type ProjectDocumentationOutput = typeof projectDocumentationOutputs.$inferSelect;
 
+// Email-GitHub Configurations - maps project emails to GitHub repos for issue tracking
+export const emailGithubConfigs = pgTable("email_github_configs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  projectName: text("project_name").notNull().unique(),
+  emailAddress: text("email_address").notNull().unique(), // e.g., "listit@agentmail.triadblue.com"
+  githubOwner: text("github_owner"), // GitHub username or organization
+  githubRepo: text("github_repo"), // Repository name
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 // Asset schemas
 export const insertAssetSchema = createInsertSchema(assets).omit({
   id: true,
@@ -579,3 +591,12 @@ export const insertAssetSchema = createInsertSchema(assets).omit({
 });
 export type InsertAsset = z.infer<typeof insertAssetSchema>;
 export type Asset = typeof assets.$inferSelect;
+
+// Email-GitHub Config schemas
+export const insertEmailGithubConfigSchema = createInsertSchema(emailGithubConfigs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertEmailGithubConfig = z.infer<typeof insertEmailGithubConfigSchema>;
+export type EmailGithubConfig = typeof emailGithubConfigs.$inferSelect;
