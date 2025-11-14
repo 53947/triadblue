@@ -1206,10 +1206,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid input", details: result.error.errors });
       }
 
-      const template = await storage.createConversationTemplate({
-        ...result.data,
-        createdById: "default-user",
-      });
+      const template = await storage.createConversationTemplate(result.data);
       res.json(template);
     } catch (error) {
       console.error("Error creating conversation template:", error);
@@ -1221,7 +1218,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const result = insertConversationTemplateSchema
         .partial()
-        .omit({ projectId: true, createdById: true })
+        .omit({ projectId: true })
         .safeParse(req.body);
 
       if (!result.success) {
@@ -1591,8 +1588,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid asset type. Must be: favicon, logo, or image" });
       }
 
-      const authReq = req as AuthRequest;
-      const userId = authReq.session?.user?.id || 'system';
+      const userId = 'default-user';
 
       const asset = await storage.saveAsset({
         type,
