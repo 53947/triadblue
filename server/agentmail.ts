@@ -1,4 +1,4 @@
-import { AgentMail } from 'agentmail';
+import { AgentMailClient } from 'agentmail';
 
 let connectionSettings: any;
 
@@ -30,8 +30,7 @@ async function getCredentials() {
   return {apiKey: connectionSettings.settings.api_key};
 }
 
-export async function getUncachableAgentMailClient(): Promise<AgentMail> {
+export async function getUncachableAgentMailClient() {
   const {apiKey} = await getCredentials();
-  const client = new AgentMail(apiKey);
-  return client;
+  return new AgentMailClient({ apiKey });
 }
