@@ -22,11 +22,6 @@ const QUICK_SETUPS: QuickSetupConfig[] = [
     description: "Task and list management agent",
   },
   {
-    name: "FixIt",
-    suggestedEndpoint: "https://fixit.replit.app/api/agent/chat",
-    description: "Issue tracking and resolution agent",
-  },
-  {
     name: "BusinessBlueprint",
     suggestedEndpoint: "https://businessblueprint.replit.app/api/agent/chat",
     description: "Business planning and strategy agent",
