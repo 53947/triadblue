@@ -1944,6 +1944,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get email settings for a specific project
+  app.get("/api/projects/:projectId/email-settings", authRequired, async (req, res) => {
+    try {
+      const { projectId } = req.params;
+      const configs = await storage.getAllEmailConfigs();
+      const projectConfig = configs.find(c => c.projectId === projectId && c.isActive);
+      
+      if (!projectConfig) {
+        return res.status(404).json(null);
+      }
+      
+      res.json({
+        agentEmail: projectConfig.emailAddress,
+        inboxId: projectConfig.inboxId,
+        githubOwner: projectConfig.githubOwner,
+        githubRepo: projectConfig.githubRepo,
+      });
+    } catch (error) {
+      console.error("Error fetching email settings:", error);
+      res.status(500).json({ error: "Failed to fetch email settings" });
+    }
+  });
+
+  // Update email config
+  app.patch("/api/email-configs/:id", authRequired, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const config = await storage.updateEmailConfig(id, req.body);
+      res.json(config);
+    } catch (error: any) {
+      console.error("Error updating email config:", error);
+      res.status(500).json({ error: error.message || "Failed to update email config" });
+    }
+  });
+
+  // Delete email config
+  app.delete("/api/email-configs/:id", authRequired, async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteEmailConfig(id);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error deleting email config:", error);
+      res.status(500).json({ error: error.message || "Failed to delete email config" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
