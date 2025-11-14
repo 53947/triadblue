@@ -25,7 +25,7 @@ const navigation = [
   { title: "Tasks", url: "/tasks", icon: ListTodo },
   { title: "Projects", url: "/projects", icon: FolderKanban },
   { title: "Conversations", url: "/conversations", icon: MessageSquare },
-  { title: "Email & GitHub", url: "/email-github", icon: Mail },
+  { title: "Email Chat", url: "/email-chat", icon: Mail },
   // { title: "Agent Chat", url: "/agent-chat", icon: MessagesSquare },
   // { title: "Agent Setup", url: "/agent-setup", icon: Plug },
   // { title: "Project Embeds", url: "/embeds", icon: ExternalLink },

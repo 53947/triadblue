@@ -62,6 +62,13 @@ function requirePermission(permission: string) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Validate required environment variables for webhooks
+  if (!process.env.AGENTMAIL_WEBHOOK_SECRET) {
+    const errorMsg = "CRITICAL: AGENTMAIL_WEBHOOK_SECRET environment variable is not set. Email webhooks will be non-functional.";
+    console.error(errorMsg);
+    throw new Error("AGENTMAIL_WEBHOOK_SECRET is required for webhook security");
+  }
+
   // Initialize the sync scheduler
   const syncScheduler = initializeSyncScheduler(storage);
   console.log("SyncScheduler initialized and started");
@@ -1695,6 +1702,191 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting asset:", error);
       res.status(500).json({ error: "Failed to delete asset" });
+    }
+  });
+
+  // ============= Email Communication API =============
+
+  // Get email threads for a project
+  app.get("/api/projects/:projectId/email-threads", authRequired, async (req, res) => {
+    try {
+      const threads = await storage.getEmailThreadsByProject(req.params.projectId);
+      res.json(threads);
+    } catch (error) {
+      console.error("Error fetching email threads:", error);
+      res.status(500).json({ error: "Failed to fetch email threads" });
+    }
+  });
+
+  // Get messages for an email thread
+  app.get("/api/email-threads/:threadId/messages", authRequired, async (req, res) => {
+    try {
+      const messages = await storage.getEmailMessagesByThread(req.params.threadId);
+      res.json(messages);
+    } catch (error) {
+      console.error("Error fetching email messages:", error);
+      res.status(500).json({ error: "Failed to fetch email messages" });
+    }
+  });
+
+  // Send email to agent
+  app.post("/api/projects/:projectId/send-email", authRequired, async (req, res) => {
+    try {
+      const { to, subject, body } = req.body;
+      const { projectId } = req.params;
+
+      if (!to || !subject || !body) {
+        return res.status(400).json({ error: "Missing required fields: to, subject, body" });
+      }
+
+      // Get email config to find inbox ID
+      const config = await storage.getEmailConfigByProject(projectId);
+      if (!config) {
+        return res.status(404).json({ error: "Email configuration not found for this project" });
+      }
+
+      if (!config.inboxId) {
+        return res.status(400).json({ error: "Inbox ID not configured. Please set up the email configuration first." });
+      }
+
+      // Get or create email thread
+      let thread = await storage.getEmailThreadByProjectAndSubject(projectId, subject);
+      
+      if (!thread) {
+        thread = await storage.createEmailThread({
+          projectId,
+          subject,
+          agentEmail: to,
+        });
+      }
+
+      // Create outgoing message record
+      const message = await storage.createEmailMessage({
+        threadId: thread.id,
+        direction: "sent",
+        fromEmail: config.emailAddress,
+        toEmail: to,
+        subject,
+        body,
+      });
+
+      // Send via AgentMail
+      try {
+        const { getUncachableAgentMailClient } = await import('./agentmail');
+        const client = await getUncachableAgentMailClient();
+        
+        await client.inboxes.messages.send(config.inboxId, {
+          to,
+          subject,
+          text: body,
+        });
+      } catch (emailError: any) {
+        console.error("Failed to send email via AgentMail:", emailError);
+        return res.status(500).json({ 
+          error: "Failed to send email via AgentMail", 
+          details: emailError.message 
+        });
+      }
+
+      // Update thread last message time
+      await storage.updateEmailThreadLastMessage(thread.id);
+
+      res.json({ thread, message });
+    } catch (error: any) {
+      console.error("Error sending email:", error);
+      res.status(500).json({ error: error.message || "Failed to send email" });
+    }
+  });
+
+  // Webhook to receive emails from AgentMail
+  app.post("/api/webhooks/agentmail", async (req, res) => {
+    try {
+      // Webhook security: verify shared secret
+      const webhookSecret = process.env.AGENTMAIL_WEBHOOK_SECRET!; // Already validated at startup
+      const providedSecret = req.headers['x-webhook-secret'] || req.query.secret;
+      
+      if (!providedSecret) {
+        console.warn("Webhook authentication failed: secret not provided");
+        return res.status(401).json({ error: "Unauthorized: missing webhook secret" });
+      }
+      
+      if (providedSecret !== webhookSecret) {
+        console.warn("Webhook authentication failed: invalid secret");
+        return res.status(401).json({ error: "Unauthorized: invalid webhook secret" });
+      }
+
+      const { from, to, subject, body, metadata } = req.body;
+
+      if (!from || !to || !subject || !body) {
+        return res.status(400).json({ error: "Missing required email fields" });
+      }
+
+      // Find project by agent email address
+      const config = await storage.getEmailConfigByEmail(to);
+      
+      if (!config) {
+        console.warn(`No email config found for ${to}`);
+        return res.status(404).json({ error: "Email address not configured" });
+      }
+
+      const project = await storage.getProject(config.projectId);
+      
+      if (!project) {
+        console.warn(`No project found for ${config.projectId}`);
+        return res.status(404).json({ error: "Project not found" });
+      }
+
+      // Get or create email thread
+      let thread = await storage.getEmailThreadByProjectAndSubject(project.id, subject);
+      
+      if (!thread) {
+        thread = await storage.createEmailThread({
+          projectId: project.id,
+          subject,
+          agentEmail: to,
+        });
+      }
+
+      // Create incoming message record
+      await storage.createEmailMessage({
+        threadId: thread.id,
+        direction: "received",
+        fromEmail: from,
+        toEmail: to,
+        subject,
+        body,
+        metadata: metadata ? JSON.stringify(metadata) : undefined,
+      });
+
+      // Update thread last message time
+      await storage.updateEmailThreadLastMessage(thread.id);
+
+      res.json({ success: true, threadId: thread.id });
+    } catch (error: any) {
+      console.error("Error processing incoming email:", error);
+      res.status(500).json({ error: error.message || "Failed to process email" });
+    }
+  });
+
+  // Get email config for a project
+  app.get("/api/email-configs", authRequired, async (req, res) => {
+    try {
+      const configs = await storage.getAllEmailConfigs();
+      res.json(configs);
+    } catch (error) {
+      console.error("Error fetching email configs:", error);
+      res.status(500).json({ error: "Failed to fetch email configs" });
+    }
+  });
+
+  // Create or update email config
+  app.post("/api/email-configs", authRequired, async (req, res) => {
+    try {
+      const config = await storage.createEmailConfig(req.body);
+      res.json(config);
+    } catch (error: any) {
+      console.error("Error creating email config:", error);
+      res.status(500).json({ error: error.message || "Failed to create email config" });
     }
   });
 

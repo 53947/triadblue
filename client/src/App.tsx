@@ -22,7 +22,7 @@ import AssetManagement from "@/pages/asset-management";
 import Conversations from "@/pages/conversations";
 import ProjectEmbeds from "@/pages/project-embeds";
 import AgentConnectionSetup from "@/pages/agent-connection-setup";
-import EmailGitHubConfig from "@/pages/email-github-config";
+import EmailChat from "@/pages/email-chat";
 import { ProtectedRoute } from "@/components/protected-route";
 import { DynamicFavicon } from "@/components/dynamic-favicon";
 import { useQuery } from "@tanstack/react-query";
@@ -56,7 +56,7 @@ function ProtectedRouter() {
       <Route path="/documentation" component={DocumentationGenerator} />
       <Route path="/assets" component={AssetManagement} />
       <Route path="/conversations" component={Conversations} />
-      <Route path="/email-github" component={EmailGitHubConfig} />
+      <Route path="/email-chat" component={EmailChat} />
       <Route path="/embeds" component={ProjectEmbeds} />
       <Route path="/agent-setup" component={AgentConnectionSetup} />
       <Route path="/github">

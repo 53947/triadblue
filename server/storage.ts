@@ -18,6 +18,9 @@ import {
   projectDocumentationConfigs,
   projectDocumentationOutputs,
   assets,
+  emailGithubConfigs,
+  emailThreads,
+  emailMessages,
   type User,
   type InsertUser,
   type Project,
@@ -54,6 +57,12 @@ import {
   type InsertProjectDocumentationOutput,
   type Asset,
   type InsertAsset,
+  type EmailGithubConfig,
+  type InsertEmailGithubConfig,
+  type EmailThread,
+  type InsertEmailThread,
+  type EmailMessage,
+  type InsertEmailMessage,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, isNull } from "drizzle-orm";
@@ -180,6 +189,29 @@ export interface IStorage {
   getActiveAsset(type: string, projectId?: string | null): Promise<Asset | undefined>;
   setActiveAsset(id: string): Promise<void>; // Atomically sets this asset as active, deactivates all others of same type+project
   deleteAsset(id: string): Promise<void>;
+
+  // Email Configs
+  getAllEmailConfigs(): Promise<EmailGithubConfig[]>;
+  getEmailConfigByProject(projectId: string): Promise<EmailGithubConfig | undefined>;
+  getEmailConfigByEmail(emailAddress: string): Promise<EmailGithubConfig | undefined>;
+  createEmailConfig(config: InsertEmailGithubConfig): Promise<EmailGithubConfig>;
+  updateEmailConfig(id: string, updates: Partial<InsertEmailGithubConfig>): Promise<EmailGithubConfig | undefined>;
+  deleteEmailConfig(id: string): Promise<void>;
+
+  // Email Threads
+  getEmailThreadsByProject(projectId: string): Promise<EmailThread[]>;
+  getEmailThread(id: string): Promise<EmailThread | undefined>;
+  getEmailThreadByProjectAndSubject(projectId: string, subject: string): Promise<EmailThread | undefined>;
+  createEmailThread(thread: InsertEmailThread): Promise<EmailThread>;
+  updateEmailThread(id: string, updates: Partial<InsertEmailThread>): Promise<EmailThread | undefined>;
+  updateEmailThreadLastMessage(id: string): Promise<void>;
+  deleteEmailThread(id: string): Promise<void>;
+
+  // Email Messages
+  getEmailMessagesByThread(threadId: string): Promise<EmailMessage[]>;
+  getEmailMessage(id: string): Promise<EmailMessage | undefined>;
+  createEmailMessage(message: InsertEmailMessage): Promise<EmailMessage>;
+  deleteEmailMessage(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -751,6 +783,103 @@ export class DatabaseStorage implements IStorage {
 
   async deleteAsset(id: string): Promise<void> {
     await db.delete(assets).where(eq(assets.id, id));
+  }
+
+  // Email Configs
+  async getAllEmailConfigs(): Promise<EmailGithubConfig[]> {
+    return await db.select().from(emailGithubConfigs).orderBy(desc(emailGithubConfigs.createdAt));
+  }
+
+  async getEmailConfigByProject(projectId: string): Promise<EmailGithubConfig | undefined> {
+    const [config] = await db.select().from(emailGithubConfigs).where(eq(emailGithubConfigs.projectId, projectId));
+    return config || undefined;
+  }
+
+  async getEmailConfigByEmail(emailAddress: string): Promise<EmailGithubConfig | undefined> {
+    const [config] = await db.select().from(emailGithubConfigs).where(eq(emailGithubConfigs.emailAddress, emailAddress));
+    return config || undefined;
+  }
+
+  async createEmailConfig(config: InsertEmailGithubConfig): Promise<EmailGithubConfig> {
+    const [result] = await db.insert(emailGithubConfigs).values(config).returning();
+    return result;
+  }
+
+  async updateEmailConfig(id: string, updates: Partial<InsertEmailGithubConfig>): Promise<EmailGithubConfig | undefined> {
+    const [updated] = await db.update(emailGithubConfigs)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(emailGithubConfigs.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteEmailConfig(id: string): Promise<void> {
+    await db.delete(emailGithubConfigs).where(eq(emailGithubConfigs.id, id));
+  }
+
+  // Email Threads
+  async getEmailThreadsByProject(projectId: string): Promise<EmailThread[]> {
+    return await db.select().from(emailThreads)
+      .where(eq(emailThreads.projectId, projectId))
+      .orderBy(desc(emailThreads.lastMessageAt));
+  }
+
+  async getEmailThread(id: string): Promise<EmailThread | undefined> {
+    const [thread] = await db.select().from(emailThreads).where(eq(emailThreads.id, id));
+    return thread || undefined;
+  }
+
+  async getEmailThreadByProjectAndSubject(projectId: string, subject: string): Promise<EmailThread | undefined> {
+    const [thread] = await db.select().from(emailThreads)
+      .where(and(
+        eq(emailThreads.projectId, projectId),
+        eq(emailThreads.subject, subject)
+      ));
+    return thread || undefined;
+  }
+
+  async createEmailThread(thread: InsertEmailThread): Promise<EmailThread> {
+    const [result] = await db.insert(emailThreads).values(thread).returning();
+    return result;
+  }
+
+  async updateEmailThread(id: string, updates: Partial<InsertEmailThread>): Promise<EmailThread | undefined> {
+    const [updated] = await db.update(emailThreads)
+      .set(updates)
+      .where(eq(emailThreads.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async updateEmailThreadLastMessage(id: string): Promise<void> {
+    await db.update(emailThreads)
+      .set({ lastMessageAt: new Date() })
+      .where(eq(emailThreads.id, id));
+  }
+
+  async deleteEmailThread(id: string): Promise<void> {
+    await db.delete(emailThreads).where(eq(emailThreads.id, id));
+  }
+
+  // Email Messages
+  async getEmailMessagesByThread(threadId: string): Promise<EmailMessage[]> {
+    return await db.select().from(emailMessages)
+      .where(eq(emailMessages.threadId, threadId))
+      .orderBy(emailMessages.createdAt);
+  }
+
+  async getEmailMessage(id: string): Promise<EmailMessage | undefined> {
+    const [message] = await db.select().from(emailMessages).where(eq(emailMessages.id, id));
+    return message || undefined;
+  }
+
+  async createEmailMessage(message: InsertEmailMessage): Promise<EmailMessage> {
+    const [result] = await db.insert(emailMessages).values(message).returning();
+    return result;
+  }
+
+  async deleteEmailMessage(id: string): Promise<void> {
+    await db.delete(emailMessages).where(eq(emailMessages.id, id));
   }
 }
 

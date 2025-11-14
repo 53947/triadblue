@@ -245,6 +245,44 @@ export const projectDocumentationOutputs = pgTable("project_documentation_output
   githubCommitSha: text("github_commit_sha"), // If pushed to GitHub
 });
 
+// Email-GitHub Configurations - maps project emails to GitHub repos for issue tracking
+export const emailGithubConfigs = pgTable("email_github_configs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  projectId: varchar("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }).unique(),
+  emailAddress: text("email_address").notNull().unique(), // e.g., "listit@agentmail.triadblue.com"
+  inboxId: text("inbox_id"), // AgentMail inbox ID required for sending emails
+  githubOwner: text("github_owner"), // GitHub username or organization
+  githubRepo: text("github_repo"), // Repository name
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Email Threads - stores email conversation threads with project agents
+export const emailThreads = pgTable("email_threads", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  projectId: varchar("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  subject: text("subject").notNull(),
+  agentEmail: text("agent_email").notNull(), // e.g., "listit@agentmail.triadblue.com"
+  lastMessageAt: timestamp("last_message_at").notNull().defaultNow(),
+  hasActionableItems: boolean("has_actionable_items").notNull().default(false), // AI detected issues/tasks
+  isAnalyzed: boolean("is_analyzed").notNull().default(false), // Has AI analysis been run?
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Email Messages - stores individual email messages within threads
+export const emailMessages = pgTable("email_messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  threadId: varchar("thread_id").notNull().references(() => emailThreads.id, { onDelete: "cascade" }),
+  direction: text("direction").notNull(), // 'sent' or 'received'
+  fromEmail: text("from_email").notNull(),
+  toEmail: text("to_email").notNull(),
+  subject: text("subject"),
+  body: text("body").notNull(),
+  metadata: text("metadata"), // JSON string for additional data (headers, etc.)
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Assets - stores uploaded files (favicons, logos, images)
 export const assets = pgTable("assets", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -291,6 +329,8 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   conversationTemplates: many(conversationTemplates),
   documentationConfig: one(projectDocumentationConfigs),
   documentationOutputs: many(projectDocumentationOutputs),
+  emailThreads: many(emailThreads),
+  emailConfig: one(emailGithubConfigs),
 }));
 
 export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
@@ -421,6 +461,28 @@ export const assetsRelations = relations(assets, ({ one }) => ({
   }),
   project: one(projects, {
     fields: [assets.projectId],
+    references: [projects.id],
+  }),
+}));
+
+export const emailThreadsRelations = relations(emailThreads, ({ one, many }) => ({
+  project: one(projects, {
+    fields: [emailThreads.projectId],
+    references: [projects.id],
+  }),
+  messages: many(emailMessages),
+}));
+
+export const emailMessagesRelations = relations(emailMessages, ({ one }) => ({
+  thread: one(emailThreads, {
+    fields: [emailMessages.threadId],
+    references: [emailThreads.id],
+  }),
+}));
+
+export const emailGithubConfigsRelations = relations(emailGithubConfigs, ({ one }) => ({
+  project: one(projects, {
+    fields: [emailGithubConfigs.projectId],
     references: [projects.id],
   }),
 }));
@@ -572,18 +634,6 @@ export const insertProjectDocumentationOutputSchema = createInsertSchema(project
 export type InsertProjectDocumentationOutput = z.infer<typeof insertProjectDocumentationOutputSchema>;
 export type ProjectDocumentationOutput = typeof projectDocumentationOutputs.$inferSelect;
 
-// Email-GitHub Configurations - maps project emails to GitHub repos for issue tracking
-export const emailGithubConfigs = pgTable("email_github_configs", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  projectName: text("project_name").notNull().unique(),
-  emailAddress: text("email_address").notNull().unique(), // e.g., "listit@agentmail.triadblue.com"
-  githubOwner: text("github_owner"), // GitHub username or organization
-  githubRepo: text("github_repo"), // Repository name
-  isActive: boolean("is_active").notNull().default(true),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
-
 // Asset schemas
 export const insertAssetSchema = createInsertSchema(assets).omit({
   id: true,
@@ -600,3 +650,22 @@ export const insertEmailGithubConfigSchema = createInsertSchema(emailGithubConfi
 });
 export type InsertEmailGithubConfig = z.infer<typeof insertEmailGithubConfigSchema>;
 export type EmailGithubConfig = typeof emailGithubConfigs.$inferSelect;
+
+// Email Thread schemas
+export const insertEmailThreadSchema = createInsertSchema(emailThreads).omit({
+  id: true,
+  createdAt: true,
+  lastMessageAt: true,
+  hasActionableItems: true,
+  isAnalyzed: true,
+});
+export type InsertEmailThread = z.infer<typeof insertEmailThreadSchema>;
+export type EmailThread = typeof emailThreads.$inferSelect;
+
+// Email Message schemas
+export const insertEmailMessageSchema = createInsertSchema(emailMessages).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertEmailMessage = z.infer<typeof insertEmailMessageSchema>;
+export type EmailMessage = typeof emailMessages.$inferSelect;
