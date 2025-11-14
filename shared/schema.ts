@@ -269,6 +269,7 @@ export const emailThreads = pgTable("email_threads", {
   isAnalyzed: boolean("is_analyzed").notNull().default(false), // Has AI analysis been run?
   actionableItems: json("actionable_items"), // Structured list of detected items from AI analysis
   analysisSummary: text("analysis_summary"), // AI-generated summary of conversation
+  githubIssues: json("github_issues"), // Array of {id, type, descriptionHash, severity, issueNumber, issueUrl, createdAt}
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

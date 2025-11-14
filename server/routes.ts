@@ -5,6 +5,7 @@ import { extractActionItemsFromConversation } from "./ai";
 import { syncGitHubActivity } from "./github";
 import { agentService } from "./agent";
 import { analyzeConversation } from "./conversation-analyzer";
+import { autoCreateGitHubIssues } from "./github-issue-automation";
 import { activityService } from "./activity";
 import { githubIssuesService } from "./github-issues";
 import { githubDocsService } from "./github-docs";
@@ -1876,6 +1877,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
           
           console.log(`Thread ${thread.id} analyzed: ${analysis.hasActionableItems ? analysis.items.length + ' actionable items found' : 'no actionable items'}`);
+          
+          // Auto-create GitHub issues for actionable items
+          if (analysis.hasActionableItems && analysis.items.length > 0) {
+            const createdIssues = await autoCreateGitHubIssues(
+              storage,
+              thread,
+              analysis.items,
+              analysis.summary
+            );
+            
+            if (createdIssues.length > 0) {
+              console.log(`Created ${createdIssues.length} GitHub issues for thread ${thread.id}`);
+            }
+          }
         } catch (error) {
           console.error(`Failed to analyze thread ${thread.id}:`, error);
         }
