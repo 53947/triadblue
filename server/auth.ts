@@ -4,6 +4,8 @@ import "express-session";
 declare module "express-session" {
   interface SessionData {
     user?: {
+      id: string;
+      username: string;
       role: string;
     };
   }
@@ -12,6 +14,8 @@ declare module "express-session" {
 export interface AuthRequest extends Request {
   session: Request["session"] & {
     user?: {
+      id: string;
+      username: string;
       role: string;
     };
   };

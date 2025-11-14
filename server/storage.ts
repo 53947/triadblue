@@ -73,11 +73,12 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  ensureSystemAdminUser(): Promise<User>;
 
   // Projects
   getProjects(): Promise<Project[]>;
   getProject(id: string): Promise<Project | undefined>;
-  createProject(project: InsertProject): Promise<Project>;
+  createProject(project: InsertProject & { createdById: string }): Promise<Project>;
   updateProject(id: string, updates: Partial<InsertProject>): Promise<Project | undefined>;
   deleteProject(id: string): Promise<void>;
 
@@ -148,14 +149,14 @@ export interface IStorage {
   // Task Templates
   getTaskTemplates(projectId: string): Promise<TaskTemplate[]>;
   getTaskTemplate(id: string): Promise<TaskTemplate | undefined>;
-  createTaskTemplate(template: InsertTaskTemplate): Promise<TaskTemplate>;
+  createTaskTemplate(template: InsertTaskTemplate & { createdById: string }): Promise<TaskTemplate>;
   updateTaskTemplate(id: string, updates: Partial<InsertTaskTemplate>): Promise<TaskTemplate | undefined>;
   deleteTaskTemplate(id: string): Promise<void>;
 
   // Conversation Templates
   getConversationTemplates(projectId: string | null): Promise<ConversationTemplate[]>;
   getConversationTemplate(id: string): Promise<ConversationTemplate | undefined>;
-  createConversationTemplate(template: InsertConversationTemplate): Promise<ConversationTemplate>;
+  createConversationTemplate(template: InsertConversationTemplate & { createdById: string }): Promise<ConversationTemplate>;
   updateConversationTemplate(id: string, updates: Partial<InsertConversationTemplate>): Promise<ConversationTemplate | undefined>;
   deleteConversationTemplate(id: string): Promise<void>;
 
@@ -231,6 +232,21 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async ensureSystemAdminUser(): Promise<User> {
+    const username = "system_admin";
+    let user = await this.getUserByUsername(username);
+    
+    if (!user) {
+      user = await this.createUser({
+        username,
+        password: "N/A",  // Password not used for system user
+        role: "owner",
+      });
+    }
+    
+    return user;
+  }
+
   // Projects
   async getProjects(): Promise<Project[]> {
     return await db.select().from(projects).orderBy(desc(projects.updatedAt));
@@ -241,7 +257,7 @@ export class DatabaseStorage implements IStorage {
     return project || undefined;
   }
 
-  async createProject(insertProject: InsertProject): Promise<Project> {
+  async createProject(insertProject: InsertProject & { createdById: string }): Promise<Project> {
     const [project] = await db.insert(projects).values(insertProject).returning();
     return project;
   }
@@ -524,7 +540,7 @@ export class DatabaseStorage implements IStorage {
     return template || undefined;
   }
 
-  async createTaskTemplate(insertTemplate: InsertTaskTemplate): Promise<TaskTemplate> {
+  async createTaskTemplate(insertTemplate: InsertTaskTemplate & { createdById: string }): Promise<TaskTemplate> {
     const [template] = await db.insert(taskTemplates).values(insertTemplate).returning();
     return template;
   }
@@ -559,7 +575,7 @@ export class DatabaseStorage implements IStorage {
     return template || undefined;
   }
 
-  async createConversationTemplate(insertTemplate: InsertConversationTemplate): Promise<ConversationTemplate> {
+  async createConversationTemplate(insertTemplate: InsertConversationTemplate & { createdById: string }): Promise<ConversationTemplate> {
     const [template] = await db.insert(conversationTemplates).values(insertTemplate).returning();
     return template;
   }

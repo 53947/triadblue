@@ -95,15 +95,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Invalid password" });
       }
 
+      // Ensure system admin user exists and get it
+      const systemUser = await storage.ensureSystemAdminUser();
+
       const authReq = req as AuthRequest;
-      authReq.session.user = { role: "admin" };
+      authReq.session.user = {
+        id: systemUser.id,
+        username: systemUser.username,
+        role: systemUser.role,
+      };
       
       authReq.session.save((err: any) => {
         if (err) {
           console.error("Session save error:", err);
           return res.status(500).json({ error: "Failed to save session" });
         }
-        res.json({ success: true, user: { role: "admin" } });
+        res.json({ success: true, user: authReq.session.user });
       });
     } catch (error) {
       console.error("Login error:", error);
@@ -162,7 +169,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/projects", authRequired, async (req, res) => {
     try {
-      const authReq = req as AuthenticatedRequest;
+      const authReq = req as AuthRequest;
       const data = insertProjectSchema.parse(req.body);
       const project = await storage.createProject({
         ...data,
@@ -417,7 +424,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/projects/:projectId/templates", authRequired, async (req, res) => {
     try {
-      const authReq = req as AuthenticatedRequest;
+      const authReq = req as AuthRequest;
       const { projectId } = req.params;
       const data = req.body;
       
@@ -1210,7 +1217,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/projects/:projectId/conversation-templates", authRequired, async (req, res) => {
     try {
-      const authReq = req as AuthenticatedRequest;
+      const authReq = req as AuthRequest;
       const { projectId } = req.params;
       
       const result = insertConversationTemplateSchema.safeParse({
