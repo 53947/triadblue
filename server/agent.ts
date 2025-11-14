@@ -42,7 +42,13 @@ export class AgentService {
       // Add API key if configured
       if (connection.agentApiKey) {
         headers["Authorization"] = `Bearer ${connection.agentApiKey}`;
+        console.log(`[Agent] Sending request with API key (length: ${connection.agentApiKey.length})`);
+      } else {
+        console.log(`[Agent] WARNING: No API key configured for connection ${connection.name}`);
       }
+
+      console.log(`[Agent] Sending to ${connection.agentEndpointUrl}`);
+      console.log(`[Agent] Headers:`, headers);
 
       // Send request to external agent endpoint
       const response = await fetch(connection.agentEndpointUrl, {
