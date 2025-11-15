@@ -1,5 +1,5 @@
-import { Switch, Route } from "wouter";
-import { queryClient } from "./lib/queryClient";
+import { Switch, Route, useLocation } from "wouter";
+import { queryClient, setSessionExpiredCallback } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -27,7 +27,7 @@ import EmailSettings from "@/pages/email-settings";
 import { ProtectedRoute } from "@/components/protected-route";
 import { DynamicFavicon } from "@/components/dynamic-favicon";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { CreateProjectModal } from "@/components/modals/create-project-modal";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -78,7 +78,38 @@ function ProtectedRouter() {
 
 function ProtectedApp() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [showCreateProjectModal, setShowCreateProjectModal] = useState(false);
+  const hasShownNotificationRef = useRef(false);
+  const redirectTimeoutRef = useRef<number | null>(null);
+  
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      if (hasShownNotificationRef.current) return;
+      
+      hasShownNotificationRef.current = true;
+      
+      toast({
+        title: "Session Expired",
+        description: "Your session has expired. Please sign in again.",
+        variant: "destructive",
+        duration: 5000,
+      });
+      
+      redirectTimeoutRef.current = window.setTimeout(() => {
+        setLocation("/login");
+      }, 1500);
+    };
+    
+    setSessionExpiredCallback(handleSessionExpired);
+    
+    return () => {
+      setSessionExpiredCallback(null);
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current);
+      }
+    };
+  }, [toast, setLocation]);
   
   const { data: projects = [] } = useQuery<Project[]>({
     queryKey: ["/api/projects"],

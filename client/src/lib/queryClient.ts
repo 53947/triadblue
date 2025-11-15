@@ -1,7 +1,16 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
+let sessionExpiredCallback: (() => void) | null | undefined = null;
+
+export function setSessionExpiredCallback(callback: (() => void) | null | undefined) {
+  sessionExpiredCallback = callback;
+}
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
+    if (res.status === 401 && sessionExpiredCallback) {
+      sessionExpiredCallback();
+    }
     const text = (await res.text()) || res.statusText;
     throw new Error(`${res.status}: ${text}`);
   }
