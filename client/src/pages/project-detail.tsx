@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRoute } from "wouter";
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,10 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Key, Copy, RefreshCw, Eye, EyeOff, AlertCircle, Github } from "lucide-react";
+import { Key, Copy, RefreshCw, Eye, EyeOff, AlertCircle, Github, Upload, Image as ImageIcon, Trash2, CheckCircle2 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import type { Project, ApiKey } from "@shared/schema";
+import type { Project, ApiKey, Asset } from "@shared/schema";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ProjectTemplates } from "@/components/project-templates";
 
@@ -27,6 +27,8 @@ export default function ProjectDetail() {
   const [githubRepo, setGithubRepo] = useState("");
   const [githubBranch, setGithubBranch] = useState("main");
   const [isSyncing, setIsSyncing] = useState(false);
+  const [faviconFile, setFaviconFile] = useState<File | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
 
   const { data: project, isLoading: projectLoading } = useQuery<Project>({
     queryKey: ["/api/projects", projectId],
@@ -35,6 +37,12 @@ export default function ProjectDetail() {
   const { data: apiKeys = [], isLoading: keysLoading } = useQuery<ApiKey[]>({
     queryKey: ["/api/projects", projectId, "api-keys"],
   });
+
+  const { data: allAssets = [] } = useQuery<Asset[]>({
+    queryKey: ["/api/assets"],
+  });
+
+  const projectAssets = allAssets.filter(a => a.projectId === projectId);
 
   // Initialize local state with project data on first load only
   useEffect(() => {
@@ -364,6 +372,139 @@ export default function ProjectDetail() {
                     </div>
                   </CardContent>
                 </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Project Assets Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ImageIcon className="w-5 h-5" />
+            Project Assets
+          </CardTitle>
+          <CardDescription>
+            Upload favicons and logos specific to this project
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Favicon Upload */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-medium">Favicon</h4>
+              <Input
+                type="file"
+                accept=".png,.svg,.ico,.webp"
+                onChange={(e) => setFaviconFile(e.target.files?.[0] || null)}
+                data-testid="input-project-favicon"
+              />
+              <Button
+                size="sm"
+                onClick={async () => {
+                  if (!faviconFile) return;
+                  const formData = new FormData();
+                  formData.append("file", faviconFile);
+                  formData.append("type", "favicon");
+                  formData.append("projectId", projectId);
+                  const response = await fetch("/api/assets", {
+                    method: "POST",
+                    body: formData,
+                    credentials: "include",
+                  });
+                  if (response.ok) {
+                    await queryClient.invalidateQueries({ queryKey: ["/api/assets"] });
+                    setFaviconFile(null);
+                    toast({ title: "Favicon uploaded" });
+                  }
+                }}
+                disabled={!faviconFile}
+                data-testid="button-upload-project-favicon"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Upload Favicon
+              </Button>
+            </div>
+
+            {/* Logo Upload */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-medium">Logo</h4>
+              <Input
+                type="file"
+                accept=".png,.svg,.webp"
+                onChange={(e) => setLogoFile(e.target.files?.[0] || null)}
+                data-testid="input-project-logo"
+              />
+              <Button
+                size="sm"
+                onClick={async () => {
+                  if (!logoFile) return;
+                  const formData = new FormData();
+                  formData.append("file", logoFile);
+                  formData.append("type", "logo");
+                  formData.append("projectId", projectId);
+                  const response = await fetch("/api/assets", {
+                    method: "POST",
+                    body: formData,
+                    credentials: "include",
+                  });
+                  if (response.ok) {
+                    await queryClient.invalidateQueries({ queryKey: ["/api/assets"] });
+                    setLogoFile(null);
+                    toast({ title: "Logo uploaded" });
+                  }
+                }}
+                disabled={!logoFile}
+                data-testid="button-upload-project-logo"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Upload Logo
+              </Button>
+            </div>
+          </div>
+
+          {/* Uploaded Assets List */}
+          {projectAssets.length > 0 && (
+            <div className="mt-6 space-y-2">
+              <h4 className="text-sm font-medium">Uploaded Assets</h4>
+              {projectAssets.map((asset) => (
+                <div key={asset.id} className="flex items-center gap-3 p-3 border rounded-md">
+                  <img
+                    src={`/uploads/${asset.filename}`}
+                    alt={asset.originalFilename}
+                    className={asset.type === "favicon" ? "w-6 h-6" : "h-8 w-auto"}
+                  />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{asset.originalFilename}</p>
+                    <p className="text-xs text-muted-foreground">{asset.type}</p>
+                  </div>
+                  {asset.isActive && <Badge variant="default" className="text-xs">Active</Badge>}
+                  {!asset.isActive && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        await apiRequest("PATCH", `/api/assets/${asset.id}/activate`, {});
+                        await queryClient.invalidateQueries({ queryKey: ["/api/assets"] });
+                        toast({ title: "Asset activated" });
+                      }}
+                    >
+                      Activate
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={async () => {
+                      await apiRequest("DELETE", `/api/assets/${asset.id}`, {});
+                      await queryClient.invalidateQueries({ queryKey: ["/api/assets"] });
+                      toast({ title: "Asset deleted" });
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
               ))}
             </div>
           )}

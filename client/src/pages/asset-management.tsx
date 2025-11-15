@@ -4,27 +4,37 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import type { Asset } from "@shared/schema";
-import { Upload, Image as ImageIcon, Trash2, CheckCircle2 } from "lucide-react";
+import type { Asset, Project } from "@shared/schema";
+import { Upload, Image as ImageIcon, Trash2, CheckCircle2, Globe } from "lucide-react";
 
 export default function AssetManagement() {
   const { toast } = useToast();
+  const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [faviconFile, setFaviconFile] = useState<File | null>(null);
   const [faviconPreview, setFaviconPreview] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+
+  const { data: projects = [] } = useQuery<Project[]>({
+    queryKey: ["/api/projects"],
+  });
 
   const { data: assets = [], isLoading } = useQuery<Asset[]>({
     queryKey: ["/api/assets"],
   });
 
   const uploadAssetMutation = useMutation({
-    mutationFn: async ({ file, type }: { file: File; type: string }) => {
+    mutationFn: async ({ file, type, projectId }: { file: File; type: string; projectId?: string }) => {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("type", type);
+      if (projectId) {
+        formData.append("projectId", projectId);
+      }
 
       const response = await fetch("/api/assets", {
         method: "POST",
@@ -119,15 +129,15 @@ export default function AssetManagement() {
     }
   };
 
-  const handleUploadFavicon = () => {
+  const handleUploadFavicon = (projectId?: string) => {
     if (faviconFile) {
-      uploadAssetMutation.mutate({ file: faviconFile, type: "favicon" });
+      uploadAssetMutation.mutate({ file: faviconFile, type: "favicon", projectId });
     }
   };
 
-  const handleUploadLogo = () => {
+  const handleUploadLogo = (projectId?: string) => {
     if (logoFile) {
-      uploadAssetMutation.mutate({ file: logoFile, type: "logo" });
+      uploadAssetMutation.mutate({ file: logoFile, type: "logo", projectId });
     }
   };
 
