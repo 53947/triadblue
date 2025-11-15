@@ -48,11 +48,23 @@ Preferred communication style: Simple, everyday language.
 - **Asset Management System:** Production-ready favicon and logo upload system with comprehensive documentation standards (ASSET_MANAGEMENT_STANDARDS.md). Database schema with UUID-based assets table, nullable projectId for global assets, partial unique index enforcing single active asset per type. Multer-based upload pipeline with file validation (PNG, SVG, ICO, WEBP, max 2MB), server-side MIME validation, and secure filename generation. Full CRUD API with authenticated routes for upload/list/activate/delete, plus unauthenticated /uploads static serving for public asset access. Asset Management UI page at /assets with separate upload forms for favicon and logo, file previews, asset library with activation controls, and active asset indicators. Dynamic favicon injection component that fetches active favicon from API and updates document head for both public and authenticated routes. All TriadBlue documentation templates mandate asset upload interfaces from project start.
 - **Speech-to-Text Voice Input:** Browser-based Web Speech API integration for hands-free input across the application. Reusable VoiceInput component (icon button) and VoiceInputButton (text button with recording states) support both single-utterance and continuous recording modes. Integrated into Agent Chat message input, Email Chat (both reply and new thread message inputs), Task creation modal (title and description fields), and Conversations page (all text inputs). Features real-time interim transcript display, error handling for microphone permissions, and automatic text appending to existing input. No external API keys required - uses native browser capabilities.
 
+## API Key & Secret Naming Standards
+
+**⚠️ IMPORTANT:** All API keys and secrets MUST follow the naming conventions in `API_KEY_NAMING_GUIDE.md`. This guide provides:
+- Exact names for all Replit Secrets (DASHBOARD_PASSWORD, AGENTMAIL_API_KEY, etc.)
+- AgentMail inbox configuration (email format: `[projectname]@agentmail.triadblue.com`)
+- ConsoleBlue API key naming format: `[ProjectName] - [Environment] - [Purpose]`
+- GitHub token setup and repository configuration
+- Common mistakes to avoid
+
+**Agents:** Consult `API_KEY_NAMING_GUIDE.md` before creating or naming any API keys or secrets.
+
 ## External Dependencies
 
 - **Package Management:** npm.
 - **Database:** Neon serverless PostgreSQL (`@neondatabase/serverless`).
 - **AI Service:** Replit AI Integrations (OpenAI-compatible API).
+- **Email Service:** AgentMail integration for project-specific email communication.
 - **Development Tools:** Replit-specific Vite plugins, TypeScript, Drizzle Kit.
 - **Fonts:** Google Fonts CDN (Inter, JetBrains Mono).
 - **Third-Party UI:** date-fns, cmdk, embla-carousel, lucide-react, react-hook-form with Zod, vaul.
