@@ -6,7 +6,28 @@
     <meta name="description" content="ConsoleBlue - Centralized task management and documentation hub for managing multiple Replit projects with AI-powered conversation extraction" />
     <meta name="facebook-domain-verification" content="tnc5snt9xsg0qxmmr25fvj3zae7v2t" />
     <title>ConsoleBlue</title>
-    <link rel="icon" type="image/png" href="/favicon.png" />
+    
+    <!-- Favicon - Multiple sizes for global visibility -->
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon.png" />
+    <link rel="shortcut icon" href="/favicon.png" />
+    
+    <!-- Open Graph / Social Media (will be converted to absolute URL by boot script) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="ConsoleBlue" />
+    <meta property="og:description" content="Centralized task management and documentation hub for managing multiple Replit projects with AI-powered conversation extraction" />
+    <meta property="og:image" content="/favicon.png" data-need-absolute />
+    <meta property="og:url" content="" data-need-absolute-url />
+    
+    <!-- Twitter Card (will be converted to absolute URL by boot script) -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="ConsoleBlue" />
+    <meta name="twitter:description" content="Centralized task management and documentation hub for managing multiple Replit projects" />
+    <meta name="twitter:image" content="/favicon.png" data-need-absolute />
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Expletus+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -19,6 +40,21 @@
         if (theme === "dark") {
           document.documentElement.classList.add("dark");
         }
+        
+        const baseUrl = window.location.origin;
+        const currentUrl = window.location.href;
+        
+        const metasNeedingAbsolute = document.querySelectorAll('[data-need-absolute]');
+        metasNeedingAbsolute.forEach(function(meta) {
+          if (meta.content && meta.content.startsWith('/')) {
+            meta.content = baseUrl + meta.content;
+          }
+        });
+        
+        const urlMetas = document.querySelectorAll('[data-need-absolute-url]');
+        urlMetas.forEach(function(meta) {
+          meta.content = currentUrl;
+        });
       })();
     </script>
     <div id="root"></div>

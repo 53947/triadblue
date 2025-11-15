@@ -22,21 +22,34 @@ export function DynamicFavicon() {
   );
 
   useEffect(() => {
-    let link = document.querySelector<HTMLLinkElement>("link[rel='icon']");
-    
-    if (!link) {
-      link = document.createElement("link");
-      link.rel = "icon";
-      link.type = "image/png";
-      document.head.appendChild(link);
+    const relativeFaviconUrl = activeFavicon 
+      ? `/uploads/${activeFavicon.filename}`
+      : "/favicon.png";
+    const absoluteFaviconUrl = window.location.origin + relativeFaviconUrl;
+    const mimeType = activeFavicon?.mimeType || "image/png";
+
+    const iconSelectors = [
+      "link[rel='icon']",
+      "link[rel='shortcut icon']",
+      "link[rel='apple-touch-icon']"
+    ];
+
+    iconSelectors.forEach(selector => {
+      const links = document.querySelectorAll<HTMLLinkElement>(selector);
+      links.forEach(link => {
+        link.href = relativeFaviconUrl;
+        link.type = mimeType;
+      });
+    });
+
+    const ogImage = document.querySelector<HTMLMetaElement>("meta[property='og:image']");
+    if (ogImage) {
+      ogImage.content = absoluteFaviconUrl;
     }
 
-    if (activeFavicon) {
-      link.href = `/uploads/${activeFavicon.filename}`;
-      link.type = activeFavicon.mimeType || "image/png";
-    } else {
-      link.href = "/favicon.png";
-      link.type = "image/png";
+    const twitterImage = document.querySelector<HTMLMetaElement>("meta[name='twitter:image']");
+    if (twitterImage) {
+      twitterImage.content = absoluteFaviconUrl;
     }
   }, [activeFavicon]);
 
