@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Plus, Edit, Trash2, Mail, Github, ExternalLink, CheckCircle2, XCircle } from "lucide-react";
 import type { Project, EmailGithubConfig } from "@shared/schema";
 
@@ -283,22 +284,34 @@ export default function EmailSettings() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleOpenEditDialog(config)}
-                            data-testid={`button-edit-${config.id}`}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setDeleteConfirmId(config.id)}
-                            data-testid={`button-delete-${config.id}`}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleOpenEditDialog(config)}
+                                data-testid={`button-edit-${config.id}`}
+                              >
+                                <Edit className="w-4 h-4 mr-1" />
+                                Edit
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Edit email configuration</TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setDeleteConfirmId(config.id)}
+                                data-testid={`button-delete-${config.id}`}
+                              >
+                                <Trash2 className="w-4 h-4 mr-1" />
+                                Delete
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Delete email configuration</TooltipContent>
+                          </Tooltip>
                         </div>
                       </TableCell>
                     </TableRow>
