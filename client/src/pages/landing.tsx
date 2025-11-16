@@ -5,9 +5,11 @@ import swipesBlueLogo from "@assets/SwipesBlue Logo_1762989341855.png";
 import consoleBlueLogo from "@assets/ConsoleBlue_1762989387897.png";
 import { Link } from "wouter";
 import { ArrowRight, CheckCircle2, Zap, Shield, Globe } from "lucide-react";
+import { useActiveLogo } from "@/hooks/use-active-logo";
 
 export default function Landing() {
   const currentYear = new Date().getFullYear();
+  const { logoUrl } = useActiveLogo();
 
   return (
     <div className="landing-page">
@@ -15,7 +17,7 @@ export default function Landing() {
       <header className="landing-header">
         <div className="landing-container landing-row">
           <div className="landing-brand">
-            <img src={triadBlueLockup} alt="TriadBlue Logo" />
+            <img src={logoUrl || triadBlueLockup} alt="TriadBlue Logo" />
           </div>
           <nav className="landing-nav">
             <a href="#platforms">Platforms</a>

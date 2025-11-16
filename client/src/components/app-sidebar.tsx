@@ -19,6 +19,7 @@ import triadBlueLogo from "@assets/Triad Blue Icon_1762915681862.png";
 import consoleBlueLogo from "@assets/Console_1762956063531.png";
 import { logout } from "@/lib/auth";
 import { useLocation as useWouterLocation } from "wouter";
+import { useActiveLogo } from "@/hooks/use-active-logo";
 
 const navigation = [
   { title: "Dashboard", url: "/dashboard", icon: Home },
@@ -46,6 +47,7 @@ interface AppSidebarProps {
 export function AppSidebar({ projects = [], onNewProject }: AppSidebarProps) {
   const [location] = useLocation();
   const [, setWouterLocation] = useWouterLocation();
+  const { logoUrl } = useActiveLogo();
 
   const handleLogout = async () => {
     await logout();
@@ -57,7 +59,7 @@ export function AppSidebar({ projects = [], onNewProject }: AppSidebarProps) {
       <SidebarHeader className="p-4">
         <div className="flex flex-col gap-2 items-center">
           <img 
-            src={consoleBlueLogo} 
+            src={logoUrl || consoleBlueLogo} 
             alt="ConsoleBlue" 
             className="h-10 w-auto object-contain"
           />
