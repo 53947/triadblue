@@ -24,6 +24,8 @@ interface Project {
   id: string;
   name: string;
   color: string;
+  features?: string[];
+  techStack?: string[];
 }
 
 interface ProjectDocumentationConfig {
@@ -102,11 +104,33 @@ export default function DocumentationGenerator() {
 
   useEffect(() => {
     setSelectedTemplates([]);
-    setMetadata({});
-    setMetadataDisplay({});
-    setMetadataErrors({});
     setPreviewTemplateId("");
-  }, [selectedProjectId]);
+    
+    // Auto-fill features and tech stack from project profile
+    const selectedProject = projects?.find(p => p.id === selectedProjectId);
+    if (selectedProject) {
+      const projectMetadata: Record<string, any> = {};
+      const projectMetadataDisplay: Record<string, string> = {};
+      
+      if (selectedProject.features) {
+        projectMetadata.FEATURES = selectedProject.features;
+        projectMetadataDisplay.FEATURES = JSON.stringify(selectedProject.features, null, 2);
+      }
+      
+      if (selectedProject.techStack) {
+        projectMetadata.TECH_STACK = selectedProject.techStack;
+        projectMetadataDisplay.TECH_STACK = JSON.stringify(selectedProject.techStack, null, 2);
+      }
+      
+      setMetadata(projectMetadata);
+      setMetadataDisplay(projectMetadataDisplay);
+      setMetadataErrors({});
+    } else {
+      setMetadata({});
+      setMetadataDisplay({});
+      setMetadataErrors({});
+    }
+  }, [selectedProjectId, projects]);
 
   useEffect(() => {
     if (previewTemplateId && !selectedTemplates.includes(previewTemplateId)) {

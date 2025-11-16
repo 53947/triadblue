@@ -29,6 +29,10 @@ export const projects = pgTable("projects", {
   // Default sync configuration for tasks created in this project
   defaultSyncEnabled: boolean("default_sync_enabled").notNull().default(false),
   defaultSyncUrl: text("default_sync_url"), // Default endpoint for task status syncs
+  
+  // Documentation metadata
+  features: json("features").$type<string[]>(), // Project features list
+  techStack: json("tech_stack").$type<string[]>(), // Technology stack list
 });
 
 // API Keys for projects - allows projects to send data to this hub

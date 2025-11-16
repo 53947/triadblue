@@ -1331,6 +1331,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "metadata must be an object" });
       }
 
+      // Save features and tech stack to project profile
+      if (metadata.FEATURES || metadata.TECH_STACK) {
+        await storage.updateProject(projectId, {
+          features: metadata.FEATURES || undefined,
+          techStack: metadata.TECH_STACK || undefined,
+        });
+      }
+
       const config = await storage.upsertProjectDocumentationConfig({
         projectId,
         selectedTemplates,
