@@ -995,6 +995,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update project metadata from external project (features, tech stack)
+  app.post("/api/external/project-metadata", validateApiKey, requirePermission("write_project_metadata"), async (req: any, res) => {
+    try {
+      const { features, techStack } = req.body;
+      
+      if (!features && !techStack) {
+        return res.status(400).json({ error: "At least one of features or techStack is required" });
+      }
+
+      // Validate that arrays contain only non-empty strings
+      if (features) {
+        if (!Array.isArray(features)) {
+          return res.status(400).json({ error: "features must be an array of strings" });
+        }
+        if (!features.every(f => typeof f === 'string' && f.trim().length > 0)) {
+          return res.status(400).json({ error: "features must contain only non-empty strings" });
+        }
+      }
+      
+      if (techStack) {
+        if (!Array.isArray(techStack)) {
+          return res.status(400).json({ error: "techStack must be an array of strings" });
+        }
+        if (!techStack.every(t => typeof t === 'string' && t.trim().length > 0)) {
+          return res.status(400).json({ error: "techStack must contain only non-empty strings" });
+        }
+      }
+
+      // Get existing project to merge with new metadata
+      const existingProject = await storage.getProject(req.apiKey.projectId);
+      
+      const updateData: any = {};
+      
+      // Merge features (de-duplicate)
+      if (features) {
+        const existingFeatures = existingProject?.features || [];
+        const mergedFeatures = [...new Set([...existingFeatures, ...features])];
+        updateData.features = mergedFeatures;
+      }
+      
+      // Merge tech stack (de-duplicate)
+      if (techStack) {
+        const existingTechStack = existingProject?.techStack || [];
+        const mergedTechStack = [...new Set([...existingTechStack, ...techStack])];
+        updateData.techStack = mergedTechStack;
+      }
+
+      await storage.updateProject(req.apiKey.projectId, updateData);
+      
+      const project = await storage.getProject(req.apiKey.projectId);
+      res.json({
+        success: true,
+        project: {
+          id: project?.id,
+          name: project?.name,
+          features: project?.features,
+          techStack: project?.techStack,
+        },
+      });
+    } catch (error) {
+      console.error("Error updating project metadata:", error);
+      res.status(500).json({ error: "Failed to update project metadata" });
+    }
+  });
+
   // ============= Agent Connections API =============
   
   // Get agent connections for a project

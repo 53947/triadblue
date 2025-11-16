@@ -411,7 +411,7 @@ export default function DocumentationGenerator() {
                         value={metadataDisplay.PROJECT_NAME || ""}
                         onChange={e => handleMetadataDisplayChange("PROJECT_NAME", e.target.value)}
                         onBlur={() => handleMetadataBlur("PROJECT_NAME")}
-                        placeholder="ConsoleBlue"
+                        placeholder="My Awesome App"
                         data-testid="input-project-name"
                       />
                       {metadataErrors.PROJECT_NAME && (
@@ -425,7 +425,7 @@ export default function DocumentationGenerator() {
                         value={metadataDisplay.PROJECT_DESCRIPTION || ""}
                         onChange={e => handleMetadataDisplayChange("PROJECT_DESCRIPTION", e.target.value)}
                         onBlur={() => handleMetadataBlur("PROJECT_DESCRIPTION")}
-                        placeholder="A unified task management and documentation hub"
+                        placeholder="A brief description of what your project does"
                         data-testid="input-project-description"
                       />
                       {metadataErrors.PROJECT_DESCRIPTION && (
@@ -442,7 +442,7 @@ export default function DocumentationGenerator() {
                         value={metadataDisplay.FEATURES || ""}
                         onChange={e => handleMetadataDisplayChange("FEATURES", e.target.value)}
                         onBlur={() => handleMetadataBlur("FEATURES")}
-                        placeholder='["Task tracking", "GitHub integration", "Documentation generator"]'
+                        placeholder='["User authentication", "Data visualization", "Real-time updates"]'
                         data-testid="input-features"
                       />
                       {metadataErrors.FEATURES && (
@@ -459,7 +459,7 @@ export default function DocumentationGenerator() {
                         value={metadataDisplay.TECH_STACK || ""}
                         onChange={e => handleMetadataDisplayChange("TECH_STACK", e.target.value)}
                         onBlur={() => handleMetadataBlur("TECH_STACK")}
-                        placeholder='["React", "TypeScript", "Express", "PostgreSQL"]'
+                        placeholder='["Node.js", "Vue", "MongoDB", "Redis"]'
                         data-testid="input-tech-stack"
                       />
                       {metadataErrors.TECH_STACK && (
