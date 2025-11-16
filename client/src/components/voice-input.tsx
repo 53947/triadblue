@@ -50,6 +50,7 @@ export function VoiceInput({
     recognition.continuous = continuous;
     recognition.interimResults = true;
     recognition.lang = language;
+    recognition.maxAlternatives = 3;
 
     recognition.onresult = (event: any) => {
       let interimTranscript = "";
@@ -96,10 +97,16 @@ export function VoiceInput({
         });
       }
       
+      if (onInterimTranscriptRef.current) {
+        onInterimTranscriptRef.current("");
+      }
       setIsListening(false);
     };
 
     recognition.onend = () => {
+      if (onInterimTranscriptRef.current) {
+        onInterimTranscriptRef.current("");
+      }
       setIsListening(false);
     };
 
@@ -117,6 +124,9 @@ export function VoiceInput({
 
     if (isListening) {
       recognitionRef.current.stop();
+      if (onInterimTranscriptRef.current) {
+        onInterimTranscriptRef.current("");
+      }
       setIsListening(false);
     } else {
       try {
@@ -203,6 +213,7 @@ export function VoiceInputButton({
     recognition.continuous = continuous;
     recognition.interimResults = true;
     recognition.lang = language;
+    recognition.maxAlternatives = 3;
 
     recognition.onresult = (event: any) => {
       let interimTranscript = "";
@@ -236,7 +247,11 @@ export function VoiceInputButton({
           variant: "destructive",
         });
       } else if (event.error === "no-speech") {
-        setIsListening(false);
+        toast({
+          title: "No speech detected",
+          description: "Please try speaking again.",
+          variant: "destructive",
+        });
       } else {
         toast({
           title: "Speech recognition error",
@@ -245,10 +260,16 @@ export function VoiceInputButton({
         });
       }
       
+      if (onInterimTranscriptRef.current) {
+        onInterimTranscriptRef.current("");
+      }
       setIsListening(false);
     };
 
     recognition.onend = () => {
+      if (onInterimTranscriptRef.current) {
+        onInterimTranscriptRef.current("");
+      }
       setIsListening(false);
     };
 
@@ -266,6 +287,9 @@ export function VoiceInputButton({
 
     if (isListening) {
       recognitionRef.current.stop();
+      if (onInterimTranscriptRef.current) {
+        onInterimTranscriptRef.current("");
+      }
       setIsListening(false);
     } else {
       try {

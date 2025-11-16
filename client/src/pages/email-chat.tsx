@@ -22,6 +22,7 @@ export default function EmailChat() {
   });
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
   const [messageInput, setMessageInput] = useState("");
+  const [interimTranscript, setInterimTranscript] = useState("");
   const [showNewThreadDialog, setShowNewThreadDialog] = useState(false);
   const [newThreadTo, setNewThreadTo] = useState("");
   const [newThreadSubject, setNewThreadSubject] = useState("");
@@ -229,6 +230,7 @@ export default function EmailChat() {
                           onTranscript={(text) => setNewThreadBody(prev => prev ? `${prev} ${text}` : text)}
                           variant="ghost"
                           size="icon"
+                          continuous={true}
                         />
                       </div>
                     </div>
@@ -372,7 +374,14 @@ export default function EmailChat() {
                 </div>
               </ScrollArea>
 
-              <div className="p-4 border-t">
+              <div className="p-4 border-t space-y-2">
+                {interimTranscript && (
+                  <div className="p-2 bg-muted/50 rounded-md border border-dashed">
+                    <p className="text-sm text-muted-foreground italic">
+                      Listening: {interimTranscript}...
+                    </p>
+                  </div>
+                )}
                 <div className="flex gap-2">
                   <Input
                     value={messageInput}
@@ -388,9 +397,14 @@ export default function EmailChat() {
                     data-testid="input-message"
                   />
                   <VoiceInput
-                    onTranscript={(text) => setMessageInput(prev => prev ? `${prev} ${text}` : text)}
+                    onTranscript={(text) => {
+                      setMessageInput(prev => prev ? `${prev} ${text}` : text);
+                      setInterimTranscript("");
+                    }}
+                    onInterimTranscript={(text) => setInterimTranscript(text)}
                     variant="outline"
                     size="icon"
+                    continuous={true}
                   />
                   <Button
                     onClick={handleSendMessage}
