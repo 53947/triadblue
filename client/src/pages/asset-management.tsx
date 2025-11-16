@@ -193,7 +193,7 @@ export default function AssetManagement() {
             )}
 
             <Button
-              onClick={handleUploadFavicon}
+              onClick={() => handleUploadFavicon()}
               disabled={!faviconFile || uploadAssetMutation.isPending}
               className="w-full"
               data-testid="button-upload-favicon"
@@ -256,7 +256,7 @@ export default function AssetManagement() {
             )}
 
             <Button
-              onClick={handleUploadLogo}
+              onClick={() => handleUploadLogo()}
               disabled={!logoFile || uploadAssetMutation.isPending}
               className="w-full"
               data-testid="button-upload-logo"
