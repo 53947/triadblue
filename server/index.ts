@@ -5,6 +5,7 @@ import { Pool } from "@neondatabase/serverless";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { seedDefaultUser } from "./seed";
+import { seedDocumentationTemplates } from "./seed-documentation-templates";
 
 const app = express();
 
@@ -80,7 +81,10 @@ app.use((req, res, next) => {
 
 (async () => {
   // Seed default user for foreign key constraints
-  await seedDefaultUser();
+  const systemUser = await seedDefaultUser();
+  
+  // Seed documentation templates
+  await seedDocumentationTemplates(systemUser.id);
   
   const server = await registerRoutes(app);
 
