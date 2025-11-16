@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Key, Copy, RefreshCw, Eye, EyeOff, AlertCircle, Github, Upload, Image as ImageIcon, Trash2, CheckCircle2 } from "lucide-react";
+import { Key, Copy, RefreshCw, Eye, EyeOff, AlertCircle, Github, Upload, Image as ImageIcon, Trash2, CheckCircle2, FileText } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Project, ApiKey, Asset } from "@shared/schema";
@@ -26,6 +26,7 @@ export default function ProjectDetail() {
   ]);
   const [githubRepo, setGithubRepo] = useState("");
   const [githubBranch, setGithubBranch] = useState("main");
+  const [metadataApiUrl, setMetadataApiUrl] = useState("");
   const [isSyncing, setIsSyncing] = useState(false);
   const [faviconFile, setFaviconFile] = useState<File | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -54,6 +55,12 @@ export default function ProjectDetail() {
   useEffect(() => {
     if (project && project.githubBranch && (!githubBranch || githubBranch === "main")) {
       setGithubBranch(project.githubBranch);
+    }
+  }, [project?.id]); // Only run when project ID changes (initial load)
+
+  useEffect(() => {
+    if (project && !metadataApiUrl && project.metadataApiUrl) {
+      setMetadataApiUrl(project.metadataApiUrl);
     }
   }, [project?.id]); // Only run when project ID changes (initial load)
 
@@ -129,6 +136,36 @@ export default function ProjectDetail() {
       toast({
         title: "Error",
         description: "Failed to update GitHub integration.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUpdateMetadataUrl = async () => {
+    const trimmedUrl = metadataApiUrl.trim();
+    
+    if (trimmedUrl && !trimmedUrl.match(/^https?:\/\/.+/)) {
+      toast({
+        title: "Invalid URL",
+        description: "Please provide a valid URL starting with http:// or https://",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await apiRequest("PUT", `/api/projects/${projectId}`, {
+        metadataApiUrl: trimmedUrl || null,
+      });
+      await queryClient.invalidateQueries({ queryKey: ["/api/projects", projectId] });
+      toast({
+        title: "Metadata URL Updated",
+        description: "Documentation metadata configuration has been saved.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update metadata URL.",
         variant: "destructive",
       });
     }
@@ -265,6 +302,38 @@ export default function ProjectDetail() {
               Last synced: {new Date(project.lastGithubSync).toLocaleString()}
             </p>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <FileText className="w-5 h-5" />
+            <CardTitle>Documentation Metadata</CardTitle>
+          </div>
+          <CardDescription>
+            Configure the API endpoint where ConsoleBlue can pull your project's features and tech stack.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="metadata-api-url">Metadata API URL</Label>
+            <Input
+              id="metadata-api-url"
+              value={metadataApiUrl}
+              onChange={(e) => setMetadataApiUrl(e.target.value)}
+              placeholder="https://your-project.replit.app/api/metadata"
+              data-testid="input-metadata-api-url"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              The endpoint should return JSON with <code className="bg-muted px-1 rounded">features</code> and{" "}
+              <code className="bg-muted px-1 rounded">techStack</code> arrays.
+            </p>
+          </div>
+
+          <Button onClick={handleUpdateMetadataUrl} variant="outline" data-testid="button-save-metadata-url">
+            Save Metadata URL
+          </Button>
         </CardContent>
       </Card>
 

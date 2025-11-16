@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { FileText, Loader2, CheckCircle2, Download, FileArchive, Github } from "lucide-react";
+import { FileText, Loader2, CheckCircle2, Download, FileArchive, Github, RefreshCw } from "lucide-react";
 
 interface DocumentationTemplate {
   id: string;
@@ -26,6 +26,7 @@ interface Project {
   color: string;
   features?: string[];
   techStack?: string[];
+  metadataApiUrl?: string;
 }
 
 interface ProjectDocumentationConfig {
@@ -314,6 +315,51 @@ export default function DocumentationGenerator() {
     pushToGithubMutation.mutate({ targetPath: "docs/" });
   };
 
+  const refreshMetadataMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", `/api/projects/${selectedProjectId}/refresh-metadata`, {});
+      return await response.json();
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
+      toast({
+        title: "Metadata refreshed",
+        description: "Features and tech stack have been updated from external project API.",
+      });
+      
+      // Auto-fill the refreshed metadata
+      if (data && data.project) {
+        const projectMetadata: Record<string, any> = {};
+        const projectMetadataDisplay: Record<string, string> = {};
+        
+        if (data.project.features) {
+          projectMetadata.FEATURES = data.project.features;
+          projectMetadataDisplay.FEATURES = JSON.stringify(data.project.features, null, 2);
+        }
+        
+        if (data.project.techStack) {
+          projectMetadata.TECH_STACK = data.project.techStack;
+          projectMetadataDisplay.TECH_STACK = JSON.stringify(data.project.techStack, null, 2);
+        }
+        
+        setMetadata({ ...metadata, ...projectMetadata });
+        setMetadataDisplay({ ...metadataDisplay, ...projectMetadataDisplay });
+      }
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Refresh failed",
+        description: error.message || "Failed to refresh metadata from external project",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleRefreshMetadata = () => {
+    if (!selectedProjectId) return;
+    refreshMetadataMutation.mutate();
+  };
+
   return (
     <div className="flex flex-col h-full">
       <header className="border-b p-6">
@@ -398,9 +444,32 @@ export default function DocumentationGenerator() {
               </Card>
 
               <Card>
-                <CardHeader>
-                  <CardTitle>Project Metadata</CardTitle>
-                  <CardDescription>Fill in the project information</CardDescription>
+                <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
+                  <div>
+                    <CardTitle>Project Metadata</CardTitle>
+                    <CardDescription>Fill in the project information</CardDescription>
+                  </div>
+                  {selectedProjectId && projects?.find(p => p.id === selectedProjectId)?.metadataApiUrl && (
+                    <Button
+                      onClick={handleRefreshMetadata}
+                      disabled={refreshMetadataMutation.isPending}
+                      size="sm"
+                      variant="outline"
+                      data-testid="button-refresh-metadata"
+                    >
+                      {refreshMetadataMutation.isPending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Refreshing...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="w-4 h-4 mr-2" />
+                          Refresh from API
+                        </>
+                      )}
+                    </Button>
+                  )}
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid gap-4">

@@ -190,14 +190,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/projects/:id", authRequired, async (req, res) => {
     try {
-      const updates = req.body;
+      // Validate project updates with Zod schema
+      const projectUpdateSchema = z.object({
+        name: z.string().min(1).optional(),
+        description: z.string().optional(),
+        color: z.string().optional(),
+        icon: z.string().optional(),
+        githubRepo: z.string().nullable().optional(),
+        githubBranch: z.string().optional(),
+        defaultSyncEnabled: z.boolean().optional(),
+        defaultSyncUrl: z.string().url().nullable().optional(),
+        features: z.array(z.string()).optional(),
+        techStack: z.array(z.string()).optional(),
+        metadataApiUrl: z.string().url().nullable().optional(),
+      });
+
+      const updates = projectUpdateSchema.parse(req.body);
       const project = await storage.updateProject(req.params.id, updates);
       if (!project) {
         return res.status(404).json({ error: "Project not found" });
       }
       res.json(project);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating project:", error);
+      if (error.name === "ZodError") {
+        return res.status(400).json({ error: "Invalid project data", details: error.errors });
+      }
       res.status(500).json({ error: "Failed to update project" });
     }
   });
@@ -995,68 +1013,112 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update project metadata from external project (features, tech stack)
-  app.post("/api/external/project-metadata", validateApiKey, requirePermission("write_project_metadata"), async (req: any, res) => {
+  // Fetch and update project metadata from external project's API
+  app.post("/api/projects/:projectId/refresh-metadata", authRequired, async (req, res) => {
+    const controller = new AbortController();
+    let timeoutId: NodeJS.Timeout | null = null;
+
     try {
-      const { features, techStack } = req.body;
+      const project = await storage.getProject(req.params.projectId);
       
-      if (!features && !techStack) {
-        return res.status(400).json({ error: "At least one of features or techStack is required" });
+      if (!project) {
+        return res.status(404).json({ error: "Project not found" });
       }
 
-      // Validate that arrays contain only non-empty strings
-      if (features) {
-        if (!Array.isArray(features)) {
-          return res.status(400).json({ error: "features must be an array of strings" });
-        }
-        if (!features.every(f => typeof f === 'string' && f.trim().length > 0)) {
-          return res.status(400).json({ error: "features must contain only non-empty strings" });
-        }
-      }
-      
-      if (techStack) {
-        if (!Array.isArray(techStack)) {
-          return res.status(400).json({ error: "techStack must be an array of strings" });
-        }
-        if (!techStack.every(t => typeof t === 'string' && t.trim().length > 0)) {
-          return res.status(400).json({ error: "techStack must contain only non-empty strings" });
-        }
+      if (!project.metadataApiUrl) {
+        return res.status(400).json({ error: "Project does not have a metadata API URL configured" });
       }
 
-      // Get existing project to merge with new metadata
-      const existingProject = await storage.getProject(req.apiKey.projectId);
+      // Fetch metadata from external project with timeout
+      timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+      let response;
+      try {
+        response = await fetch(project.metadataApiUrl, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+          },
+          signal: controller.signal,
+        });
+      } catch (fetchError: any) {
+        if (fetchError.name === 'AbortError') {
+          return res.status(504).json({ error: "Request to external API timed out" });
+        }
+        return res.status(502).json({ 
+          error: `Failed to connect to external API: ${fetchError.message}` 
+        });
+      }
+
+      if (!response.ok) {
+        return res.status(502).json({ 
+          error: `External API returned error: ${response.status} ${response.statusText}` 
+        });
+      }
+
+      // Check content length (max 1MB)
+      const contentLength = response.headers.get('content-length');
+      if (contentLength && parseInt(contentLength) > 1024 * 1024) {
+        return res.status(413).json({ error: "External API response too large (max 1MB)" });
+      }
+
+      // Read response with size limit
+      let data;
+      try {
+        const text = await response.text();
+        if (text.length > 1024 * 1024) {
+          return res.status(413).json({ error: "External API response too large (max 1MB)" });
+        }
+        data = JSON.parse(text);
+      } catch (parseError) {
+        return res.status(502).json({ error: "External API returned invalid JSON" });
+      }
+
+      const { features, techStack } = data;
+
+      // Validate response format
+      if (features && !Array.isArray(features)) {
+        return res.status(400).json({ error: "External API returned invalid features format (must be array)" });
+      }
       
+      if (techStack && !Array.isArray(techStack)) {
+        return res.status(400).json({ error: "External API returned invalid techStack format (must be array)" });
+      }
+
+      // Validate array contents and sanitize
+      if (features && !features.every((f: any) => typeof f === 'string' && f.trim().length > 0)) {
+        return res.status(400).json({ error: "External API features must contain only non-empty strings" });
+      }
+      
+      if (techStack && !techStack.every((t: any) => typeof t === 'string' && t.trim().length > 0)) {
+        return res.status(400).json({ error: "External API techStack must contain only non-empty strings" });
+      }
+
+      // Sanitize and trim values
       const updateData: any = {};
-      
-      // Merge features (de-duplicate)
-      if (features) {
-        const existingFeatures = existingProject?.features || [];
-        const mergedFeatures = [...new Set([...existingFeatures, ...features])];
-        updateData.features = mergedFeatures;
-      }
-      
-      // Merge tech stack (de-duplicate)
-      if (techStack) {
-        const existingTechStack = existingProject?.techStack || [];
-        const mergedTechStack = [...new Set([...existingTechStack, ...techStack])];
-        updateData.techStack = mergedTechStack;
-      }
+      if (features) updateData.features = features.map((f: string) => f.trim()).filter((f: string) => f.length > 0);
+      if (techStack) updateData.techStack = techStack.map((t: string) => t.trim()).filter((t: string) => t.length > 0);
 
-      await storage.updateProject(req.apiKey.projectId, updateData);
+      if (Object.keys(updateData).length > 0) {
+        await storage.updateProject(req.params.projectId, updateData);
+      }
       
-      const project = await storage.getProject(req.apiKey.projectId);
+      const updatedProject = await storage.getProject(req.params.projectId);
       res.json({
-        success: true,
         project: {
-          id: project?.id,
-          name: project?.name,
-          features: project?.features,
-          techStack: project?.techStack,
+          id: updatedProject?.id,
+          name: updatedProject?.name,
+          features: updatedProject?.features,
+          techStack: updatedProject?.techStack,
         },
       });
     } catch (error) {
-      console.error("Error updating project metadata:", error);
-      res.status(500).json({ error: "Failed to update project metadata" });
+      console.error("Error refreshing project metadata:", error);
+      res.status(500).json({ error: "Failed to refresh project metadata" });
+    } finally {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
     }
   });
 

@@ -33,6 +33,7 @@ export const projects = pgTable("projects", {
   // Documentation metadata
   features: json("features").$type<string[]>(), // Project features list
   techStack: json("tech_stack").$type<string[]>(), // Technology stack list
+  metadataApiUrl: text("metadata_api_url"), // API endpoint in external project to fetch metadata from
 });
 
 // API Keys for projects - allows projects to send data to this hub
