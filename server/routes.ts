@@ -1122,6 +1122,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Mock metadata endpoint for testing (remove in production)
+  app.get("/mock-metadata", (req, res) => {
+    res.json({
+      features: [
+        "Task Management System",
+        "GitHub Integration",
+        "Documentation Generator",
+        "Real-time Agent Chat"
+      ],
+      techStack: [
+        "React",
+        "TypeScript",
+        "Express.js",
+        "PostgreSQL",
+        "Drizzle ORM"
+      ]
+    });
+  });
+
   // ============= Agent Connections API =============
   
   // Get agent connections for a project
