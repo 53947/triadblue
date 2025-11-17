@@ -269,6 +269,7 @@ export const emailThreads = pgTable("email_threads", {
   projectId: varchar("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
   subject: text("subject").notNull(),
   agentEmail: text("agent_email").notNull(), // e.g., "listit@agentmail.triadblue.com"
+  contactEmail: text("contact_email"), // External contact email - used for outbound-only threads
   lastMessageAt: timestamp("last_message_at").notNull().defaultNow(),
   hasActionableItems: boolean("has_actionable_items").notNull().default(false), // AI detected issues/tasks
   isAnalyzed: boolean("is_analyzed").notNull().default(false), // Has AI analysis been run?
@@ -288,6 +289,17 @@ export const emailMessages = pgTable("email_messages", {
   subject: text("subject"),
   body: text("body").notNull(),
   metadata: text("metadata"), // JSON string for additional data (headers, etc.)
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Email Attachments - stores full attachment data for sent and received emails
+export const emailAttachments = pgTable("email_attachments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  messageId: varchar("message_id").notNull().references(() => emailMessages.id, { onDelete: "cascade" }),
+  filename: text("filename").notNull(),
+  contentType: text("content_type").notNull(),
+  size: integer("size").notNull(), // Size in bytes
+  data: text("data").notNull(), // Base64-encoded file data
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -677,3 +689,11 @@ export const insertEmailMessageSchema = createInsertSchema(emailMessages).omit({
 });
 export type InsertEmailMessage = z.infer<typeof insertEmailMessageSchema>;
 export type EmailMessage = typeof emailMessages.$inferSelect;
+
+// Email Attachment schemas
+export const insertEmailAttachmentSchema = createInsertSchema(emailAttachments).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertEmailAttachment = z.infer<typeof insertEmailAttachmentSchema>;
+export type EmailAttachment = typeof emailAttachments.$inferSelect;

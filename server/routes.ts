@@ -2105,7 +2105,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           projectId: project.id,
           subject,
           agentEmail: to,
+          contactEmail: from, // Store sender's email for reply fallback
         });
+      } else if (!thread.contactEmail) {
+        // Update existing threads that don't have contactEmail set
+        await storage.updateEmailThread(thread.id, { contactEmail: from });
+        thread.contactEmail = from;
       }
 
       // Create incoming message record
@@ -2182,21 +2187,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Email inbox not configured for this project" });
       }
 
-      // Find the most recent received message to get the external contact
+      // Determine recipient email - try received messages first, then fallback to contactEmail
       const messages = await storage.getEmailMessagesByThread(threadId);
       const receivedMessages = messages.filter(m => m.direction === 'received');
       
-      if (receivedMessages.length === 0) {
+      let recipientEmail: string;
+      if (receivedMessages.length > 0) {
+        // Get the latest received message (messages are ordered by createdAt)
+        const latestReceivedMessage = receivedMessages[receivedMessages.length - 1];
+        recipientEmail = latestReceivedMessage.fromEmail;
+      } else if (thread.contactEmail) {
+        // Fallback to contactEmail for outbound-only threads
+        recipientEmail = thread.contactEmail;
+      } else {
         return res.status(400).json({ 
-          error: "Cannot determine recipient - no received messages in thread. This might be a proactive outreach thread." 
+          error: "Cannot determine recipient - no received messages in thread and no contact email stored." 
         });
       }
 
-      // Get the latest received message (messages are ordered by createdAt)
-      const latestReceivedMessage = receivedMessages[receivedMessages.length - 1];
-      const recipientEmail = latestReceivedMessage.fromEmail;
+      // Validate attachments before sending
+      if (attachments && Array.isArray(attachments)) {
+        const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024; // 10MB per attachment
+        const MAX_TOTAL_SIZE = 25 * 1024 * 1024; // 25MB total
+        let totalSize = 0;
 
-      // Send the email via AgentMail
+        for (const att of attachments) {
+          // Validate base64 encoding
+          if (!att.content || typeof att.content !== 'string') {
+            return res.status(400).json({ error: `Invalid attachment: ${att.filename} - missing or invalid content` });
+          }
+
+          try {
+            const buffer = Buffer.from(att.content, 'base64');
+            const size = buffer.length;
+
+            if (size > MAX_ATTACHMENT_SIZE) {
+              return res.status(400).json({ error: `Attachment ${att.filename} exceeds 10MB limit` });
+            }
+
+            totalSize += size;
+            if (totalSize > MAX_TOTAL_SIZE) {
+              return res.status(400).json({ error: `Total attachment size exceeds 25MB limit` });
+            }
+          } catch (error) {
+            return res.status(400).json({ error: `Invalid base64 encoding in attachment: ${att.filename}` });
+          }
+        }
+      }
+
+      // Send the email via AgentMail FIRST (fail fast before persisting)
       const response = await fetch("https://api.agentmail.ai/v1/messages/send", {
         method: "POST",
         headers: {
@@ -2214,27 +2253,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Failed to send email: ${response.statusText}`);
+        return res.status(502).json({ error: `Email service error: ${errorData.message || response.statusText}` });
       }
 
-      // Record the sent message with attachment metadata
-      await storage.createEmailMessage({
+      // Only persist to database after successful send
+      const sentMessage = await storage.createEmailMessage({
         threadId,
         direction: "sent",
         fromEmail: emailConfig.emailAddress,
         toEmail: recipientEmail,
         subject: `Re: ${thread.subject}`,
         body,
-        metadata: attachments ? JSON.stringify({ attachments: attachments.map((a: any) => ({ filename: a.filename, contentType: a.contentType })) }) : undefined,
       });
+
+      // Persist attachments with graceful fallback
+      let attachmentErrors: string[] = [];
+      if (attachments && Array.isArray(attachments)) {
+        for (const att of attachments) {
+          try {
+            const buffer = Buffer.from(att.content, 'base64');
+            await storage.createEmailAttachment({
+              messageId: sentMessage.id,
+              filename: att.filename,
+              contentType: att.contentType,
+              size: buffer.length,
+              data: att.content,
+            });
+          } catch (error: any) {
+            console.error(`Failed to persist attachment ${att.filename}:`, error);
+            attachmentErrors.push(att.filename);
+          }
+        }
+      }
 
       // Update thread last message time
       await storage.updateEmailThreadLastMessage(threadId);
 
-      res.json({ success: true, sentTo: recipientEmail });
+      const response_data: any = { 
+        success: true, 
+        sentTo: recipientEmail,
+        messageId: sentMessage.id,
+      };
+      
+      if (attachmentErrors.length > 0) {
+        response_data.warning = `Email sent successfully but failed to persist ${attachmentErrors.length} attachment(s): ${attachmentErrors.join(', ')}`;
+      }
+
+      res.json(response_data);
     } catch (error: any) {
       console.error("Error replying to email thread:", error);
-      res.status(500).json({ error: error.message || "Failed to send reply" });
+      res.status(500).json({ error: error.message || "Internal server error while sending reply" });
     }
   });
 

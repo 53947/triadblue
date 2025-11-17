@@ -21,6 +21,7 @@ import {
   emailGithubConfigs,
   emailThreads,
   emailMessages,
+  emailAttachments,
   type User,
   type InsertUser,
   type Project,
@@ -63,6 +64,8 @@ import {
   type InsertEmailThread,
   type EmailMessage,
   type InsertEmailMessage,
+  type EmailAttachment,
+  type InsertEmailAttachment,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, isNull } from "drizzle-orm";
@@ -213,6 +216,11 @@ export interface IStorage {
   getEmailMessage(id: string): Promise<EmailMessage | undefined>;
   createEmailMessage(message: InsertEmailMessage): Promise<EmailMessage>;
   deleteEmailMessage(id: string): Promise<void>;
+
+  // Email Attachments
+  getAttachmentsByMessage(messageId: string): Promise<EmailAttachment[]>;
+  createEmailAttachment(attachment: InsertEmailAttachment): Promise<EmailAttachment>;
+  deleteAttachmentsByMessage(messageId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -896,6 +904,22 @@ export class DatabaseStorage implements IStorage {
 
   async deleteEmailMessage(id: string): Promise<void> {
     await db.delete(emailMessages).where(eq(emailMessages.id, id));
+  }
+
+  // Email Attachments
+  async getAttachmentsByMessage(messageId: string): Promise<EmailAttachment[]> {
+    return await db.select().from(emailAttachments)
+      .where(eq(emailAttachments.messageId, messageId))
+      .orderBy(emailAttachments.createdAt);
+  }
+
+  async createEmailAttachment(attachment: InsertEmailAttachment): Promise<EmailAttachment> {
+    const [result] = await db.insert(emailAttachments).values(attachment).returning();
+    return result;
+  }
+
+  async deleteAttachmentsByMessage(messageId: string): Promise<void> {
+    await db.delete(emailAttachments).where(eq(emailAttachments.messageId, messageId));
   }
 }
 
