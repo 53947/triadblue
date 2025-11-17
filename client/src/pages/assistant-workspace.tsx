@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Mail, Send, User, Bot, Paperclip, X } from "lucide-react";
 import { format } from "date-fns";
 import { VoiceInput } from "@/components/voice-input";
+import { PageShell } from "@/components/layout/page-shell";
 
 export default function AssistantWorkspace() {
   const { toast } = useToast();
@@ -168,7 +169,7 @@ export default function AssistantWorkspace() {
   };
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
+    <PageShell>
       <div className="border-b p-4">
         <h1 className="text-2xl font-bold">Assistant Workspace</h1>
         <p className="text-sm text-muted-foreground">
@@ -178,7 +179,7 @@ export default function AssistantWorkspace() {
 
       <div className="flex-1 flex overflow-hidden min-w-0">
         {/* Thread List */}
-        <div className="w-80 md:w-96 border-r flex flex-col flex-shrink-0">
+        <div className="basis-80 lg:basis-96 max-w-sm border-r flex flex-col flex-shrink-0">
           <div className="p-4 border-b">
             <h2 className="font-semibold">All Email Threads</h2>
             <p className="text-xs text-muted-foreground mt-1">
@@ -373,6 +374,6 @@ export default function AssistantWorkspace() {
           )}
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 }
