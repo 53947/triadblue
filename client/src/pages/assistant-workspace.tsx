@@ -168,7 +168,7 @@ export default function AssistantWorkspace() {
   };
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-screen flex flex-col overflow-hidden">
       <div className="border-b p-4">
         <h1 className="text-2xl font-bold">Assistant Workspace</h1>
         <p className="text-sm text-muted-foreground">
@@ -176,9 +176,9 @@ export default function AssistantWorkspace() {
         </p>
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden min-w-0">
         {/* Thread List */}
-        <div className="w-96 border-r flex flex-col">
+        <div className="w-80 md:w-96 border-r flex flex-col flex-shrink-0">
           <div className="p-4 border-b">
             <h2 className="font-semibold">All Email Threads</h2>
             <p className="text-xs text-muted-foreground mt-1">
@@ -236,7 +236,7 @@ export default function AssistantWorkspace() {
         </div>
 
         {/* Message View */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           {!selectedThread ? (
             <div className="flex-1 flex items-center justify-center text-muted-foreground">
               <div className="text-center">
@@ -260,7 +260,7 @@ export default function AssistantWorkspace() {
               </div>
 
               <ScrollArea className="flex-1 p-4">
-                <div className="space-y-4 max-w-3xl mx-auto">
+                <div className="space-y-4 max-w-3xl mx-auto w-full">
                   {messages.map((message) => (
                     <div
                       key={message.id}
