@@ -10,9 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Mail, Send, User, Bot, Plus, AlertTriangle } from "lucide-react";
+import { Mail, Send, User, Bot, Plus, AlertTriangle, Paperclip, X } from "lucide-react";
 import { format } from "date-fns";
 import { VoiceInput } from "@/components/voice-input";
+import { Badge } from "@/components/ui/badge";
 
 export default function EmailChat() {
   const { toast } = useToast();
@@ -22,6 +23,7 @@ export default function EmailChat() {
   });
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
   const [messageInput, setMessageInput] = useState("");
+  const [attachments, setAttachments] = useState<Array<{file: File, base64: string}>>([]);
   const [interimTranscript, setInterimTranscript] = useState("");
   const [showNewThreadDialog, setShowNewThreadDialog] = useState(false);
   const [newThreadTo, setNewThreadTo] = useState("");
@@ -30,15 +32,16 @@ export default function EmailChat() {
 
   const { data: projects = [] } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
-    onSuccess: (data) => {
-      // Auto-select first project if none selected or saved project doesn't exist
-      if ((!selectedProjectId || !data.find(p => p.id === selectedProjectId)) && data.length > 0) {
-        const firstProjectId = data[0].id;
-        setSelectedProjectId(firstProjectId);
-        localStorage.setItem("emailChat:lastProjectId", firstProjectId);
-      }
-    },
   });
+
+  // Auto-select first project if none selected or saved project doesn't exist
+  useEffect(() => {
+    if ((!selectedProjectId || !projects.find((p: Project) => p.id === selectedProjectId)) && projects.length > 0) {
+      const firstProjectId = projects[0].id;
+      setSelectedProjectId(firstProjectId);
+      localStorage.setItem("emailChat:lastProjectId", firstProjectId);
+    }
+  }, [projects, selectedProjectId]);
 
   const { data: emailSettings } = useQuery<{ agentEmail: string } | null>({
     queryKey: [`/api/projects/${selectedProjectId}/email-settings`],
@@ -65,7 +68,7 @@ export default function EmailChat() {
   });
 
   const sendEmailMutation = useMutation({
-    mutationFn: async ({ subject, body }: { subject: string; body: string }) => {
+    mutationFn: async ({ subject, body, attachments: emailAttachments }: { subject: string; body: string; attachments?: Array<{filename: string; contentType: string; content: string}> }) => {
       const thread = threads.find(t => t.id === selectedThreadId);
       if (!thread) throw new Error("Thread not found");
 
@@ -76,12 +79,14 @@ export default function EmailChat() {
         to: thread.agentEmail,
         subject: emailSubject,
         body,
+        attachments: emailAttachments,
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/email-threads/${selectedThreadId}/messages`] });
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${selectedProjectId}/email-threads`] });
       setMessageInput("");
+      setAttachments([]);
       toast({
         title: "Message sent",
         description: "Your email has been sent to the agent",
@@ -130,10 +135,51 @@ export default function EmailChat() {
   const handleSendMessage = () => {
     if (!messageInput.trim() || sendEmailMutation.isPending) return;
     const thread = threads.find(t => t.id === selectedThreadId);
+    
+    const emailAttachments = attachments.map(att => ({
+      filename: att.file.name,
+      contentType: att.file.type || 'application/octet-stream',
+      content: att.base64.split(',')[1], // Remove data:mime;base64, prefix
+    }));
+    
     sendEmailMutation.mutate({
       subject: thread?.subject?.trim() || "Re: Conversation",
       body: messageInput,
+      attachments: emailAttachments.length > 0 ? emailAttachments : undefined,
     });
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    
+    for (const file of files) {
+      // Check file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: `${file.name} exceeds 10MB limit`,
+          variant: "destructive",
+        });
+        continue;
+      }
+
+      // Convert to base64
+      const reader = new FileReader();
+      reader.onload = () => {
+        setAttachments(prev => [...prev, {
+          file,
+          base64: reader.result as string,
+        }]);
+      };
+      reader.readAsDataURL(file);
+    }
+    
+    // Reset input
+    e.target.value = '';
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
   };
   
   // Update localStorage when project selection changes
@@ -382,7 +428,45 @@ export default function EmailChat() {
                     </p>
                   </div>
                 )}
+                
+                {attachments.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {attachments.map((attachment, index) => (
+                      <Badge key={index} variant="secondary" className="gap-2">
+                        <Paperclip className="w-3 h-3" />
+                        <span className="truncate max-w-[150px]">{attachment.file.name}</span>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-4 w-4 p-0 hover:bg-transparent"
+                          onClick={() => removeAttachment(index)}
+                          data-testid={`button-remove-attachment-${index}`}
+                        >
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+                
                 <div className="flex gap-2">
+                  <input
+                    type="file"
+                    id="email-file-input"
+                    multiple
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    data-testid="input-file"
+                  />
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={() => document.getElementById('email-file-input')?.click()}
+                    disabled={sendEmailMutation.isPending}
+                    data-testid="button-attach-file"
+                  >
+                    <Paperclip className="w-4 h-4" />
+                  </Button>
                   <Input
                     value={messageInput}
                     onChange={(e) => setMessageInput(e.target.value)}

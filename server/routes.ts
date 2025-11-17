@@ -1928,15 +1928,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Attachment validation schema
+  const attachmentSchema = z.object({
+    filename: z.string().min(1).max(255),
+    contentType: z.string().min(1).max(100),
+    content: z.string().refine(
+      (val) => {
+        // Base64 validation and size check (max 10MB decoded)
+        try {
+          const buffer = Buffer.from(val, 'base64');
+          return buffer.length <= 10 * 1024 * 1024; // 10MB limit
+        } catch {
+          return false;
+        }
+      },
+      { message: "Attachment must be valid base64 and under 10MB" }
+    ),
+  });
+
+  const sendEmailSchema = z.object({
+    to: z.string().email(),
+    subject: z.string().min(1),
+    body: z.string().min(1),
+    attachments: z.array(attachmentSchema).max(10).optional(),
+  });
+
   // Send email to agent
   app.post("/api/projects/:projectId/send-email", authRequired, async (req, res) => {
     try {
-      const { to, subject, body } = req.body;
-      const { projectId } = req.params;
-
-      if (!to || !subject || !body) {
-        return res.status(400).json({ error: "Missing required fields: to, subject, body" });
+      // Validate request body
+      const validation = sendEmailSchema.safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ 
+          error: "Invalid request data", 
+          details: validation.error.errors 
+        });
       }
+
+      const { to, subject, body, attachments } = validation.data;
+      const { projectId } = req.params;
 
       // Get email config to find inbox ID
       const config = await storage.getEmailConfigByProject(projectId);
@@ -1974,15 +2004,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const { getUncachableAgentMailClient } = await import('./agentmail');
         const client = await getUncachableAgentMailClient();
         
-        await client.inboxes.messages.send(config.inboxId, {
+        const sendPayload: any = {
           to,
           subject,
           text: body,
-        });
+        };
+        
+        // Add attachments if provided (already validated by schema)
+        if (attachments && attachments.length > 0) {
+          sendPayload.attachments = attachments.map(att => ({
+            filename: att.filename,
+            contentType: att.contentType,
+            content: att.content,
+          }));
+        }
+        
+        await client.inboxes.messages.send(config.inboxId, sendPayload);
       } catch (emailError: any) {
         console.error("Failed to send email via AgentMail:", emailError);
+        
+        // Provide specific error messages for attachment-related failures
+        let errorMessage = "Failed to send email via AgentMail";
+        if (emailError.message?.includes("attachment")) {
+          errorMessage = "Failed to send email attachments. Files may be too large or in an unsupported format.";
+        }
+        
         return res.status(500).json({ 
-          error: "Failed to send email via AgentMail", 
+          error: errorMessage, 
           details: emailError.message 
         });
       }
