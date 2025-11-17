@@ -4,7 +4,7 @@ import type { Asset } from "@shared/schema";
 
 export function DynamicFavicon() {
   const { data: assets = [] } = useQuery<Asset[]>({
-    queryKey: ["/api/public/assets/active", { type: "favicon" }],
+    queryKey: ["/api/public/assets/active?type=favicon"],
     retry: false,
     refetchOnWindowFocus: false,
   });

@@ -176,11 +176,14 @@ function ProtectedApp() {
 }
 
 function AppContent() {
+  const isConsoleBlue = window.location.hostname.includes('console');
+  
   return (
     <>
       <DynamicFavicon />
       <Switch>
         <Route path="/login" component={Login} />
+        {!isConsoleBlue && <Route path="/" component={Landing} />}
         <Route>
           <ProtectedRoute>
             <ProtectedApp />
