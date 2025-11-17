@@ -9,6 +9,7 @@ import {
   SidebarMenuItem,
   SidebarHeader,
   SidebarFooter,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Link, useLocation } from "wouter";
 import { Home, FolderKanban, MessageSquare, Settings, Plus, Github, MessagesSquare, Clock, BarChart3, ListTodo, LogOut, ImageIcon, FileText, ExternalLink, Plug, Mail, Settings2 } from "lucide-react";
@@ -48,10 +49,17 @@ export function AppSidebar({ projects = [], onNewProject }: AppSidebarProps) {
   const [location] = useLocation();
   const [, setWouterLocation] = useWouterLocation();
   const { logoUrl } = useActiveLogo();
+  const { setOpenMobile, isMobile } = useSidebar();
 
   const handleLogout = async () => {
     await logout();
     setWouterLocation("/");
+  };
+
+  const handleNavClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
   };
 
   return (
@@ -75,7 +83,7 @@ export function AppSidebar({ projects = [], onNewProject }: AppSidebarProps) {
               {navigation.map((item) => (
                 <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton asChild isActive={location === item.url} data-testid={`nav-${item.title.toLowerCase().replace(/\s+/g, '-')}`}>
-                    <Link href={item.url}>
+                    <Link href={item.url} onClick={handleNavClick}>
                       <item.icon className="w-4 h-4" />
                       <span>{item.title}</span>
                     </Link>
@@ -111,7 +119,7 @@ export function AppSidebar({ projects = [], onNewProject }: AppSidebarProps) {
                 projects.map((project) => (
                   <SidebarMenuItem key={project.id}>
                     <SidebarMenuButton asChild data-testid={`project-${project.id}`}>
-                      <Link href={`/project/${project.id}`}>
+                      <Link href={`/project/${project.id}`} onClick={handleNavClick}>
                         <div
                           className="w-2 h-2 rounded-full flex-shrink-0"
                           style={{ backgroundColor: project.color }}

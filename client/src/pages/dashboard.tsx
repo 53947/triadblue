@@ -135,18 +135,20 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-4 space-y-6">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold" style={{ fontFamily: 'var(--font-heading)' }}>Dashboard</h1>
-        <div className="flex items-center gap-2">
-          <Button onClick={() => setShowConversationModal(true)} variant="outline" data-testid="button-log-conversation">
+    <div className="max-w-7xl mx-auto p-3 sm:p-4 space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <h1 className="text-xl sm:text-2xl font-semibold" style={{ fontFamily: 'var(--font-heading)' }}>Dashboard</h1>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button onClick={() => setShowConversationModal(true)} variant="outline" data-testid="button-log-conversation" className="flex-1 sm:flex-none">
             <Plus className="w-4 h-4 mr-2" />
-            Log Conversation
+            <span className="hidden xs:inline">Log Conversation</span>
+            <span className="xs:hidden">Log</span>
           </Button>
           <Button 
             onClick={() => setShowTaskModal(true)} 
             data-testid="button-create-task"
             variant="outline"
+            className="flex-1 sm:flex-none"
             style={{
               borderColor: '#FF44CC',
               color: '#FF44CC',

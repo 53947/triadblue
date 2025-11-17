@@ -142,21 +142,24 @@ function ProtectedApp() {
 
   return (
     <SidebarProvider style={style as React.CSSProperties}>
-      <div className="flex h-screen w-full">
+      <div className="flex h-screen w-full overflow-hidden">
         <AppSidebar 
           projects={projects} 
           onNewProject={() => setShowCreateProjectModal(true)}
         />
-        <div className="flex flex-col flex-1 min-w-0">
-          <header className="flex items-center justify-between gap-4 px-4 py-2 border-b">
-            <SidebarTrigger data-testid="button-sidebar-toggle" />
-            <div className="flex items-center gap-3">
+        <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+          <header className="flex items-center justify-between gap-2 px-2 sm:px-4 py-2 border-b shrink-0">
+            <div className="flex items-center gap-2">
+              <SidebarTrigger data-testid="button-sidebar-toggle" className="h-10 min-h-10" />
+              <span className="font-semibold text-sm sm:text-base md:hidden">ConsoleBlue</span>
+            </div>
+            <div className="flex items-center gap-2 sm:gap-3">
               <NotificationBell />
               <ThemeToggle />
               <img 
                 src={logoUrl || triadBlueLockup} 
                 alt="TriadBlue" 
-                className="h-11 w-auto object-contain"
+                className="h-8 sm:h-11 w-auto object-contain"
               />
             </div>
           </header>
