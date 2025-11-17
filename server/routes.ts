@@ -2155,6 +2155,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Reply to email thread (for assistant workspace)
+  app.post("/api/email-threads/:threadId/reply", authRequired, async (req, res) => {
+    try {
+      const { threadId } = req.params;
+      const { body, attachments } = req.body;
+
+      if (!body) {
+        return res.status(400).json({ error: "Email body is required" });
+      }
+
+      // Get thread and its messages
+      const thread = await storage.getEmailThread(threadId);
+      if (!thread) {
+        return res.status(404).json({ error: "Thread not found" });
+      }
+
+      // Get email config for this project
+      const emailConfig = await storage.getEmailConfigByProject(thread.projectId);
+      if (!emailConfig?.inboxId) {
+        return res.status(400).json({ error: "Email inbox not configured for this project" });
+      }
+
+      // Find the most recent received message to get the external contact
+      const messages = await storage.getEmailMessagesByThread(threadId);
+      const receivedMessages = messages.filter(m => m.direction === 'received');
+      
+      if (receivedMessages.length === 0) {
+        return res.status(400).json({ 
+          error: "Cannot determine recipient - no received messages in thread. This might be a proactive outreach thread." 
+        });
+      }
+
+      // Get the latest received message (messages are ordered by createdAt)
+      const latestReceivedMessage = receivedMessages[receivedMessages.length - 1];
+      const recipientEmail = latestReceivedMessage.fromEmail;
+
+      // Send the email via AgentMail
+      const response = await fetch("https://api.agentmail.ai/v1/messages/send", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${process.env.AGENTMAIL_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          inboxId: emailConfig.inboxId,
+          to: recipientEmail,
+          subject: `Re: ${thread.subject}`,
+          body,
+          attachments,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Failed to send email: ${response.statusText}`);
+      }
+
+      // Record the sent message with attachment metadata
+      await storage.createEmailMessage({
+        threadId,
+        direction: "sent",
+        fromEmail: emailConfig.emailAddress,
+        toEmail: recipientEmail,
+        subject: `Re: ${thread.subject}`,
+        body,
+        metadata: attachments ? JSON.stringify({ attachments: attachments.map((a: any) => ({ filename: a.filename, contentType: a.contentType })) }) : undefined,
+      });
+
+      // Update thread last message time
+      await storage.updateEmailThreadLastMessage(threadId);
+
+      res.json({ success: true, sentTo: recipientEmail });
+    } catch (error: any) {
+      console.error("Error replying to email thread:", error);
+      res.status(500).json({ error: error.message || "Failed to send reply" });
+    }
+  });
+
   // Get email config for a project
   app.get("/api/email-configs", authRequired, async (req, res) => {
     try {
