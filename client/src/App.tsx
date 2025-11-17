@@ -38,7 +38,6 @@ import { useActiveLogo } from "@/hooks/use-active-logo";
 function PublicRouter() {
   return (
     <Switch>
-      <Route path="/" component={Landing} />
       <Route path="/login" component={Login} />
       <Route component={NotFound} />
     </Switch>
@@ -48,6 +47,7 @@ function PublicRouter() {
 function ProtectedRouter() {
   return (
     <Switch>
+      <Route path="/" component={Dashboard} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/tasks" component={Tasks} />
       <Route path="/projects" component={Projects} />
@@ -180,7 +180,6 @@ function AppContent() {
     <>
       <DynamicFavicon />
       <Switch>
-        <Route path="/" component={Landing} />
         <Route path="/login" component={Login} />
         <Route>
           <ProtectedRoute>
