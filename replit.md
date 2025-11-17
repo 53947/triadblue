@@ -2,7 +2,14 @@
 
 ## Overview
 
-ConsoleBlue is a unified, password-protected task management and documentation hub designed to manage multiple Replit projects. It features a public landing page for the TriadBlue ecosystem (BusinessBlueprint, HostsBlue, SwipesBlue) and acts as a command center for tracking tasks, conversations, GitHub activity, and project data. The system includes AI-powered conversation extraction for action items, API key-based integration for external projects, and a Project Documentation Generator for creating standardized documentation using Handlebars templates. It follows a dark-first design aesthetic with fluorescent blue accents, Archivo typography, and is built as a full-stack web application with React and Express.js, drawing inspiration from Linear, Notion, and GitHub for productivity and information density.
+ConsoleBlue is a unified, password-protected task management and documentation hub built within the **TriadBlue Replit Account**. It serves as the command center for managing multiple sibling projects (BusinessBlueprint, HostsBlue, SwipesBlue, List It) that are also built under the same TriadBlue account.
+
+**Organizational Structure:**
+- **TriadBlue** = Replit Account (top-level)
+- **ConsoleBlue** = Sub-project (this application)
+- **BusinessBlueprint, HostsBlue, SwipesBlue, List It** = Sibling sub-projects at the same level
+
+ConsoleBlue features a public landing page for the TriadBlue ecosystem and acts as a centralized hub for tracking tasks, conversations, GitHub activity, and project data across all TriadBlue projects. The system includes AI-powered conversation extraction for action items, API key-based integration for external projects, and a Project Documentation Generator for creating standardized documentation using Handlebars templates. It follows a dark-first design aesthetic with fluorescent blue accents, Archivo typography, and is built as a full-stack web application with React and Express.js, drawing inspiration from Linear, Notion, and GitHub for productivity and information density.
 
 ## User Preferences
 

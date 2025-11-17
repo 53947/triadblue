@@ -449,6 +449,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/projects/:projectId/templates", authRequired, async (req, res) => {
     try {
       const authReq = req as AuthRequest;
+      if (!authReq.session?.user) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
       const { projectId } = req.params;
       const data = req.body;
       
@@ -1370,6 +1373,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/projects/:projectId/conversation-templates", authRequired, async (req, res) => {
     try {
       const authReq = req as AuthRequest;
+      if (!authReq.session?.user) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
       const { projectId } = req.params;
       
       const result = insertConversationTemplateSchema.safeParse({
