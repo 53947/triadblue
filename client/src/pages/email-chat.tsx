@@ -14,6 +14,7 @@ import { Mail, Send, User, Bot, Plus, AlertTriangle, Paperclip, X } from "lucide
 import { format } from "date-fns";
 import { VoiceInput } from "@/components/voice-input";
 import { Badge } from "@/components/ui/badge";
+import { PageShell } from "@/components/layout/page-shell";
 
 export default function EmailChat() {
   const { toast } = useToast();
@@ -240,7 +241,7 @@ export default function EmailChat() {
   const selectedThread = threads.find(t => t.id === selectedThreadId);
 
   return (
-    <div className="flex flex-col h-full">
+    <PageShell>
       <div className="p-6 border-b">
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -597,6 +598,6 @@ export default function EmailChat() {
           )}
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 }
