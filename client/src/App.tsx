@@ -33,6 +33,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Project } from "@shared/schema";
 import triadBlueLockup from "@assets/Triad Blue Lockup_1762915681863.png";
+import { useActiveLogo } from "@/hooks/use-active-logo";
 
 function PublicRouter() {
   return (
@@ -82,6 +83,7 @@ function ProtectedApp() {
   const [showCreateProjectModal, setShowCreateProjectModal] = useState(false);
   const hasShownNotificationRef = useRef(false);
   const redirectTimeoutRef = useRef<number | null>(null);
+  const { logoUrl } = useActiveLogo();
   
   useEffect(() => {
     const handleSessionExpired = () => {
@@ -152,7 +154,7 @@ function ProtectedApp() {
               <NotificationBell />
               <ThemeToggle />
               <img 
-                src={triadBlueLockup} 
+                src={logoUrl || triadBlueLockup} 
                 alt="TriadBlue" 
                 className="h-11 w-auto object-contain"
               />
