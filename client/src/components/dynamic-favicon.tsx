@@ -14,9 +14,14 @@ export function DynamicFavicon() {
   );
 
   useEffect(() => {
+    // Add cache-busting timestamp to force browser reload
+    const cacheBust = activeFavicon?.uploadedAt 
+      ? new Date(activeFavicon.uploadedAt).getTime()
+      : Date.now();
+    
     const relativeFaviconUrl = activeFavicon 
-      ? `/uploads/${activeFavicon.filename}`
-      : "/favicon.png";
+      ? `/uploads/${activeFavicon.filename}?v=${cacheBust}`
+      : `/favicon.png?v=${cacheBust}`;
     const absoluteFaviconUrl = window.location.origin + relativeFaviconUrl;
     const mimeType = activeFavicon?.mimeType || "image/png";
 

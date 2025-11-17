@@ -12,8 +12,12 @@ export function useActiveLogo() {
     (asset) => asset.type === "logo" && asset.isActive
   );
 
+  const cacheBust = activeLogo?.uploadedAt 
+    ? new Date(activeLogo.uploadedAt).getTime()
+    : Date.now();
+
   const logoUrl = activeLogo
-    ? `/uploads/${activeLogo.filename}`
+    ? `/uploads/${activeLogo.filename}?v=${cacheBust}`
     : null;
 
   return { logoUrl, isLoading };

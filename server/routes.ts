@@ -1777,6 +1777,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Filter for active assets only
       const activeAssets = assets.filter(asset => asset.isActive);
       
+      // Disable caching for this endpoint to ensure fresh data
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      
       res.json(activeAssets);
     } catch (error) {
       console.error("Error fetching active assets:", error);
