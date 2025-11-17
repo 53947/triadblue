@@ -151,7 +151,7 @@ function ProtectedApp() {
           <header className="flex items-center justify-between gap-2 px-2 sm:px-4 py-2 border-b shrink-0">
             <div className="flex items-center gap-2">
               <SidebarTrigger data-testid="button-sidebar-toggle" className="h-10 min-h-10" />
-              <span className="font-semibold text-sm sm:text-base md:hidden">ConsoleBlue</span>
+              <span className="font-semibold text-sm sm:text-base lg:hidden">ConsoleBlue</span>
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
               <NotificationBell />
