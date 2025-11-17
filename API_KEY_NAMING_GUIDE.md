@@ -35,15 +35,17 @@ These are stored in Replit's Secrets tool and accessed as environment variables.
 
 ### Inbox Setup
 
-Each TriadBlue project gets its own AgentMail inbox. Use these EXACT assistant names:
+Each TriadBlue project has one AgentMail inbox. Configure in ConsoleBlue → Project → Email Settings:
 
-| Project | Assistant Name | Inbox Name in AgentMail |
-|---------|---------------|-------------------------|
-| BusinessBlueprint | `businessblueprint.assistant` | BusinessBlueprint |
-| HostsBlue | `hostsblue.assistant` | HostsBlue |
-| SwipesBlue | `swipesblue.assistant` | SwipesBlue |
-| List It | `listit.assistant` | ListIt |
-| ConsoleBlue | `consoleblue.assistant` | ConsoleBlue |
+| Project | Project Email Inbox | Assistant Session Name |
+|---------|---------------------|----------------------|
+| BusinessBlueprint | (Configure in Email Settings) | `businessblueprint.assistant` |
+| HostsBlue | (Configure in Email Settings) | `hostsblue.assistant` |
+| SwipesBlue | (Configure in Email Settings) | `swipesblue.assistant` |
+| List It | (Configure in Email Settings) | `listit.assistant` |
+| ConsoleBlue | (Configure in Email Settings) | `consoleblue.assistant` |
+
+**Note:** Assistant names (like `listit.assistant`) are just labels for AI sessions that monitor project inboxes. They do NOT have separate email addresses.
 
 ### Email Settings in ConsoleBlue
 
@@ -53,8 +55,8 @@ For each project in ConsoleBlue → Email Settings:
    - ❌ Wrong: `businessblueprint-inbox`
    - ✅ Correct: `550e8400-e29b-41d4-a716-446655440000` (from AgentMail)
 
-2. **Agent Email:** Use the exact assistant name from the table above
-   - ✅ Correct: `businessblueprint.assistant`
+2. **Sender Email:** The email address configured for this project's inbox in AgentMail
+   - Example: Whatever email you set up in AgentMail for this project
 
 ---
 
@@ -127,11 +129,14 @@ In each Project Detail page → GitHub Integration:
 ### Setting Up a New Project
 
 - [ ] Create project in ConsoleBlue
-- [ ] Create AgentMail inbox with assistant name: `[projectname].assistant`
+- [ ] Create AgentMail inbox for the project (any email address you want)
 - [ ] Copy AgentMail Inbox ID to ConsoleBlue Email Settings
+- [ ] Configure sender email in ConsoleBlue Email Settings
 - [ ] Generate API key: `[ProjectName] - Production - Full Access`
 - [ ] Add `GITHUB_TOKEN` to Replit Secrets (if using GitHub)
 - [ ] Configure GitHub repo in Project Detail: `owner/repo`
+
+**Note:** Assistant sessions (like `listit.assistant`) automatically monitor project inboxes - no additional setup needed.
 
 ### Required Replit Secrets
 
@@ -145,9 +150,9 @@ In each Project Detail page → GitHub Integration:
 
 ## 🚨 Common Mistakes to Avoid
 
-1. **Using different assistant name formats**
-   - ❌ `BusinessBlueprint.Assistant` (wrong case)
-   - ✅ `businessblueprint.assistant` (all lowercase)
+1. **Confusing assistant names with email addresses**
+   - ❌ Assistants do NOT have their own email addresses
+   - ✅ Assistant names are just labels for AI sessions monitoring project inboxes
 
 2. **Creating custom inbox IDs**
    - ❌ Making up your own UUID
