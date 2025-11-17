@@ -35,14 +35,15 @@ These are stored in Replit's Secrets tool and accessed as environment variables.
 
 ### Inbox Setup
 
-Each TriadBlue project gets its own AgentMail inbox. Use these EXACT email addresses:
+Each TriadBlue project gets its own AgentMail inbox. Use these EXACT assistant names:
 
-| Project | Email Address | Inbox Name in AgentMail |
+| Project | Assistant Name | Inbox Name in AgentMail |
 |---------|---------------|-------------------------|
-| BusinessBlueprint | `businessblueprint@agentmail.triadblue.com` | BusinessBlueprint |
-| HostsBlue | `hostsblue@agentmail.triadblue.com` | HostsBlue |
-| SwipesBlue | `swipesblue@agentmail.triadblue.com` | SwipesBlue |
-| List It | `listit@agentmail.triadblue.com` | ListIt |
+| BusinessBlueprint | `businessblueprint.assistant` | BusinessBlueprint |
+| HostsBlue | `hostsblue.assistant` | HostsBlue |
+| SwipesBlue | `swipesblue.assistant` | SwipesBlue |
+| List It | `listit.assistant` | ListIt |
+| ConsoleBlue | `consoleblue.assistant` | ConsoleBlue |
 
 ### Email Settings in ConsoleBlue
 
@@ -52,8 +53,8 @@ For each project in ConsoleBlue → Email Settings:
    - ❌ Wrong: `businessblueprint-inbox`
    - ✅ Correct: `550e8400-e29b-41d4-a716-446655440000` (from AgentMail)
 
-2. **Sender Email:** Use the exact email from the table above
-   - ✅ Correct: `businessblueprint@agentmail.triadblue.com`
+2. **Agent Email:** Use the exact assistant name from the table above
+   - ✅ Correct: `businessblueprint.assistant`
 
 ---
 
@@ -126,7 +127,7 @@ In each Project Detail page → GitHub Integration:
 ### Setting Up a New Project
 
 - [ ] Create project in ConsoleBlue
-- [ ] Create AgentMail inbox with email: `[projectname]@agentmail.triadblue.com`
+- [ ] Create AgentMail inbox with assistant name: `[projectname].assistant`
 - [ ] Copy AgentMail Inbox ID to ConsoleBlue Email Settings
 - [ ] Generate API key: `[ProjectName] - Production - Full Access`
 - [ ] Add `GITHUB_TOKEN` to Replit Secrets (if using GitHub)
@@ -144,9 +145,9 @@ In each Project Detail page → GitHub Integration:
 
 ## 🚨 Common Mistakes to Avoid
 
-1. **Using different email formats**
-   - ❌ `BusinessBlueprint@AgentMail.TriadBlue.com` (wrong case)
-   - ✅ `businessblueprint@agentmail.triadblue.com` (all lowercase)
+1. **Using different assistant name formats**
+   - ❌ `BusinessBlueprint.Assistant` (wrong case)
+   - ✅ `businessblueprint.assistant` (all lowercase)
 
 2. **Creating custom inbox IDs**
    - ❌ Making up your own UUID

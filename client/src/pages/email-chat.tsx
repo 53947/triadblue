@@ -274,9 +274,9 @@ export default function EmailChat() {
                     </div>
                   )}
                   <div>
-                    <label className="text-sm font-medium">Agent Email</label>
+                    <label className="text-sm font-medium">Assistant Name</label>
                     <Input
-                      placeholder="agent@agentmail.triadblue.com"
+                      placeholder="listit.assistant"
                       value={newThreadTo}
                       onChange={(e) => setNewThreadTo(e.target.value)}
                       data-testid="input-new-thread-to"
