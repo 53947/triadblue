@@ -173,6 +173,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/projects", authRequired, async (req, res) => {
     try {
       const authReq = req as AuthRequest;
+      if (!authReq.session?.user) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
       const data = insertProjectSchema.parse(req.body);
       const project = await storage.createProject({
         ...data,
@@ -2111,12 +2114,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Analyze conversation for actionable items (async, don't await to avoid blocking webhook response)
       (async () => {
         try {
-          const messages = await storage.getEmailThreadMessages(thread.id);
+          const messages = await storage.getEmailMessagesByThread(thread.id);
           const analysis = await analyzeConversation(messages);
           
           await storage.updateEmailThread(thread.id, {
-            hasActionableItems: analysis.hasActionableItems,
-            isAnalyzed: true,
             actionableItems: analysis.items,
             analysisSummary: analysis.summary,
           });
