@@ -29,6 +29,7 @@ export default function EmailChat() {
   const [newThreadTo, setNewThreadTo] = useState("");
   const [newThreadSubject, setNewThreadSubject] = useState("");
   const [newThreadBody, setNewThreadBody] = useState("");
+  const [newThreadAttachments, setNewThreadAttachments] = useState<Array<{file: File, base64: string}>>([]);
 
   const { data: projects = [] } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
@@ -102,11 +103,12 @@ export default function EmailChat() {
   });
 
   const createThreadMutation = useMutation({
-    mutationFn: async ({ to, subject, body }: { to: string; subject: string; body: string }) => {
+    mutationFn: async ({ to, subject, body, attachments: emailAttachments }: { to: string; subject: string; body: string; attachments?: Array<{filename: string; contentType: string; content: string}> }) => {
       return await apiRequest("POST", `/api/projects/${selectedProjectId}/send-email`, {
         to,
         subject,
         body,
+        attachments: emailAttachments,
       });
     },
     onSuccess: (data: any) => {
@@ -115,6 +117,7 @@ export default function EmailChat() {
       setNewThreadTo("");
       setNewThreadSubject("");
       setNewThreadBody("");
+      setNewThreadAttachments([]);
       if (data.thread?.id) {
         setSelectedThreadId(data.thread.id);
       }
@@ -180,6 +183,39 @@ export default function EmailChat() {
 
   const removeAttachment = (index: number) => {
     setAttachments(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleNewThreadFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    
+    for (const file of files) {
+      // Check file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: `${file.name} exceeds 10MB limit`,
+          variant: "destructive",
+        });
+        continue;
+      }
+
+      // Convert to base64
+      const reader = new FileReader();
+      reader.onload = () => {
+        setNewThreadAttachments(prev => [...prev, {
+          file,
+          base64: reader.result as string,
+        }]);
+      };
+      reader.readAsDataURL(file);
+    }
+    
+    // Reset input
+    e.target.value = '';
+  };
+
+  const removeNewThreadAttachment = (index: number) => {
+    setNewThreadAttachments(prev => prev.filter((_, i) => i !== index));
   };
   
   // Update localStorage when project selection changes
@@ -281,14 +317,68 @@ export default function EmailChat() {
                       </div>
                     </div>
                   </div>
+                  <div>
+                    <label className="text-sm font-medium">Attachments</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="file"
+                        multiple
+                        onChange={handleNewThreadFileSelect}
+                        className="hidden"
+                        id="new-thread-file-input"
+                        data-testid="input-new-thread-file"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => document.getElementById('new-thread-file-input')?.click()}
+                        data-testid="button-attach-new-thread-file"
+                      >
+                        <Paperclip className="w-4 h-4 mr-2" />
+                        Attach Files
+                      </Button>
+                      <span className="text-xs text-muted-foreground">
+                        Max 10MB per file
+                      </span>
+                    </div>
+                    {newThreadAttachments.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {newThreadAttachments.map((attachment, index) => (
+                          <Badge
+                            key={index}
+                            variant="secondary"
+                            className="flex items-center gap-1"
+                            data-testid={`badge-new-thread-attachment-${index}`}
+                          >
+                            {attachment.file.name}
+                            <button
+                              onClick={() => removeNewThreadAttachment(index)}
+                              className="ml-1 hover:text-destructive"
+                              data-testid={`button-remove-new-thread-attachment-${index}`}
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   <Button
                     className="w-full"
                     onClick={() => {
                       if (newThreadTo && newThreadSubject && newThreadBody) {
+                        const emailAttachments = newThreadAttachments.map(att => ({
+                          filename: att.file.name,
+                          contentType: att.file.type || 'application/octet-stream',
+                          content: att.base64.split(',')[1],
+                        }));
+                        
                         createThreadMutation.mutate({
                           to: newThreadTo,
                           subject: newThreadSubject,
                           body: newThreadBody,
+                          attachments: emailAttachments.length > 0 ? emailAttachments : undefined,
                         });
                       }
                     }}
