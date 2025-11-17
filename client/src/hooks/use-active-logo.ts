@@ -3,7 +3,7 @@ import type { Asset } from "@shared/schema";
 
 export function useActiveLogo() {
   const { data: assets = [], isLoading } = useQuery<Asset[]>({
-    queryKey: ["/api/assets"],
+    queryKey: ["/api/public/assets/active", { type: "logo" }],
     retry: false,
     refetchOnWindowFocus: false,
   });

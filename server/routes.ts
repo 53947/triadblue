@@ -1751,6 +1751,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Serve uploaded assets
   app.use('/uploads', express.static('uploads'));
 
+  // Public endpoint for active favicon and logo (no auth required)
+  app.get("/api/public/assets/active", async (req, res) => {
+    try {
+      const { type } = req.query;
+      
+      if (type && type !== 'favicon' && type !== 'logo') {
+        return res.status(400).json({ error: "Type must be 'favicon' or 'logo'" });
+      }
+      
+      const assets = await storage.listAssets(
+        type ? String(type) : undefined,
+        null // Only global assets (no project-specific)
+      );
+      
+      // Filter for active assets only
+      const activeAssets = assets.filter(asset => asset.isActive);
+      
+      res.json(activeAssets);
+    } catch (error) {
+      console.error("Error fetching active assets:", error);
+      res.status(500).json({ error: "Failed to fetch active assets" });
+    }
+  });
+
   // Upload new asset
   app.post("/api/assets", authRequired, upload.single('file'), async (req: any, res) => {
     try {

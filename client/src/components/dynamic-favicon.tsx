@@ -1,18 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { Asset } from "@shared/schema";
-import { checkAuth } from "@/lib/auth";
 
 export function DynamicFavicon() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  useEffect(() => {
-    checkAuth().then(setIsAuthenticated);
-  }, []);
-
   const { data: assets = [] } = useQuery<Asset[]>({
-    queryKey: ["/api/assets"],
-    enabled: isAuthenticated,
+    queryKey: ["/api/public/assets/active", { type: "favicon" }],
     retry: false,
     refetchOnWindowFocus: false,
   });
