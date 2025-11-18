@@ -16,7 +16,7 @@ import { templatingService } from "./templating";
 import { randomBytes, createHmac, randomUUID } from "crypto";
 import AdmZip from "adm-zip";
 import { z } from "zod";
-import { insertProjectSchema, insertTaskSchema, insertConversationSchema, insertGithubActivitySchema, insertApiKeySchema, insertAgentConnectionSchema, insertAgentChatMessageSchema, insertTaskTemplateSchema, insertConversationTemplateSchema, insertAssetSchema } from "@shared/schema";
+import { insertProjectSchema, insertTaskSchema, insertConversationSchema, insertGithubActivitySchema, insertApiKeySchema, insertAgentConnectionSchema, insertAgentChatMessageSchema, insertTaskTemplateSchema, insertConversationTemplateSchema, insertAssetSchema, insertSitePlannerNodeSchema, insertSitePlannerEdgeSchema } from "@shared/schema";
 import { authRequired, constantTimeCompare, setStorageForAuth, type AuthRequest } from "./auth";
 import multer from "multer";
 import path from "path";
@@ -2405,14 +2405,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/projects/:projectId/site-planner/save", authRequired, async (req, res) => {
     try {
       const { projectId } = req.params;
-      const { nodes, edges } = req.body;
+      
+      // Validate request body with Zod
+      const sitePlannerSaveSchema = z.object({
+        nodes: z.array(insertSitePlannerNodeSchema.omit({ projectId: true })).default([]),
+        edges: z.array(insertSitePlannerEdgeSchema.omit({ projectId: true })).default([]),
+      });
+      
+      const validated = sitePlannerSaveSchema.parse(req.body);
+      
+      // Inject projectId from route param into all nodes and edges
+      const nodesWithProjectId = validated.nodes.map(node => ({
+        ...node,
+        projectId,
+      }));
+      
+      const edgesWithProjectId = validated.edges.map(edge => ({
+        ...edge,
+        projectId,
+      }));
 
       // Bulk upsert nodes and edges
-      const savedNodes = await storage.bulkUpsertSitePlannerNodes(projectId, nodes);
-      const savedEdges = await storage.bulkUpsertSitePlannerEdges(projectId, edges);
+      const savedNodes = await storage.bulkUpsertSitePlannerNodes(projectId, nodesWithProjectId);
+      const savedEdges = await storage.bulkUpsertSitePlannerEdges(projectId, edgesWithProjectId);
 
       res.json({ nodes: savedNodes, edges: savedEdges });
     } catch (error: any) {
+      if (error.name === "ZodError") {
+        console.error("Validation error saving site planner:", error);
+        return res.status(400).json({ error: "Invalid request data", details: error.errors });
+      }
       console.error("Error saving site planner:", error);
       res.status(500).json({ error: error.message || "Failed to save planner" });
     }
