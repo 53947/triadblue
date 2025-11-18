@@ -22,6 +22,8 @@ import {
   emailThreads,
   emailMessages,
   emailAttachments,
+  sitePlannerNodes,
+  sitePlannerEdges,
   type User,
   type InsertUser,
   type Project,
@@ -66,6 +68,10 @@ import {
   type InsertEmailMessage,
   type EmailAttachment,
   type InsertEmailAttachment,
+  type SitePlannerNode,
+  type InsertSitePlannerNode,
+  type SitePlannerEdge,
+  type InsertSitePlannerEdge,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, isNull } from "drizzle-orm";
@@ -221,6 +227,21 @@ export interface IStorage {
   getAttachmentsByMessage(messageId: string): Promise<EmailAttachment[]>;
   createEmailAttachment(attachment: InsertEmailAttachment): Promise<EmailAttachment>;
   deleteAttachmentsByMessage(messageId: string): Promise<void>;
+
+  // Site Planner Nodes
+  getSitePlannerNodesByProject(projectId: string): Promise<SitePlannerNode[]>;
+  getSitePlannerNode(id: string): Promise<SitePlannerNode | undefined>;
+  createSitePlannerNode(node: InsertSitePlannerNode): Promise<SitePlannerNode>;
+  updateSitePlannerNode(id: string, updates: Partial<InsertSitePlannerNode>): Promise<SitePlannerNode | undefined>;
+  deleteSitePlannerNode(id: string): Promise<void>;
+  bulkUpsertSitePlannerNodes(projectId: string, nodes: InsertSitePlannerNode[]): Promise<SitePlannerNode[]>;
+
+  // Site Planner Edges
+  getSitePlannerEdgesByProject(projectId: string): Promise<SitePlannerEdge[]>;
+  getSitePlannerEdge(id: string): Promise<SitePlannerEdge | undefined>;
+  createSitePlannerEdge(edge: InsertSitePlannerEdge): Promise<SitePlannerEdge>;
+  deleteSitePlannerEdge(id: string): Promise<void>;
+  bulkUpsertSitePlannerEdges(projectId: string, edges: InsertSitePlannerEdge[]): Promise<SitePlannerEdge[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -920,6 +941,74 @@ export class DatabaseStorage implements IStorage {
 
   async deleteAttachmentsByMessage(messageId: string): Promise<void> {
     await db.delete(emailAttachments).where(eq(emailAttachments.messageId, messageId));
+  }
+
+  // Site Planner Nodes
+  async getSitePlannerNodesByProject(projectId: string): Promise<SitePlannerNode[]> {
+    return await db.select().from(sitePlannerNodes)
+      .where(eq(sitePlannerNodes.projectId, projectId))
+      .orderBy(sitePlannerNodes.createdAt);
+  }
+
+  async getSitePlannerNode(id: string): Promise<SitePlannerNode | undefined> {
+    const [node] = await db.select().from(sitePlannerNodes).where(eq(sitePlannerNodes.id, id));
+    return node || undefined;
+  }
+
+  async createSitePlannerNode(node: InsertSitePlannerNode): Promise<SitePlannerNode> {
+    const [result] = await db.insert(sitePlannerNodes).values(node).returning();
+    return result;
+  }
+
+  async updateSitePlannerNode(id: string, updates: Partial<InsertSitePlannerNode>): Promise<SitePlannerNode | undefined> {
+    const [updated] = await db.update(sitePlannerNodes)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(sitePlannerNodes.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteSitePlannerNode(id: string): Promise<void> {
+    await db.delete(sitePlannerNodes).where(eq(sitePlannerNodes.id, id));
+  }
+
+  async bulkUpsertSitePlannerNodes(projectId: string, nodes: InsertSitePlannerNode[]): Promise<SitePlannerNode[]> {
+    // Delete existing nodes for this project
+    await db.delete(sitePlannerNodes).where(eq(sitePlannerNodes.projectId, projectId));
+    
+    // Insert new nodes
+    if (nodes.length === 0) return [];
+    return await db.insert(sitePlannerNodes).values(nodes).returning();
+  }
+
+  // Site Planner Edges
+  async getSitePlannerEdgesByProject(projectId: string): Promise<SitePlannerEdge[]> {
+    return await db.select().from(sitePlannerEdges)
+      .where(eq(sitePlannerEdges.projectId, projectId))
+      .orderBy(sitePlannerEdges.createdAt);
+  }
+
+  async getSitePlannerEdge(id: string): Promise<SitePlannerEdge | undefined> {
+    const [edge] = await db.select().from(sitePlannerEdges).where(eq(sitePlannerEdges.id, id));
+    return edge || undefined;
+  }
+
+  async createSitePlannerEdge(edge: InsertSitePlannerEdge): Promise<SitePlannerEdge> {
+    const [result] = await db.insert(sitePlannerEdges).values(edge).returning();
+    return result;
+  }
+
+  async deleteSitePlannerEdge(id: string): Promise<void> {
+    await db.delete(sitePlannerEdges).where(eq(sitePlannerEdges.id, id));
+  }
+
+  async bulkUpsertSitePlannerEdges(projectId: string, edges: InsertSitePlannerEdge[]): Promise<SitePlannerEdge[]> {
+    // Delete existing edges for this project
+    await db.delete(sitePlannerEdges).where(eq(sitePlannerEdges.projectId, projectId));
+    
+    // Insert new edges
+    if (edges.length === 0) return [];
+    return await db.insert(sitePlannerEdges).values(edges).returning();
   }
 }
 

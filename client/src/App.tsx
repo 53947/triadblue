@@ -25,6 +25,8 @@ import AgentConnectionSetup from "@/pages/agent-connection-setup";
 import EmailChat from "@/pages/email-chat";
 import EmailSettings from "@/pages/email-settings";
 import AssistantWorkspace from "@/pages/assistant-workspace";
+import SitePlanner from "@/pages/site-planner";
+import SiteMap from "@/pages/site-map";
 import { ProtectedRoute } from "@/components/protected-route";
 import { DynamicFavicon } from "@/components/dynamic-favicon";
 import { useQuery } from "@tanstack/react-query";
@@ -62,6 +64,8 @@ function ProtectedRouter() {
       <Route path="/email-chat" component={EmailChat} />
       <Route path="/email-settings" component={EmailSettings} />
       <Route path="/assistant-workspace" component={AssistantWorkspace} />
+      <Route path="/site-planner" component={SitePlanner} />
+      <Route path="/site-map" component={SiteMap} />
       <Route path="/embeds" component={ProjectEmbeds} />
       <Route path="/agent-setup" component={AgentConnectionSetup} />
       <Route path="/github">

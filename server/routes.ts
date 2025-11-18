@@ -2375,6 +2375,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Site Planner Routes
+  
+  // Get all nodes for a project
+  app.get("/api/projects/:projectId/site-planner/nodes", authRequired, async (req, res) => {
+    try {
+      const { projectId } = req.params;
+      const nodes = await storage.getSitePlannerNodesByProject(projectId);
+      res.json(nodes);
+    } catch (error: any) {
+      console.error("Error fetching site planner nodes:", error);
+      res.status(500).json({ error: error.message || "Failed to fetch nodes" });
+    }
+  });
+
+  // Get all edges for a project
+  app.get("/api/projects/:projectId/site-planner/edges", authRequired, async (req, res) => {
+    try {
+      const { projectId } = req.params;
+      const edges = await storage.getSitePlannerEdgesByProject(projectId);
+      res.json(edges);
+    } catch (error: any) {
+      console.error("Error fetching site planner edges:", error);
+      res.status(500).json({ error: error.message || "Failed to fetch edges" });
+    }
+  });
+
+  // Save entire planner state (bulk upsert)
+  app.post("/api/projects/:projectId/site-planner/save", authRequired, async (req, res) => {
+    try {
+      const { projectId } = req.params;
+      const { nodes, edges } = req.body;
+
+      // Bulk upsert nodes and edges
+      const savedNodes = await storage.bulkUpsertSitePlannerNodes(projectId, nodes);
+      const savedEdges = await storage.bulkUpsertSitePlannerEdges(projectId, edges);
+
+      res.json({ nodes: savedNodes, edges: savedEdges });
+    } catch (error: any) {
+      console.error("Error saving site planner:", error);
+      res.status(500).json({ error: error.message || "Failed to save planner" });
+    }
+  });
+
+  // Create a single node
+  app.post("/api/site-planner/nodes", authRequired, async (req, res) => {
+    try {
+      const node = await storage.createSitePlannerNode(req.body);
+      res.json(node);
+    } catch (error: any) {
+      console.error("Error creating node:", error);
+      res.status(500).json({ error: error.message || "Failed to create node" });
+    }
+  });
+
+  // Update a single node
+  app.patch("/api/site-planner/nodes/:id", authRequired, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const node = await storage.updateSitePlannerNode(id, req.body);
+      res.json(node);
+    } catch (error: any) {
+      console.error("Error updating node:", error);
+      res.status(500).json({ error: error.message || "Failed to update node" });
+    }
+  });
+
+  // Delete a single node
+  app.delete("/api/site-planner/nodes/:id", authRequired, async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteSitePlannerNode(id);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error deleting node:", error);
+      res.status(500).json({ error: error.message || "Failed to delete node" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
