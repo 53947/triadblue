@@ -324,6 +324,37 @@ export const assets = pgTable("assets", {
   uploadedByIdx: sql`create index if not exists "assets_uploaded_by_idx" on ${table} ("uploaded_by_id", "uploaded_at" desc)`,
 }));
 
+// Site Planner Nodes - stores page/component nodes in the visual planner
+export const sitePlannerNodes = pgTable("site_planner_nodes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  projectId: varchar("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  nodeId: text("node_id").notNull(), // React Flow node ID (e.g., "node-1", "node-2")
+  label: text("label").notNull(), // Page name (e.g., "Home", "About", "Contact")
+  description: text("description"), // Optional description
+  status: text("status").notNull().default("planned"), // 'planned', 'in_progress', 'completed'
+  positionX: integer("position_x").notNull(), // X coordinate on canvas
+  positionY: integer("position_y").notNull(), // Y coordinate on canvas
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  // Ensure unique nodeId per project
+  uniqueNodeId: unique("site_planner_nodes_unique_node_id").on(table.projectId, table.nodeId),
+}));
+
+// Site Planner Edges - stores connections between nodes
+export const sitePlannerEdges = pgTable("site_planner_edges", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  projectId: varchar("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  edgeId: text("edge_id").notNull(), // React Flow edge ID (e.g., "edge-1-2")
+  sourceNodeId: text("source_node_id").notNull(), // Node ID of source
+  targetNodeId: text("target_node_id").notNull(), // Node ID of target
+  label: text("label"), // Optional edge label (e.g., "Click", "Navigate")
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  // Ensure unique edgeId per project
+  uniqueEdgeId: unique("site_planner_edges_unique_edge_id").on(table.projectId, table.edgeId),
+}));
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   createdProjects: many(projects),
@@ -351,6 +382,8 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   documentationOutputs: many(projectDocumentationOutputs),
   emailThreads: many(emailThreads),
   emailConfig: one(emailGithubConfigs),
+  sitePlannerNodes: many(sitePlannerNodes),
+  sitePlannerEdges: many(sitePlannerEdges),
 }));
 
 export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
@@ -503,6 +536,20 @@ export const emailMessagesRelations = relations(emailMessages, ({ one }) => ({
 export const emailGithubConfigsRelations = relations(emailGithubConfigs, ({ one }) => ({
   project: one(projects, {
     fields: [emailGithubConfigs.projectId],
+    references: [projects.id],
+  }),
+}));
+
+export const sitePlannerNodesRelations = relations(sitePlannerNodes, ({ one }) => ({
+  project: one(projects, {
+    fields: [sitePlannerNodes.projectId],
+    references: [projects.id],
+  }),
+}));
+
+export const sitePlannerEdgesRelations = relations(sitePlannerEdges, ({ one }) => ({
+  project: one(projects, {
+    fields: [sitePlannerEdges.projectId],
     references: [projects.id],
   }),
 }));
@@ -697,3 +744,20 @@ export const insertEmailAttachmentSchema = createInsertSchema(emailAttachments).
 });
 export type InsertEmailAttachment = z.infer<typeof insertEmailAttachmentSchema>;
 export type EmailAttachment = typeof emailAttachments.$inferSelect;
+
+// Site Planner Node schemas
+export const insertSitePlannerNodeSchema = createInsertSchema(sitePlannerNodes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertSitePlannerNode = z.infer<typeof insertSitePlannerNodeSchema>;
+export type SitePlannerNode = typeof sitePlannerNodes.$inferSelect;
+
+// Site Planner Edge schemas
+export const insertSitePlannerEdgeSchema = createInsertSchema(sitePlannerEdges).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertSitePlannerEdge = z.infer<typeof insertSitePlannerEdgeSchema>;
+export type SitePlannerEdge = typeof sitePlannerEdges.$inferSelect;
