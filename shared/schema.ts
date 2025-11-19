@@ -355,6 +355,22 @@ export const sitePlannerEdges = pgTable("site_planner_edges", {
   uniqueEdgeId: unique("site_planner_edges_unique_edge_id").on(table.projectId, table.edgeId),
 }));
 
+// Project Routes - stores actual routes/pages from projects for sitemap generation
+export const projectRoutes = pgTable("project_routes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  projectId: varchar("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  name: text("name").notNull(), // Display name (e.g., "Dashboard", "User Profile")
+  path: text("path").notNull(), // Route path (e.g., "/", "/projects", "/user/:id")
+  filePath: text("file_path"), // File location (e.g., "client/src/pages/dashboard.tsx")
+  routeType: text("route_type").notNull().default("static"), // 'static', 'dynamic', 'layout'
+  framework: text("framework").notNull().default("wouter"), // 'wouter', 'react-router', 'nextjs', 'other'
+  parentId: varchar("parent_id"), // Self-reference for nested routes
+  meta: json("meta").$type<{ methods?: string[], component?: string, exact?: boolean, [key: string]: any }>(), // Additional metadata
+  source: text("source").notNull().default("scan"), // 'scan' (auto-scanned), 'external' (from API)
+  lastSyncedAt: timestamp("last_synced_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   createdProjects: many(projects),
@@ -384,6 +400,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   emailConfig: one(emailGithubConfigs),
   sitePlannerNodes: many(sitePlannerNodes),
   sitePlannerEdges: many(sitePlannerEdges),
+  routes: many(projectRoutes),
 }));
 
 export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
@@ -550,6 +567,13 @@ export const sitePlannerNodesRelations = relations(sitePlannerNodes, ({ one }) =
 export const sitePlannerEdgesRelations = relations(sitePlannerEdges, ({ one }) => ({
   project: one(projects, {
     fields: [sitePlannerEdges.projectId],
+    references: [projects.id],
+  }),
+}));
+
+export const projectRoutesRelations = relations(projectRoutes, ({ one }) => ({
+  project: one(projects, {
+    fields: [projectRoutes.projectId],
     references: [projects.id],
   }),
 }));
@@ -761,3 +785,12 @@ export const insertSitePlannerEdgeSchema = createInsertSchema(sitePlannerEdges).
 });
 export type InsertSitePlannerEdge = z.infer<typeof insertSitePlannerEdgeSchema>;
 export type SitePlannerEdge = typeof sitePlannerEdges.$inferSelect;
+
+// Project Route schemas
+export const insertProjectRouteSchema = createInsertSchema(projectRoutes).omit({
+  id: true,
+  createdAt: true,
+  lastSyncedAt: true,
+});
+export type InsertProjectRoute = z.infer<typeof insertProjectRouteSchema>;
+export type ProjectRoute = typeof projectRoutes.$inferSelect;
