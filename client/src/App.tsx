@@ -148,12 +148,12 @@ function ProtectedApp() {
 
   return (
     <SidebarProvider style={style as React.CSSProperties}>
-      <div className="flex h-screen w-full overflow-hidden">
+      <div className="flex h-screen w-full min-h-screen overflow-x-hidden">
         <AppSidebar 
           projects={projects} 
           onNewProject={() => setShowCreateProjectModal(true)}
         />
-        <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+        <div className="flex flex-col flex-1 min-w-0">
           <header className="flex items-center justify-between gap-2 px-2 sm:px-4 py-2 border-b shrink-0">
             <div className="flex items-center gap-2">
               <SidebarTrigger data-testid="button-sidebar-toggle" className="h-10 min-h-10" />
@@ -169,7 +169,7 @@ function ProtectedApp() {
               />
             </div>
           </header>
-          <main className="flex-1 overflow-auto">
+          <main className="flex-1 overflow-y-auto overflow-x-hidden">
             <ProtectedRouter />
           </main>
         </div>
