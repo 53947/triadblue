@@ -13,10 +13,11 @@ import { initializeSyncScheduler } from "./sync-scheduler";
 import { NotificationService } from "./notification";
 import { analyticsService } from "./analytics";
 import { templatingService } from "./templating";
+import { scanConsoleBlueRoutes } from "./site-map-scanner";
 import { randomBytes, createHmac, randomUUID } from "crypto";
 import AdmZip from "adm-zip";
 import { z } from "zod";
-import { insertProjectSchema, insertTaskSchema, insertConversationSchema, insertGithubActivitySchema, insertApiKeySchema, insertAgentConnectionSchema, insertAgentChatMessageSchema, insertTaskTemplateSchema, insertConversationTemplateSchema, insertAssetSchema, insertSitePlannerNodeSchema, insertSitePlannerEdgeSchema } from "@shared/schema";
+import { insertProjectSchema, insertTaskSchema, insertConversationSchema, insertGithubActivitySchema, insertApiKeySchema, insertAgentConnectionSchema, insertAgentChatMessageSchema, insertTaskTemplateSchema, insertConversationTemplateSchema, insertAssetSchema, insertSitePlannerNodeSchema, insertSitePlannerEdgeSchema, insertProjectRouteSchema } from "@shared/schema";
 import { authRequired, constantTimeCompare, setStorageForAuth, type AuthRequest } from "./auth";
 import multer from "multer";
 import path from "path";
@@ -2472,6 +2473,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error deleting node:", error);
       res.status(500).json({ error: error.message || "Failed to delete node" });
+    }
+  });
+
+  // Project Routes (Site Map)
+  
+  // Get all routes for a project
+  app.get("/api/projects/:projectId/routes", authRequired, async (req, res) => {
+    try {
+      const { projectId } = req.params;
+      const routes = await storage.getProjectRoutes(projectId);
+      res.json(routes);
+    } catch (error: any) {
+      console.error("Error fetching project routes:", error);
+      res.status(500).json({ error: error.message || "Failed to fetch routes" });
+    }
+  });
+
+  // Trigger route scan for ConsoleBlue project
+  app.post("/api/projects/:projectId/routes/scan", authRequired, async (req, res) => {
+    try {
+      const { projectId } = req.params;
+      
+      // Scan routes from ConsoleBlue codebase
+      const scannedRoutes = await scanConsoleBlueRoutes(projectId);
+      
+      // Delete existing scanned routes for this project
+      await storage.deleteProjectRoutesBySource(projectId, "scan");
+      
+      // Insert newly scanned routes
+      const savedRoutes = await storage.bulkUpsertProjectRoutes(projectId, scannedRoutes);
+      
+      res.json({ 
+        success: true, 
+        count: savedRoutes.length,
+        routes: savedRoutes,
+      });
+    } catch (error: any) {
+      console.error("Error scanning project routes:", error);
+      res.status(500).json({ error: error.message || "Failed to scan routes" });
+    }
+  });
+
+  // Accept routes from external projects (API key authenticated)
+  app.post("/api/projects/:projectId/routes", validateApiKey, requirePermission("write_routes"), async (req, res) => {
+    try {
+      const { projectId } = req.params;
+      
+      // Verify that the API key belongs to this project
+      if (req.apiKey.projectId !== projectId) {
+        return res.status(403).json({ error: "API key does not belong to this project" });
+      }
+      
+      // Validate request body
+      const externalRoutesSchema = z.object({
+        routes: z.array(insertProjectRouteSchema.omit({ projectId: true, createdAt: true, lastSyncedAt: true })),
+      });
+      
+      const validated = externalRoutesSchema.parse(req.body);
+      
+      // Inject projectId and ensure source is 'external'
+      const routesWithProjectId = validated.routes.map(route => ({
+        ...route,
+        projectId,
+        source: "external",
+      }));
+      
+      // Delete existing external routes for this project
+      await storage.deleteProjectRoutesBySource(projectId, "external");
+      
+      // Insert new routes
+      const savedRoutes = await storage.bulkUpsertProjectRoutes(projectId, routesWithProjectId);
+      
+      res.json({ 
+        success: true, 
+        count: savedRoutes.length,
+        routes: savedRoutes,
+      });
+    } catch (error: any) {
+      if (error.name === "ZodError") {
+        console.error("Validation error saving external routes:", error);
+        return res.status(400).json({ error: "Invalid request data", details: error.errors });
+      }
+      console.error("Error saving external routes:", error);
+      res.status(500).json({ error: error.message || "Failed to save routes" });
     }
   });
 
