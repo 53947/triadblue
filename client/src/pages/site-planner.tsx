@@ -309,22 +309,24 @@ export default function SitePlanner() {
         </Select>
       </div>
 
-      <div className="flex-1 relative">
+      <div className="flex-1 w-full">
         {selectedProjectId ? (
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onNodeClick={handleNodeClick}
-            nodeTypes={nodeTypes}
-            fitView
-            data-testid="react-flow-canvas"
-          >
-            <Background variant={BackgroundVariant.Dots} />
-            <Controls />
-          </ReactFlow>
+          <div className="w-full h-full">
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              onNodeClick={handleNodeClick}
+              nodeTypes={nodeTypes}
+              fitView
+              data-testid="react-flow-canvas"
+            >
+              <Background variant={BackgroundVariant.Dots} />
+              <Controls />
+            </ReactFlow>
+          </div>
         ) : (
           <div className="flex items-center justify-center h-full text-muted-foreground">
             Select a project to begin planning
