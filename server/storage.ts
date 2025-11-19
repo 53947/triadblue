@@ -24,6 +24,7 @@ import {
   emailAttachments,
   sitePlannerNodes,
   sitePlannerEdges,
+  projectRoutes,
   type User,
   type InsertUser,
   type Project,
@@ -72,6 +73,8 @@ import {
   type InsertSitePlannerNode,
   type SitePlannerEdge,
   type InsertSitePlannerEdge,
+  type ProjectRoute,
+  type InsertProjectRoute,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, isNull } from "drizzle-orm";
@@ -242,6 +245,11 @@ export interface IStorage {
   createSitePlannerEdge(edge: InsertSitePlannerEdge): Promise<SitePlannerEdge>;
   deleteSitePlannerEdge(id: string): Promise<void>;
   bulkUpsertSitePlannerEdges(projectId: string, edges: InsertSitePlannerEdge[]): Promise<SitePlannerEdge[]>;
+
+  // Project Routes
+  getProjectRoutes(projectId: string): Promise<ProjectRoute[]>;
+  deleteProjectRoutesBySource(projectId: string, source: string): Promise<void>;
+  bulkUpsertProjectRoutes(projectId: string, routes: InsertProjectRoute[]): Promise<ProjectRoute[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1009,6 +1017,27 @@ export class DatabaseStorage implements IStorage {
     // Insert new edges
     if (edges.length === 0) return [];
     return await db.insert(sitePlannerEdges).values(edges).returning();
+  }
+
+  // Project Routes
+  async getProjectRoutes(projectId: string): Promise<ProjectRoute[]> {
+    return await db.select().from(projectRoutes)
+      .where(eq(projectRoutes.projectId, projectId))
+      .orderBy(projectRoutes.path);
+  }
+
+  async deleteProjectRoutesBySource(projectId: string, source: string): Promise<void> {
+    await db.delete(projectRoutes)
+      .where(and(
+        eq(projectRoutes.projectId, projectId),
+        eq(projectRoutes.source, source)
+      ));
+  }
+
+  async bulkUpsertProjectRoutes(projectId: string, routes: InsertProjectRoute[]): Promise<ProjectRoute[]> {
+    // If there are routes to insert, insert them
+    if (routes.length === 0) return [];
+    return await db.insert(projectRoutes).values(routes).returning();
   }
 }
 
