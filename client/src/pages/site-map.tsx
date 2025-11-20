@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { Project, ProjectRoute } from "@shared/schema";
@@ -6,149 +6,131 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/layout/page-shell";
-import { FileCode, Folder, File, RefreshCw, ChevronRight, ChevronDown } from "lucide-react";
+import { TreeVisualization, TreeNode } from "@/components/tree-visualization";
+import { RefreshCw, File } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-// Tree node type for hierarchical route display
-interface RouteTreeNode {
-  segment: string;
-  fullPath: string;
-  routes: ProjectRoute[];
-  children: Map<string, RouteTreeNode>;
-  isExpanded: boolean;
-}
+// Build tree structure from routes with proper segment-based hierarchy
+function buildRouteTree(routes: ProjectRoute[]): TreeNode[] {
+  const tree: TreeNode[] = [];
+  const nodeMap = new Map<string, TreeNode>();
 
-// Build tree structure from routes
-function buildRouteTree(routes: ProjectRoute[]): RouteTreeNode {
-  const root: RouteTreeNode = {
-    segment: "",
-    fullPath: "",
-    routes: [],
-    children: new Map(),
-    isExpanded: true,
-  };
+  // Sort routes by depth (shallower first) and then lexicographically
+  const sortedRoutes = [...routes].sort((a, b) => {
+    const aDepth = a.path.split("/").filter(Boolean).length;
+    const bDepth = b.path.split("/").filter(Boolean).length;
+    if (aDepth !== bDepth) return aDepth - bDepth;
+    return a.path.localeCompare(b.path);
+  });
 
-  for (const route of routes) {
-    const segments = route.path.split("/").filter(Boolean);
-    let currentNode = root;
-    let currentPath = "";
-
-    for (let i = 0; i < segments.length; i++) {
-      const segment = segments[i];
-      currentPath += `/${segment}`;
-
-      if (!currentNode.children.has(segment)) {
-        currentNode.children.set(segment, {
-          segment,
-          fullPath: currentPath,
-          routes: [],
-          children: new Map(),
-          isExpanded: false,
-        });
-      }
-
-      currentNode = currentNode.children.get(segment)!;
+  // Helper to ensure a path segment exists in the tree
+  const ensureNode = (fullPath: string, segments: string[], depth: number): TreeNode => {
+    // Check if this path already has a node
+    if (nodeMap.has(fullPath)) {
+      return nodeMap.get(fullPath)!;
     }
 
-    // Add route to the leaf node
-    currentNode.routes.push(route);
+    // Create a new node (segment placeholder)
+    const segment = segments[depth];
+    const node: TreeNode = {
+      id: `segment-${fullPath}`,
+      label: segment,
+      description: fullPath,
+      children: [],
+    };
+
+    nodeMap.set(fullPath, node);
+
+    // Attach to parent or root
+    if (depth === 0) {
+      tree.push(node);
+    } else {
+      const parentPath = "/" + segments.slice(0, depth).join("/");
+      const parentNode = ensureNode(parentPath, segments, depth - 1);
+      if (!parentNode.children) {
+        parentNode.children = [];
+      }
+      parentNode.children.push(node);
+    }
+
+    return node;
+  };
+
+  // Process each route in sorted order
+  for (const route of sortedRoutes) {
+    const segments = route.path.split("/").filter(Boolean);
+    const fullPath = route.path;
+
+    if (segments.length === 0) {
+      // Root route
+      const existing = nodeMap.get(fullPath);
+      if (existing) {
+        // Update existing placeholder
+        existing.id = route.id;
+        existing.label = route.name;
+        existing.description = fullPath;
+        existing.status = "completed";
+      } else {
+        const node: TreeNode = {
+          id: route.id,
+          label: route.name,
+          description: fullPath,
+          status: "completed",
+        };
+        tree.push(node);
+        nodeMap.set(fullPath, node);
+      }
+    } else {
+      // Ensure all parent segments exist
+      for (let i = 0; i < segments.length - 1; i++) {
+        const segmentPath = "/" + segments.slice(0, i + 1).join("/");
+        ensureNode(segmentPath, segments, i);
+      }
+
+      // Check if this path already has a placeholder node
+      const existing = nodeMap.get(fullPath);
+      if (existing) {
+        // Merge route metadata into existing node
+        existing.id = route.id;
+        existing.label = route.name;
+        existing.description = fullPath;
+        existing.status = "completed";
+      } else {
+        // Create new route node
+        const routeNode: TreeNode = {
+          id: route.id,
+          label: route.name,
+          description: fullPath,
+          status: "completed",
+        };
+
+        // Attach to parent
+        if (segments.length === 1) {
+          tree.push(routeNode);
+        } else {
+          const parentPath = "/" + segments.slice(0, -1).join("/");
+          const parentNode = nodeMap.get(parentPath);
+          if (parentNode) {
+            if (!parentNode.children) {
+              parentNode.children = [];
+            }
+            parentNode.children.push(routeNode);
+          } else {
+            tree.push(routeNode);
+          }
+        }
+
+        nodeMap.set(fullPath, routeNode);
+      }
+    }
   }
 
-  return root;
-}
-
-// Recursive tree node component
-function TreeNode({ 
-  node, 
-  depth = 0, 
-  onToggle 
-}: { 
-  node: RouteTreeNode; 
-  depth?: number; 
-  onToggle: (path: string) => void;
-}) {
-  const hasChildren = node.children.size > 0;
-  const hasRoutes = node.routes.length > 0;
-  const paddingLeft = depth * 20;
-
-  return (
-    <div className="select-none">
-      {node.segment && (
-        <div
-          className={`flex items-center gap-2 p-2 rounded-md hover-elevate cursor-pointer ${
-            hasChildren ? "" : "cursor-default"
-          }`}
-          style={{ paddingLeft: `${paddingLeft}px` }}
-          onClick={() => hasChildren && onToggle(node.fullPath)}
-          data-testid={`tree-node-${node.fullPath}`}
-        >
-          {hasChildren ? (
-            node.isExpanded ? (
-              <ChevronDown className="w-4 h-4 text-muted-foreground" />
-            ) : (
-              <ChevronRight className="w-4 h-4 text-muted-foreground" />
-            )
-          ) : (
-            <div className="w-4" />
-          )}
-          
-          {hasChildren ? (
-            <Folder className="w-4 h-4 text-primary" />
-          ) : (
-            <FileCode className="w-4 h-4 text-muted-foreground" />
-          )}
-          
-          <span className="font-medium">{node.segment}</span>
-          <span className="text-xs text-muted-foreground">
-            {node.fullPath}
-          </span>
-        </div>
-      )}
-
-      {hasRoutes && node.segment && (
-        <div style={{ paddingLeft: `${paddingLeft + 24}px` }} className="space-y-1 mt-1">
-          {node.routes.map((route) => (
-            <div
-              key={route.id}
-              className="flex items-start gap-2 p-2 rounded-md border text-sm"
-              data-testid={`route-detail-${route.id}`}
-            >
-              <div className="flex-1 min-w-0">
-                <div className="font-medium text-sm">{route.name}</div>
-                {route.filePath && (
-                  <div className="text-xs text-muted-foreground mt-0.5">
-                    {route.filePath}
-                  </div>
-                )}
-              </div>
-              <div className="flex flex-col items-end gap-0.5 text-xs text-muted-foreground">
-                <span className="capitalize">{route.routeType}</span>
-                <span>{route.framework}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {node.isExpanded && hasChildren && (
-        <div className="mt-1">
-          {Array.from(node.children.values()).map((child) => (
-            <TreeNode
-              key={child.fullPath}
-              node={child}
-              depth={depth + 1}
-              onToggle={onToggle}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
+  return tree;
 }
 
 export default function SiteMap() {
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
-  const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set());
+  const [treeData, setTreeData] = useState<TreeNode[]>([]);
   const { toast } = useToast();
 
   const { data: projects = [] } = useQuery<Project[]>({
@@ -186,35 +168,15 @@ export default function SiteMap() {
   const selectedProject = projects.find(p => p.id === selectedProjectId);
   const isConsoleBlue = selectedProject?.name === "ConsoleBlue";
 
-  // Group routes by source
-  const scannedRoutes = routes.filter(r => r.source === "scan");
-  const externalRoutes = routes.filter(r => r.source === "external");
-
-  // Build tree structures
-  const scannedTree = buildRouteTree(scannedRoutes);
-  const externalTree = buildRouteTree(externalRoutes);
-
-  // Apply expanded state to trees
-  const applyExpandedState = (node: RouteTreeNode) => {
-    node.isExpanded = expandedPaths.has(node.fullPath) || node.fullPath === "";
-    node.children.forEach((child) => applyExpandedState(child));
-  };
-
-  applyExpandedState(scannedTree);
-  applyExpandedState(externalTree);
-
-  // Toggle expand/collapse
-  const togglePath = (path: string) => {
-    setExpandedPaths((prev) => {
-      const next = new Set(prev);
-      if (next.has(path)) {
-        next.delete(path);
-      } else {
-        next.add(path);
-      }
-      return next;
-    });
-  };
+  // Build tree from routes
+  useEffect(() => {
+    if (routes.length > 0) {
+      const tree = buildRouteTree(routes);
+      setTreeData(tree);
+    } else {
+      setTreeData([]);
+    }
+  }, [routes]);
 
   return (
     <PageShell>
@@ -222,7 +184,7 @@ export default function SiteMap() {
         <div className="mb-4">
           <h1 className="text-2xl font-semibold">Site Map</h1>
           <p className="text-sm text-muted-foreground">
-            Auto-generated view of actual routes and pages in the project
+            Auto-generated tree view of actual routes and pages in the project
           </p>
         </div>
 
@@ -253,149 +215,31 @@ export default function SiteMap() {
         </div>
       </div>
 
-      <div className="p-6">
+      <div className="flex-1 overflow-hidden">
         {selectedProjectId ? (
           routesLoading ? (
-            <div className="flex items-center justify-center h-64 text-muted-foreground">
+            <div className="flex items-center justify-center h-full text-muted-foreground">
               Loading routes...
             </div>
-          ) : routes.length === 0 ? (
-            <Card className="p-6 bg-muted/30">
-              <div className="flex items-center gap-2 mb-2">
-                <File className="w-4 h-4 text-muted-foreground" />
-                <h4 className="text-sm font-medium">No routes found</h4>
-              </div>
-              <p className="text-sm text-muted-foreground mb-3">
-                {isConsoleBlue 
-                  ? "Click 'Scan Routes' to detect routes from ConsoleBlue's codebase."
-                  : "This project hasn't submitted its routes yet. External projects can POST routes to ConsoleBlue's API with a valid API key."}
-              </p>
-            </Card>
-          ) : (
-            <div className="space-y-6">
-              {scannedRoutes.length > 0 && (
-                <Card className="p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Folder className="w-5 h-5 text-primary" />
-                    <h3 className="font-semibold">Scanned Routes ({scannedRoutes.length})</h3>
-                    <span className="text-xs text-muted-foreground ml-auto">
-                      Source: Local codebase scan
-                    </span>
-                  </div>
-                  
-                  <div className="border rounded-md p-3" data-testid="tree-scanned-routes">
-                    {/* Render root-level routes (homepage, etc.) */}
-                    {scannedTree.routes.length > 0 && (
-                      <div className="space-y-1 mb-2">
-                        {scannedTree.routes.map((route) => (
-                          <div
-                            key={route.id}
-                            className="flex items-start gap-2 p-2 rounded-md border text-sm"
-                            data-testid={`route-detail-${route.id}`}
-                          >
-                            <FileCode className="w-4 h-4 text-muted-foreground mt-0.5" />
-                            <div className="flex-1 min-w-0">
-                              <div className="font-medium text-sm">{route.name}</div>
-                              <div className="text-sm text-muted-foreground">
-                                {route.path}
-                              </div>
-                              {route.filePath && (
-                                <div className="text-xs text-muted-foreground mt-0.5">
-                                  {route.filePath}
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex flex-col items-end gap-0.5 text-xs text-muted-foreground">
-                              <span className="capitalize">{route.routeType}</span>
-                              <span>{route.framework}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    
-                    {/* Render tree hierarchy */}
-                    {Array.from(scannedTree.children.values()).map((child) => (
-                      <TreeNode
-                        key={child.fullPath}
-                        node={child}
-                        depth={0}
-                        onToggle={togglePath}
-                      />
-                    ))}
-                  </div>
-                </Card>
-              )}
-
-              {externalRoutes.length > 0 && (
-                <Card className="p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Folder className="w-5 h-5 text-primary" />
-                    <h3 className="font-semibold">External Routes ({externalRoutes.length})</h3>
-                    <span className="text-xs text-muted-foreground ml-auto">
-                      Source: API submission
-                    </span>
-                  </div>
-                  
-                  <div className="border rounded-md p-3" data-testid="tree-external-routes">
-                    {/* Render root-level routes (homepage, etc.) */}
-                    {externalTree.routes.length > 0 && (
-                      <div className="space-y-1 mb-2">
-                        {externalTree.routes.map((route) => (
-                          <div
-                            key={route.id}
-                            className="flex items-start gap-2 p-2 rounded-md border text-sm"
-                            data-testid={`route-detail-${route.id}`}
-                          >
-                            <FileCode className="w-4 h-4 text-muted-foreground mt-0.5" />
-                            <div className="flex-1 min-w-0">
-                              <div className="font-medium text-sm">{route.name}</div>
-                              <div className="text-sm text-muted-foreground">
-                                {route.path}
-                              </div>
-                              {route.filePath && (
-                                <div className="text-xs text-muted-foreground mt-0.5">
-                                  {route.filePath}
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex flex-col items-end gap-0.5 text-xs text-muted-foreground">
-                              <span className="capitalize">{route.routeType}</span>
-                              <span>{route.framework}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    
-                    {/* Render tree hierarchy */}
-                    {Array.from(externalTree.children.values()).map((child) => (
-                      <TreeNode
-                        key={child.fullPath}
-                        node={child}
-                        depth={0}
-                        onToggle={togglePath}
-                      />
-                    ))}
-                  </div>
-                </Card>
-              )}
-
-              <Card className="p-6 bg-muted/30">
+          ) : treeData.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full p-6">
+              <Card className="p-6 bg-muted/30 max-w-md">
                 <div className="flex items-center gap-2 mb-2">
                   <File className="w-4 h-4 text-muted-foreground" />
-                  <h4 className="text-sm font-medium">About Site Map</h4>
+                  <h4 className="text-sm font-medium">No routes found</h4>
                 </div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground mb-3">
                   {isConsoleBlue 
-                    ? "ConsoleBlue's routes are scanned directly from the codebase (App.tsx and pages directory). Click 'Scan Routes' to update with the latest changes."
-                    : "External projects can submit their routes to ConsoleBlue via API with a valid API key that has 'write_routes' permission."}
+                    ? "Click 'Scan Routes' to detect routes from ConsoleBlue's codebase."
+                    : "This project hasn't submitted its routes yet. External projects can POST routes to ConsoleBlue's API with a valid API key."}
                 </p>
               </Card>
             </div>
+          ) : (
+            <TreeVisualization data={treeData} />
           )
         ) : (
-          <div className="flex items-center justify-center h-64 text-muted-foreground">
+          <div className="flex items-center justify-center h-full text-muted-foreground">
             Select a project to view its sitemap
           </div>
         )}

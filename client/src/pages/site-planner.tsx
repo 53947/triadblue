@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -8,88 +8,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Card } from "@/components/ui/card";
 import { PageShell } from "@/components/layout/page-shell";
+import { TreeVisualization, TreeNode } from "@/components/tree-visualization";
 import {
   Save,
   Plus,
   Trash2,
-  CheckCircle2,
-  Circle,
-  Clock,
   Loader2,
 } from "lucide-react";
-
-import ReactFlow, {
-  Node,
-  Edge,
-  Controls,
-  Background,
-  useNodesState,
-  useEdgesState,
-  addEdge,
-  Connection,
-  BackgroundVariant,
-  NodeChange,
-  EdgeChange,
-  applyNodeChanges,
-  applyEdgeChanges,
-} from "reactflow";
-import "reactflow/dist/style.css";
-
-// Custom node component for site pages
-function PageNode({ data }: { data: any }) {
-  const getStatusIcon = () => {
-    switch (data.status) {
-      case "completed":
-        return <CheckCircle2 className="w-4 h-4 text-green-500" />;
-      case "in_progress":
-        return <Clock className="w-4 h-4 text-blue-500" />;
-      default:
-        return <Circle className="w-4 h-4 text-muted-foreground" />;
-    }
-  };
-
-  const getStatusColor = () => {
-    switch (data.status) {
-      case "completed":
-        return "border-green-500 bg-green-50 dark:bg-green-950/20";
-      case "in_progress":
-        return "border-blue-500 bg-blue-50 dark:bg-blue-950/20";
-      default:
-        return "border-border bg-card";
-    }
-  };
-
-  return (
-    <div
-      className={`px-4 py-3 rounded-lg border-2 min-w-[160px] ${getStatusColor()}`}
-    >
-      <div className="flex items-center gap-2 mb-1">
-        {getStatusIcon()}
-        <div className="font-medium">{data.label}</div>
-      </div>
-      {data.description && (
-        <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
-          {data.description}
-        </div>
-      )}
-    </div>
-  );
-}
-
-const nodeTypes = {
-  page: PageNode,
-};
 
 export default function SitePlanner() {
   const { toast } = useToast();
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [treeData, setTreeData] = useState<TreeNode[]>([]);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [selectedNode, setSelectedNode] = useState<TreeNode | null>(null);
+  const [parentNodeId, setParentNodeId] = useState<string>("");
 
   // Form state
   const [newNodeLabel, setNewNodeLabel] = useState("");
@@ -112,33 +47,45 @@ export default function SitePlanner() {
     enabled: !!selectedProjectId,
   });
 
-  // Convert DB nodes/edges to React Flow format
+  // Convert DB nodes/edges to tree structure
   useEffect(() => {
-    if (!selectedProjectId) return;
+    if (!selectedProjectId || dbNodes.length === 0) {
+      setTreeData([]);
+      return;
+    }
 
-    const flowNodes: Node[] = dbNodes.map((dbNode) => ({
-      id: dbNode.nodeId,
-      type: "page",
-      position: { x: dbNode.positionX, y: dbNode.positionY },
-      data: {
+    // Build adjacency map from edges
+    const childrenMap = new Map<string, string[]>();
+    dbEdges.forEach(edge => {
+      const children = childrenMap.get(edge.sourceNodeId) || [];
+      children.push(edge.targetNodeId);
+      childrenMap.set(edge.sourceNodeId, children);
+    });
+
+    // Find root nodes (nodes that are not targets of any edge)
+    const targetNodeIds = new Set(dbEdges.map(edge => edge.targetNodeId));
+    const rootNodes = dbNodes.filter(node => !targetNodeIds.has(node.nodeId));
+
+    // Recursively build tree
+    function buildTree(nodeId: string): TreeNode | null {
+      const dbNode = dbNodes.find(n => n.nodeId === nodeId);
+      if (!dbNode) return null;
+
+      const childIds = childrenMap.get(nodeId) || [];
+      const children = childIds.map(buildTree).filter(Boolean) as TreeNode[];
+
+      return {
+        id: dbNode.nodeId,
         label: dbNode.label,
-        description: dbNode.description,
-        status: dbNode.status,
-        dbId: dbNode.id,
-      },
-    }));
+        description: dbNode.description || undefined,
+        status: dbNode.status as any,
+        children: children.length > 0 ? children : undefined,
+      };
+    }
 
-    const flowEdges: Edge[] = dbEdges.map((dbEdge) => ({
-      id: dbEdge.edgeId,
-      source: dbEdge.sourceNodeId,
-      target: dbEdge.targetNodeId,
-      label: dbEdge.label || undefined,
-      animated: true,
-    }));
-
-    setNodes(flowNodes);
-    setEdges(flowEdges);
-  }, [dbNodes, dbEdges, selectedProjectId, setNodes, setEdges]);
+    const tree = rootNodes.map(node => buildTree(node.nodeId)).filter(Boolean) as TreeNode[];
+    setTreeData(tree);
+  }, [dbNodes, dbEdges, selectedProjectId]);
 
   // Auto-select first project
   useEffect(() => {
@@ -147,40 +94,52 @@ export default function SitePlanner() {
     }
   }, [projects, selectedProjectId]);
 
-  const onConnect = useCallback(
-    (connection: Connection) => {
-      setEdges((eds) => addEdge({ ...connection, animated: true }, eds));
-    },
-    [setEdges]
-  );
+  // Flatten tree to get all nodes for saving
+  function flattenTree(nodes: TreeNode[], parentId: string | null = null): { nodes: any[], edges: any[] } {
+    const flatNodes: any[] = [];
+    const flatEdges: any[] = [];
+
+    nodes.forEach((node, index) => {
+      flatNodes.push({
+        projectId: selectedProjectId,
+        nodeId: node.id,
+        label: node.label,
+        description: node.description || null,
+        status: node.status || "planned",
+        positionX: index * 100,
+        positionY: parentId ? 100 : 0,
+      });
+
+      if (parentId) {
+        flatEdges.push({
+          projectId: selectedProjectId,
+          edgeId: `edge-${parentId}-${node.id}`,
+          sourceNodeId: parentId,
+          targetNodeId: node.id,
+          label: null,
+        });
+      }
+
+      if (node.children) {
+        const childResult = flattenTree(node.children, node.id);
+        flatNodes.push(...childResult.nodes);
+        flatEdges.push(...childResult.edges);
+      }
+    });
+
+    return { nodes: flatNodes, edges: flatEdges };
+  }
 
   // Save mutation
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!selectedProjectId) throw new Error("No project selected");
 
-      // Convert React Flow nodes/edges back to DB format
-      const nodesToSave = nodes.map((node) => ({
-        projectId: selectedProjectId,
-        nodeId: node.id,
-        label: node.data.label,
-        description: node.data.description || null,
-        status: node.data.status,
-        positionX: Math.round(node.position.x),
-        positionY: Math.round(node.position.y),
-      }));
-
-      const edgesToSave = edges.map((edge) => ({
-        projectId: selectedProjectId,
-        edgeId: edge.id,
-        sourceNodeId: edge.source,
-        targetNodeId: edge.target,
-        label: edge.label as string || null,
-      }));
+      const { nodes, edges } = flattenTree(treeData);
 
       return apiRequest("POST", `/api/projects/${selectedProjectId}/site-planner/save`, {
-        nodes: nodesToSave,
-        edges: edgesToSave,
+        nodes,
+        edges,
       });
     },
     onSuccess: () => {
@@ -203,44 +162,69 @@ export default function SitePlanner() {
       return;
     }
 
-    const nodeId = `node-${Date.now()}`;
-    const newNode: Node = {
-      id: nodeId,
-      type: "page",
-      position: { x: Math.random() * 400 + 100, y: Math.random() * 300 + 100 },
-      data: {
-        label: newNodeLabel,
-        description: newNodeDescription,
-        status: newNodeStatus,
-      },
+    const newNode: TreeNode = {
+      id: `node-${Date.now()}`,
+      label: newNodeLabel,
+      description: newNodeDescription || undefined,
+      status: newNodeStatus,
     };
 
-    setNodes((nds) => [...nds, newNode]);
+    if (!parentNodeId) {
+      // Add as root node
+      setTreeData([...treeData, newNode]);
+    } else {
+      // Add as child to parent
+      const addChild = (nodes: TreeNode[]): TreeNode[] => {
+        return nodes.map(node => {
+          if (node.id === parentNodeId) {
+            return {
+              ...node,
+              children: [...(node.children || []), newNode],
+            };
+          }
+          if (node.children) {
+            return {
+              ...node,
+              children: addChild(node.children),
+            };
+          }
+          return node;
+        });
+      };
+      setTreeData(addChild(treeData));
+    }
+
     setShowAddDialog(false);
     setNewNodeLabel("");
     setNewNodeDescription("");
     setNewNodeStatus("planned");
+    setParentNodeId("");
   };
 
   const handleEditNode = () => {
     if (!selectedNode || !newNodeLabel.trim()) return;
 
-    setNodes((nds) =>
-      nds.map((node) =>
-        node.id === selectedNode.id
-          ? {
-              ...node,
-              data: {
-                ...node.data,
-                label: newNodeLabel,
-                description: newNodeDescription,
-                status: newNodeStatus,
-              },
-            }
-          : node
-      )
-    );
+    const updateNode = (nodes: TreeNode[]): TreeNode[] => {
+      return nodes.map(node => {
+        if (node.id === selectedNode!.id) {
+          return {
+            ...node,
+            label: newNodeLabel,
+            description: newNodeDescription || undefined,
+            status: newNodeStatus,
+          };
+        }
+        if (node.children) {
+          return {
+            ...node,
+            children: updateNode(node.children),
+          };
+        }
+        return node;
+      });
+    };
 
+    setTreeData(updateNode(treeData));
     setShowEditDialog(false);
     setSelectedNode(null);
     setNewNodeLabel("");
@@ -249,17 +233,40 @@ export default function SitePlanner() {
   };
 
   const handleDeleteNode = (nodeId: string) => {
-    setNodes((nds) => nds.filter((node) => node.id !== nodeId));
-    setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
+    const removeNode = (nodes: TreeNode[]): TreeNode[] => {
+      return nodes.filter(node => {
+        if (node.id === nodeId) return false;
+        if (node.children) {
+          node.children = removeNode(node.children);
+        }
+        return true;
+      });
+    };
+
+    setTreeData(removeNode(treeData));
   };
 
-  const handleNodeClick = (_event: any, node: Node) => {
+  const handleNodeClick = (node: TreeNode) => {
     setSelectedNode(node);
-    setNewNodeLabel(node.data.label);
-    setNewNodeDescription(node.data.description || "");
-    setNewNodeStatus(node.data.status);
+    setNewNodeLabel(node.label);
+    setNewNodeDescription(node.description || "");
+    setNewNodeStatus(node.status || "planned");
     setShowEditDialog(true);
   };
+
+  // Get all nodes for parent selection (flattened)
+  const getAllNodes = (nodes: TreeNode[]): TreeNode[] => {
+    const all: TreeNode[] = [];
+    nodes.forEach(node => {
+      all.push(node);
+      if (node.children) {
+        all.push(...getAllNodes(node.children));
+      }
+    });
+    return all;
+  };
+
+  const allNodes = getAllNodes(treeData);
 
   return (
     <PageShell>
@@ -268,7 +275,7 @@ export default function SitePlanner() {
           <div>
             <h1 className="text-2xl font-semibold">Site Planner</h1>
             <p className="text-sm text-muted-foreground">
-              Visual planner for mapping out pages and navigation flow
+              Visual tree planner for mapping out pages and navigation flow
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -309,24 +316,15 @@ export default function SitePlanner() {
         </Select>
       </div>
 
-      <div className="flex-1 w-full">
+      <div className="flex-1 overflow-hidden">
         {selectedProjectId ? (
-          <div className="w-full h-full">
-            <ReactFlow
-              nodes={nodes}
-              edges={edges}
-              onNodesChange={onNodesChange}
-              onEdgesChange={onEdgesChange}
-              onConnect={onConnect}
-              onNodeClick={handleNodeClick}
-              nodeTypes={nodeTypes}
-              fitView
-              data-testid="react-flow-canvas"
-            >
-              <Background variant={BackgroundVariant.Dots} />
-              <Controls />
-            </ReactFlow>
-          </div>
+          treeData.length > 0 ? (
+            <TreeVisualization data={treeData} onNodeClick={handleNodeClick} />
+          ) : (
+            <div className="flex items-center justify-center h-full text-muted-foreground">
+              No pages yet. Click "Add Page" to get started.
+            </div>
+          )
         ) : (
           <div className="flex items-center justify-center h-full text-muted-foreground">
             Select a project to begin planning
@@ -369,6 +367,22 @@ export default function SitePlanner() {
                   <SelectItem value="planned">Planned</SelectItem>
                   <SelectItem value="in_progress">In Progress</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Parent Page (optional)</label>
+              <Select value={parentNodeId} onValueChange={setParentNodeId}>
+                <SelectTrigger data-testid="select-parent-node">
+                  <SelectValue placeholder="None (root level)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">None (root level)</SelectItem>
+                  {allNodes.map((node) => (
+                    <SelectItem key={node.id} value={node.id}>
+                      {node.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
