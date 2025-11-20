@@ -372,12 +372,12 @@ export default function SitePlanner() {
             </div>
             <div>
               <label className="text-sm font-medium">Parent Page (optional)</label>
-              <Select value={parentNodeId} onValueChange={setParentNodeId}>
+              <Select value={parentNodeId || "__root__"} onValueChange={(val) => setParentNodeId(val === "__root__" ? "" : val)}>
                 <SelectTrigger data-testid="select-parent-node">
                   <SelectValue placeholder="None (root level)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None (root level)</SelectItem>
+                  <SelectItem value="__root__">None (root level)</SelectItem>
                   {allNodes.map((node) => (
                     <SelectItem key={node.id} value={node.id}>
                       {node.label}

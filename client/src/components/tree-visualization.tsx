@@ -26,7 +26,13 @@ interface PositionedNode extends TreeNode {
   depth: number;
 }
 
-function calculateLayout(nodes: TreeNode[], startX = 0, startY = 0, depth = 0): PositionedNode[] {
+function calculateLayout(
+  nodes: TreeNode[],
+  startX = 0,
+  startY = 0,
+  depth = 0,
+  parentChildMap = new Map<string, string[]>()
+): { positioned: PositionedNode[]; connections: Map<string, string[]> } {
   const positioned: PositionedNode[] = [];
   let currentY = startY;
 
@@ -35,13 +41,16 @@ function calculateLayout(nodes: TreeNode[], startX = 0, startY = 0, depth = 0): 
     const hasChildren = childNodes.length > 0;
 
     if (hasChildren) {
+      // Store parent-child relationship
+      parentChildMap.set(node.id, childNodes.map(child => child.id));
+
       // Calculate child positions first
-      const childPositioned = calculateLayout(childNodes, startX + NODE_WIDTH + HORIZONTAL_SPACING, currentY, depth + 1);
-      positioned.push(...childPositioned);
+      const childResult = calculateLayout(childNodes, startX + NODE_WIDTH + HORIZONTAL_SPACING, currentY, depth + 1, parentChildMap);
+      positioned.push(...childResult.positioned);
 
       // Position this node centered vertically relative to its children
-      const firstChild = childPositioned[0];
-      const lastChild = childPositioned[childPositioned.length - 1];
+      const firstChild = childResult.positioned[0];
+      const lastChild = childResult.positioned[childResult.positioned.length - 1];
       const centerY = (firstChild.y + lastChild.y + NODE_HEIGHT) / 2 - NODE_HEIGHT / 2;
 
       positioned.push({
@@ -67,7 +76,7 @@ function calculateLayout(nodes: TreeNode[], startX = 0, startY = 0, depth = 0): 
     }
   }
 
-  return positioned;
+  return { positioned, connections: parentChildMap };
 }
 
 function getStatusColor(status?: string) {
@@ -94,11 +103,13 @@ function getStatusFill(status?: string) {
 
 export function TreeVisualization({ data, onNodeClick }: TreeVisualizationProps) {
   const [positionedNodes, setPositionedNodes] = useState<PositionedNode[]>([]);
+  const [parentChildMap, setParentChildMap] = useState<Map<string, string[]>>(new Map());
   const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
-    const positioned = calculateLayout(data);
-    setPositionedNodes(positioned);
+    const result = calculateLayout(data);
+    setPositionedNodes(result.positioned);
+    setParentChildMap(result.connections);
   }, [data]);
 
   // Calculate SVG dimensions
@@ -107,14 +118,15 @@ export function TreeVisualization({ data, onNodeClick }: TreeVisualizationProps)
   const svgWidth = maxX + 40;
   const svgHeight = maxY + 40;
 
-  // Build parent-child connections
+  // Build parent-child connections from the map
   const connections: Array<{ from: PositionedNode; to: PositionedNode }> = [];
-  positionedNodes.forEach(node => {
-    if (node.children) {
-      node.children.forEach(childId => {
-        const child = positionedNodes.find(n => n.id === (typeof childId === 'string' ? childId : childId.id));
+  parentChildMap.forEach((childIds, parentId) => {
+    const parent = positionedNodes.find(n => n.id === parentId);
+    if (parent) {
+      childIds.forEach(childId => {
+        const child = positionedNodes.find(n => n.id === childId);
         if (child) {
-          connections.push({ from: node, to: child });
+          connections.push({ from: parent, to: child });
         }
       });
     }
