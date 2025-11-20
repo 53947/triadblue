@@ -52,7 +52,7 @@ export async function scanConsoleBlueRoutes(projectId: string): Promise<InsertPr
           routeType,
           framework: "wouter",
           source: "scan",
-          meta: { component },
+          meta: { component } as any,
         });
       }
       
@@ -74,7 +74,7 @@ export async function scanConsoleBlueRoutes(projectId: string): Promise<InsertPr
           routeType: "static",
           framework: "wouter",
           source: "scan",
-          meta: { inline: "true" },
+          meta: { inline: "true" } as any,
         });
       }
     }
@@ -100,7 +100,7 @@ export async function scanConsoleBlueRoutes(projectId: string): Promise<InsertPr
           routeType: "static",
           framework: "wouter",
           source: "scan",
-          meta: { component, public: "true" },
+          meta: { component, public: "true" } as any,
         });
       }
     }
