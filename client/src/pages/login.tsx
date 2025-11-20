@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import consoleBlueLockup from "@assets/consoleblue-lockup.png";
+import consoleBlueLockup from "@assets/TriadBlue-Logo-Lockup_1763606084811.png";
 import { login } from "@/lib/auth";
 
 export default function Login() {

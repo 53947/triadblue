@@ -1,8 +1,8 @@
-import triadBlueLockup from "@assets/triadblue-lockup.png";
-import businessBlueprintLogo from "@assets/Blueprint_Logo_1762989341853.png";
-import hostsBlueLogo from "@assets/HostsBlue Logo_1762989341854.png";
-import swipesBlueLogo from "@assets/SwipesBlue Logo_1762989341855.png";
-import consoleBlueLogo from "@assets/ConsoleBlue_1762989387897.png";
+import triadBlueLockup from "@assets/TriadBlue-Logo-Lockup_1763606084811.png";
+import businessBlueprintLogo from "@assets/archive/Blueprint_Logo_1762989341853.png";
+import hostsBlueLogo from "@assets/archive/HostsBlue Logo_1762989341854.png";
+import swipesBlueLogo from "@assets/archive/SwipesBlue Logo_1762989341855.png";
+import consoleBlueLogo from "@assets/archive/ConsoleBlue_1762989387897.png";
 import { Link } from "wouter";
 import { ArrowRight, CheckCircle2, Zap, Shield, Globe } from "lucide-react";
 import { useActiveLogo } from "@/hooks/use-active-logo";

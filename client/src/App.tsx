@@ -35,7 +35,7 @@ import { CreateProjectModal } from "@/components/modals/create-project-modal";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Project } from "@shared/schema";
-import triadBlueLockup from "@assets/Triad Blue Lockup_1762915681863.png";
+import triadBlueLockup from "@assets/TriadBlue-Logo-Lockup_1763606084811.png";
 import { useActiveLogo } from "@/hooks/use-active-logo";
 
 function PublicRouter() {
