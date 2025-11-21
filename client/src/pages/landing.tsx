@@ -27,9 +27,8 @@ export default function Landing() {
             <a href="#faq">FAQ</a>
           </nav>
           <div className="landing-actions">
-            <Link href="/login" className="landing-cta-green" data-testid="link-dashboard-login" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <img src={consoleBlueLogo} alt="ConsoleBlue" style={{ height: '24px', width: 'auto' }} />
-              ConsoleBlue Dashboard
+            <Link href="/login" className="landing-cta-green" data-testid="link-dashboard-login" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px 20px' }}>
+              <img src={consoleBlueLogo} alt="ConsoleBlue Dashboard" style={{ height: '36px', width: 'auto' }} />
             </Link>
           </div>
         </div>
@@ -88,7 +87,7 @@ export default function Landing() {
 
           <article className="landing-card">
             <a href="https://hostsblue.com" target="_blank" rel="noopener noreferrer" style={{ display: 'block', marginBottom: '20px' }}>
-              <img src={hostsBlueLogo} alt="HostsBlue.com" style={{ height: '50px', width: 'auto' }} />
+              <img src={hostsBlueLogo} alt="HostsBlue.com" style={{ height: '40px', width: 'auto' }} />
             </a>
             <p>
               Fast, secure cloud infrastructure—domains, SSL certificates, email, and hosting with one-click deployment and automated backups.
@@ -100,7 +99,7 @@ export default function Landing() {
 
           <article className="landing-card">
             <a href="https://swipesblue.com" target="_blank" rel="noopener noreferrer" style={{ display: 'block', marginBottom: '20px' }}>
-              <img src={swipesBlueLogo} alt="SwipesBlue.com" style={{ height: '50px', width: 'auto' }} />
+              <img src={swipesBlueLogo} alt="SwipesBlue.com" style={{ height: '40px', width: 'auto' }} />
             </a>
             <p>
               Embedded payment processing online and in-person—subscriptions, invoices, and real-time tracking with PCI-compliant security.
@@ -198,7 +197,7 @@ export default function Landing() {
       {/* ConsoleBlue Section */}
       <section id="console" className="landing-section landing-container">
         <article className="landing-mod">
-          <img src={consoleBlueLogo} alt="ConsoleBlue Development Platform" />
+          <img src={consoleBlueLogo} alt="ConsoleBlue Development Platform" style={{ height: '50px', width: 'auto' }} />
           <div>
             <h2>ConsoleBlue<br />Where New Platforms Are Born</h2>
             <ul>
