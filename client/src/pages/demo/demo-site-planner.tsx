@@ -10,49 +10,49 @@ export default function DemoSitePlanner() {
     {
       id: '1',
       type: 'default',
-      data: { label: '🏠 Landing Page' },
+      data: { label: 'Landing Page' },
       position: { x: 250, y: 0 },
       style: { background: '#3b82f6', color: 'white', padding: '10px', borderRadius: '8px', fontWeight: '500' }
     },
     {
       id: '2',
       type: 'default',
-      data: { label: '📋 Dashboard' },
+      data: { label: 'Dashboard' },
       position: { x: 100, y: 100 },
       style: { background: '#8b5cf6', color: 'white', padding: '10px', borderRadius: '8px', fontWeight: '500' }
     },
     {
       id: '3',
       type: 'default',
-      data: { label: '📝 Tasks List' },
+      data: { label: 'Tasks List' },
       position: { x: 0, y: 200 },
       style: { background: '#10b981', color: 'white', padding: '10px', borderRadius: '8px', fontWeight: '500' }
     },
     {
       id: '4',
       type: 'default',
-      data: { label: '📊 Project Board' },
+      data: { label: 'Project Board' },
       position: { x: 200, y: 200 },
       style: { background: '#10b981', color: 'white', padding: '10px', borderRadius: '8px', fontWeight: '500' }
     },
     {
       id: '5',
       type: 'default',
-      data: { label: '✉️ Email Chat' },
+      data: { label: 'Email Chat' },
       position: { x: 400, y: 100 },
       style: { background: '#8b5cf6', color: 'white', padding: '10px', borderRadius: '8px', fontWeight: '500' }
     },
     {
       id: '6',
       type: 'default',
-      data: { label: '💬 Thread View' },
+      data: { label: 'Thread View' },
       position: { x: 400, y: 200 },
       style: { background: '#10b981', color: 'white', padding: '10px', borderRadius: '8px', fontWeight: '500' }
     },
     {
       id: '7',
       type: 'default',
-      data: { label: '⚙️ Settings' },
+      data: { label: 'Settings' },
       position: { x: 250, y: 300 },
       style: { background: '#f59e0b', color: 'white', padding: '10px', borderRadius: '8px', fontWeight: '500' }
     }

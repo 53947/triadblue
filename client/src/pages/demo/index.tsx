@@ -50,7 +50,7 @@ export default function DemoHome() {
           {features.map((feature) => {
             const Icon = feature.icon;
             return (
-              <Card key={feature.path} className="hover-elevate cursor-pointer transition-all">
+              <Card key={feature.path} className="hover-elevate cursor-pointer transition-all" data-testid={`card-${feature.title.toLowerCase().replace(/\s+/g, "-")}`}>
                 <Link href={feature.path}>
                   <CardHeader>
                     <div className="flex items-center gap-3 mb-2">
@@ -60,7 +60,7 @@ export default function DemoHome() {
                     <CardDescription>{feature.description}</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Button variant="ghost" className="gap-2 px-0">
+                    <Button variant="ghost" className="gap-2 px-0" data-testid={`button-explore-${feature.title.toLowerCase().replace(/\s+/g, "-")}`}>
                       Explore {feature.title}
                       <ArrowRight className="h-4 w-4" />
                     </Button>
@@ -71,7 +71,7 @@ export default function DemoHome() {
           })}
         </div>
 
-        <Card className="mt-8 border-primary/20 bg-primary/5">
+        <Card className="mt-8 border-primary/20 bg-primary/5" data-testid="card-login-cta">
           <CardHeader>
             <CardTitle>Ready to explore the full platform?</CardTitle>
             <CardDescription>
@@ -80,7 +80,7 @@ export default function DemoHome() {
           </CardHeader>
           <CardContent>
             <Link href="/login">
-              <Button variant="default" className="gap-2">
+              <Button variant="default" className="gap-2" data-testid="button-login-from-demo-home">
                 Login to Full Dashboard
                 <ArrowRight className="h-4 w-4" />
               </Button>

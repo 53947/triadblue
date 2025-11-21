@@ -69,7 +69,7 @@ export default function DemoAssets() {
                 <p className="text-sm text-muted-foreground mb-3">
                   Drag & drop or click to upload
                 </p>
-                <Button disabled size="sm">
+                <Button disabled size="sm" data-testid="button-upload-favicon">
                   Choose File (Demo Mode)
                 </Button>
               </div>
@@ -92,7 +92,7 @@ export default function DemoAssets() {
                 <p className="text-sm text-muted-foreground mb-3">
                   Drag & drop or click to upload
                 </p>
-                <Button disabled size="sm">
+                <Button disabled size="sm" data-testid="button-upload-logo">
                   Choose File (Demo Mode)
                 </Button>
               </div>
@@ -148,11 +148,11 @@ export default function DemoAssets() {
                   </div>
                   <div className="flex items-center gap-2">
                     {!asset.active && (
-                      <Button size="sm" variant="outline" disabled>
+                      <Button size="sm" variant="outline" disabled data-testid={`button-activate-${asset.id}`}>
                         Activate
                       </Button>
                     )}
-                    <Button size="sm" variant="ghost" disabled>
+                    <Button size="sm" variant="ghost" disabled data-testid={`button-delete-${asset.id}`}>
                       Delete
                     </Button>
                   </div>

@@ -158,7 +158,7 @@ export default function DemoEmailChat() {
                     <h3 className="font-semibold">{currentThread.subject}</h3>
                     <p className="text-sm text-muted-foreground mt-1">{currentThread.from}</p>
                   </div>
-                  <Button variant="ghost" size="sm" className="gap-2">
+                  <Button variant="ghost" size="sm" className="gap-2" data-testid="button-archive-thread">
                     <Archive className="h-4 w-4" />
                     Archive
                   </Button>
@@ -181,18 +181,19 @@ export default function DemoEmailChat() {
 
               <div className="p-4 border-t">
                 <div className="space-y-2">
-                  <Input placeholder="Subject (if new thread)" disabled className="text-sm" />
+                  <Input placeholder="Subject (if new thread)" disabled className="text-sm" data-testid="input-email-subject" />
                   <Textarea 
                     placeholder="Type your reply here... (Demo mode - read only)" 
                     className="min-h-24 resize-none" 
                     disabled
+                    data-testid="textarea-email-reply"
                   />
                   <div className="flex items-center justify-between">
-                    <Button variant="ghost" size="sm" disabled className="gap-2">
+                    <Button variant="ghost" size="sm" disabled className="gap-2" data-testid="button-attach-files">
                       <Paperclip className="h-4 w-4" />
                       Attach Files
                     </Button>
-                    <Button size="sm" disabled className="gap-2">
+                    <Button size="sm" disabled className="gap-2" data-testid="button-send-reply">
                       <Send className="h-4 w-4" />
                       Send Reply
                     </Button>

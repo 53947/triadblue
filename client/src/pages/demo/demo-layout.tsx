@@ -38,14 +38,14 @@ export function DemoLayout({ children }: DemoLayoutProps) {
           </header>
 
           {/* Demo Mode Banner */}
-          <Alert className="m-4 mb-0 border-yellow-500 bg-yellow-500/10">
+          <Alert className="m-4 mb-0 border-yellow-500 bg-yellow-500/10" data-testid="alert-demo-mode">
             <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-500" />
             <AlertDescription className="flex items-center justify-between gap-4 flex-wrap">
-              <span className="text-sm">
+              <span className="text-sm" data-testid="text-demo-mode-message">
                 <strong>Demo Mode:</strong> You're exploring sample data. Login to access the full dashboard.
               </span>
               <Link href="/login">
-                <Button size="sm" variant="outline" className="gap-2">
+                <Button size="sm" variant="outline" className="gap-2" data-testid="button-login-from-demo">
                   Login to Full Dashboard
                   <ExternalLink className="h-3 w-3" />
                 </Button>
@@ -104,7 +104,7 @@ function DemoSidebar() {
 
           <div className="pt-4 mt-4 border-t">
             <Link href="/">
-              <Button variant="outline" className="w-full gap-2">
+              <Button variant="outline" className="w-full gap-2" data-testid="button-back-to-landing">
                 <ExternalLink className="h-4 w-4" />
                 Back to Landing Page
               </Button>
