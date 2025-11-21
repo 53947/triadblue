@@ -28,7 +28,7 @@ export default function Landing() {
             <a href="#faq">FAQ</a>
           </nav>
           <div className="landing-actions">
-            <Link href="/demo" className="landing-cta-green" data-testid="link-demo-dashboard" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px 24px' }}>
+            <Link href="/login" className="landing-cta-green" data-testid="link-dashboard-login" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px 24px' }}>
               <img src={consoleBlueDashboardButton} alt="ConsoleBlue Dashboard" style={{ height: '40px', width: 'auto' }} />
             </Link>
           </div>
@@ -138,7 +138,7 @@ export default function Landing() {
       {/* HostsBlue Section */}
       <section id="hosts" className="landing-section landing-container">
         <article className="landing-mod">
-          <img src={hostsBlueLogo} alt="HostsBlue.com Hosting Platform" style={{ height: '36px', width: 'auto' }} />
+          <img src={hostsBlueLogo} alt="HostsBlue.com Hosting Platform" />
           <div>
             <h2>HostsBlue.com<br />Power Your Presence</h2>
             <ul>
@@ -159,7 +159,7 @@ export default function Landing() {
       {/* SwipesBlue Section */}
       <section id="swipes" className="landing-section landing-container">
         <article className="landing-mod">
-          <img src={swipesBlueLogo} alt="SwipesBlue.com Payment Platform" style={{ height: '36px', width: 'auto' }} />
+          <img src={swipesBlueLogo} alt="SwipesBlue.com Payment Platform" />
           <div>
             <h2>SwipesBlue.com<br />Simplify How You Get Paid</h2>
             <ul>
@@ -208,7 +208,7 @@ export default function Landing() {
               <li>Centralized command center for managing all your TriadBlue services</li>
             </ul>
             <div style={{ marginTop: '24px' }}>
-              <Link href="/login" className="landing-cta-green">
+              <Link href="/demo" className="landing-cta-green">
                 Access ConsoleBlue Dashboard
               </Link>
             </div>
