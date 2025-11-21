@@ -42,20 +42,6 @@ import { useToast } from "@/hooks/use-toast";
 import type { Project } from "@shared/schema";
 import { useContextLogo } from "@/hooks/use-context-logo";
 
-function PublicRouter() {
-  return (
-    <Switch>
-      <Route path="/login" component={Login} />
-      <Route path="/demo" component={DemoHome} />
-      <Route path="/demo/email-chat" component={DemoEmailChat} />
-      <Route path="/demo/assets" component={DemoAssets} />
-      <Route path="/demo/site-map" component={DemoSiteMap} />
-      <Route path="/demo/site-planner" component={DemoSitePlanner} />
-      <Route component={NotFound} />
-    </Switch>
-  );
-}
-
 function ProtectedRouter() {
   return (
     <Switch>
@@ -203,6 +189,11 @@ function AppContent() {
       <Switch>
         <Route path="/login" component={Login} />
         {!isConsoleBlue && <Route path="/" component={Landing} />}
+        <Route path="/demo" component={DemoHome} />
+        <Route path="/demo/email-chat" component={DemoEmailChat} />
+        <Route path="/demo/assets" component={DemoAssets} />
+        <Route path="/demo/site-map" component={DemoSiteMap} />
+        <Route path="/demo/site-planner" component={DemoSitePlanner} />
         <Route>
           <ProtectedRoute>
             <ProtectedApp />

@@ -4,6 +4,8 @@
 
 ConsoleBlue is a unified, password-protected task management and documentation hub built within the **TriadBlue Replit Account**. It serves as the command center for managing multiple sibling projects (BusinessBlueprint, HostsBlue, SwipesBlue, List It) that are also built under the same TriadBlue account.
 
+**Public Demo:** ConsoleBlue features a public demo dashboard at `/demo` (no login required) that showcases key features with mock data, allowing visitors to explore the platform's capabilities before signing in.
+
 **Organizational Structure:**
 - **TriadBlue** = Replit Account (top-level)
 - **ConsoleBlue** = Sub-project (this application)
@@ -54,13 +56,14 @@ All builders are **equal** - no hierarchical structure. Email chat is preferred 
 
 ### Authentication
 
-- **Public Access:** Landing page (`/`), Login page (`/login`).
-- **Protected Access:** All dashboard routes require authentication.
+- **Public Access:** Landing page (`/`), Login page (`/login`), Demo Dashboard (`/demo` and all `/demo/*` routes).
+- **Protected Access:** All main dashboard routes require authentication.
 - **Method:** Password-based (DASHBOARD_PASSWORD env var), server-side session management with httpOnly cookies.
 - **Session Security:** Rolling sessions (7-day expiry), SameSite=lax, secure cookies in production, trust proxy for Replit deployment.
 
 ### Key Features
 
+- **Public Demo Dashboard:** Public showcase at `/demo` (no authentication required) featuring 5 pages with mock data: Demo Home with feature cards, Email Chat inbox with sample threads, Asset Management with upload UI and sample assets, Site Map with hierarchical routes, and Site Planner with visual flowcharts. Includes clear demo mode indicators, login CTAs, and read-only controls. All pages comply with project guidelines (no emojis, comprehensive data-testid attributes).
 - **Multi-Project Management:** Color-coded project cards, project-specific API keys, aggregated task views.
 - **Task Tracking:** Multi-source task creation (manual, AI, GitHub, API), status workflow, priority levels, filtering, source URL tracking.
 - **Conversation Logging:** Manual entry, AI-powered action item extraction, optional project association, automated task creation.
