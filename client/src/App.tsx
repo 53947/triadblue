@@ -27,6 +27,11 @@ import EmailSettings from "@/pages/email-settings";
 import AssistantWorkspace from "@/pages/assistant-workspace";
 import SitePlanner from "@/pages/site-planner";
 import SiteMap from "@/pages/site-map";
+import DemoHome from "@/pages/demo";
+import DemoEmailChat from "@/pages/demo/demo-email-chat";
+import DemoAssets from "@/pages/demo/demo-assets";
+import DemoSiteMap from "@/pages/demo/demo-site-map";
+import DemoSitePlanner from "@/pages/demo/demo-site-planner";
 import { ProtectedRoute } from "@/components/protected-route";
 import { DynamicFavicon } from "@/components/dynamic-favicon";
 import { useQuery } from "@tanstack/react-query";
@@ -41,6 +46,11 @@ function PublicRouter() {
   return (
     <Switch>
       <Route path="/login" component={Login} />
+      <Route path="/demo" component={DemoHome} />
+      <Route path="/demo/email-chat" component={DemoEmailChat} />
+      <Route path="/demo/assets" component={DemoAssets} />
+      <Route path="/demo/site-map" component={DemoSiteMap} />
+      <Route path="/demo/site-planner" component={DemoSitePlanner} />
       <Route component={NotFound} />
     </Switch>
   );
