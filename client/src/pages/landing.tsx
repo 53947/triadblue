@@ -3,7 +3,7 @@ import businessBlueprintLogo from "@assets/BluePrint Header Logo minus io_176375
 import hostsBlueLogo from "@assets/archive/HostsBlue Logo_1762989341854.png";
 import swipesBlueLogo from "@assets/archive/SwipesBlue Logo_1762989341855.png";
 import consoleBlueLogo from "@assets/ConsoleBlue-logo_1763756605648.png";
-import consoleBlueDashboardButton from "@assets/ConsoleBlue dahsboard_1763759339561.png";
+import consoleBlueDashboardButton from "@assets/ConsoleBlue dahsboard_1763759506138.png";
 import { Link } from "wouter";
 import { ArrowRight, CheckCircle2, Zap, Shield, Globe } from "lucide-react";
 import { useActiveLogo } from "@/hooks/use-active-logo";
@@ -88,7 +88,7 @@ export default function Landing() {
 
           <article className="landing-card">
             <a href="https://hostsblue.com" target="_blank" rel="noopener noreferrer" style={{ display: 'block', marginBottom: '20px' }}>
-              <img src={hostsBlueLogo} alt="HostsBlue.com" style={{ height: '40px', width: 'auto' }} />
+              <img src={hostsBlueLogo} alt="HostsBlue.com" style={{ height: '50px', width: 'auto' }} />
             </a>
             <p>
               Fast, secure cloud infrastructure—domains, SSL certificates, email, and hosting with one-click deployment and automated backups.
@@ -100,7 +100,7 @@ export default function Landing() {
 
           <article className="landing-card">
             <a href="https://swipesblue.com" target="_blank" rel="noopener noreferrer" style={{ display: 'block', marginBottom: '20px' }}>
-              <img src={swipesBlueLogo} alt="SwipesBlue.com" style={{ height: '40px', width: 'auto' }} />
+              <img src={swipesBlueLogo} alt="SwipesBlue.com" style={{ height: '50px', width: 'auto' }} />
             </a>
             <p>
               Embedded payment processing online and in-person—subscriptions, invoices, and real-time tracking with PCI-compliant security.
@@ -138,7 +138,7 @@ export default function Landing() {
       {/* HostsBlue Section */}
       <section id="hosts" className="landing-section landing-container">
         <article className="landing-mod">
-          <img src={hostsBlueLogo} alt="HostsBlue.com Hosting Platform" />
+          <img src={hostsBlueLogo} alt="HostsBlue.com Hosting Platform" style={{ height: '36px', width: 'auto' }} />
           <div>
             <h2>HostsBlue.com<br />Power Your Presence</h2>
             <ul>
@@ -159,7 +159,7 @@ export default function Landing() {
       {/* SwipesBlue Section */}
       <section id="swipes" className="landing-section landing-container">
         <article className="landing-mod">
-          <img src={swipesBlueLogo} alt="SwipesBlue.com Payment Platform" />
+          <img src={swipesBlueLogo} alt="SwipesBlue.com Payment Platform" style={{ height: '36px', width: 'auto' }} />
           <div>
             <h2>SwipesBlue.com<br />Simplify How You Get Paid</h2>
             <ul>
