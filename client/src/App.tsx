@@ -35,8 +35,7 @@ import { CreateProjectModal } from "@/components/modals/create-project-modal";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Project } from "@shared/schema";
-import triadBlueLockup from "@assets/TriadBlue-Logo-Lockup_1763606084811.png";
-import { useActiveLogo } from "@/hooks/use-active-logo";
+import { useContextLogo } from "@/hooks/use-context-logo";
 
 function PublicRouter() {
   return (
@@ -89,7 +88,7 @@ function ProtectedApp() {
   const [showCreateProjectModal, setShowCreateProjectModal] = useState(false);
   const hasShownNotificationRef = useRef(false);
   const redirectTimeoutRef = useRef<number | null>(null);
-  const { logoUrl } = useActiveLogo();
+  const { logo: contextLogo, alt: contextLogoAlt } = useContextLogo();
   
   useEffect(() => {
     const handleSessionExpired = () => {
@@ -163,9 +162,10 @@ function ProtectedApp() {
               <NotificationBell />
               <ThemeToggle />
               <img 
-                src={logoUrl || triadBlueLockup} 
-                alt="TriadBlue" 
+                src={contextLogo} 
+                alt={contextLogoAlt} 
                 className="h-8 sm:h-11 w-auto object-contain"
+                data-testid="header-context-logo"
               />
             </div>
           </header>

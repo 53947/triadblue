@@ -1,8 +1,8 @@
 import triadBlueLockup from "@assets/TriadBlue-Logo-Lockup_1763606084811.png";
-import businessBlueprintLogo from "@assets/archive/Blueprint_Logo_1762989341853.png";
+import businessBlueprintLogo from "@assets/BluePrint Header Logo minus io_1763756646639.png";
 import hostsBlueLogo from "@assets/archive/HostsBlue Logo_1762989341854.png";
 import swipesBlueLogo from "@assets/archive/SwipesBlue Logo_1762989341855.png";
-import consoleBlueLogo from "@assets/archive/ConsoleBlue_1762989387897.png";
+import consoleBlueLogo from "@assets/ConsoleBlue-logo_1763756605648.png";
 import { Link } from "wouter";
 import { ArrowRight, CheckCircle2, Zap, Shield, Globe } from "lucide-react";
 import { useActiveLogo } from "@/hooks/use-active-logo";
@@ -27,8 +27,9 @@ export default function Landing() {
             <a href="#faq">FAQ</a>
           </nav>
           <div className="landing-actions">
-            <Link href="/login" className="landing-cta-green" data-testid="link-dashboard-login">
-              Dashboard Login
+            <Link href="/login" className="landing-cta-green" data-testid="link-dashboard-login" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <img src={consoleBlueLogo} alt="ConsoleBlue" style={{ height: '24px', width: 'auto' }} />
+              ConsoleBlue Dashboard
             </Link>
           </div>
         </div>

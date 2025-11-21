@@ -12,7 +12,6 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Task, Conversation, GithubActivity, Project } from "@shared/schema";
 import { Inbox } from "lucide-react";
-import triadBlueLogo from "@assets/TriadBlue-Logo-Lockup_1763606084811.png";
 
 type FeedItem = 
   | { type: 'task'; data: Task & { projectName?: string; projectColor?: string } }

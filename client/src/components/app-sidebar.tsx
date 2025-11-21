@@ -16,8 +16,7 @@ import { Home, FolderKanban, MessageSquare, Settings, Plus, Github, MessagesSqua
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { Project } from "@shared/schema";
-import triadBlueLogo from "@assets/TriadBlue-Favicon_1763606084812.png";
-import consoleBlueLogo from "@assets/TriadBlue-Logo-Lockup_1763606084811.png";
+import consoleBlueLogo from "@assets/ConsoleBlue-logo_1763756605648.png";
 import { logout } from "@/lib/auth";
 import { useLocation as useWouterLocation } from "wouter";
 import { useActiveLogo } from "@/hooks/use-active-logo";
