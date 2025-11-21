@@ -117,7 +117,7 @@ export default function Landing() {
       {/* BusinessBlueprint Section */}
       <section id="blueprint" className="landing-section landing-container">
         <article className="landing-mod">
-          <img src={businessBlueprintLogo} alt="BusinessBlueprint.io Platform Dashboard" />
+          <img src={businessBlueprintLogo} alt="BusinessBlueprint.io Platform Dashboard" style={{ height: '80px', width: 'auto' }} />
           <div>
             <h2>BusinessBlueprint.io<br />Diagnose & Prescribe</h2>
             <ul>
@@ -138,7 +138,7 @@ export default function Landing() {
       {/* HostsBlue Section */}
       <section id="hosts" className="landing-section landing-container">
         <article className="landing-mod">
-          <img src={hostsBlueLogo} alt="HostsBlue.com Hosting Platform" />
+          <img src={hostsBlueLogo} alt="HostsBlue.com Hosting Platform" style={{ height: '80px', width: 'auto' }} />
           <div>
             <h2>HostsBlue.com<br />Power Your Presence</h2>
             <ul>
@@ -159,7 +159,7 @@ export default function Landing() {
       {/* SwipesBlue Section */}
       <section id="swipes" className="landing-section landing-container">
         <article className="landing-mod">
-          <img src={swipesBlueLogo} alt="SwipesBlue.com Payment Platform" />
+          <img src={swipesBlueLogo} alt="SwipesBlue.com Payment Platform" style={{ height: '80px', width: 'auto' }} />
           <div>
             <h2>SwipesBlue.com<br />Simplify How You Get Paid</h2>
             <ul>
