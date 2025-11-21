@@ -198,7 +198,7 @@ export default function Landing() {
       {/* ConsoleBlue Section */}
       <section id="console" className="landing-section landing-container">
         <article className="landing-mod">
-          <img src={consoleBlueLogo} alt="ConsoleBlue Development Platform" style={{ height: '50px', width: 'auto' }} />
+          <img src={consoleBlueLogo} alt="ConsoleBlue Development Platform" style={{ height: '80px', width: 'auto' }} />
           <div>
             <h2>ConsoleBlue<br />Where New Platforms Are Born</h2>
             <ul>
