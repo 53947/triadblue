@@ -209,7 +209,7 @@ export default function Landing() {
             </ul>
             <div style={{ marginTop: '24px' }}>
               <Link href="/demo" className="landing-cta-green">
-                Access ConsoleBlue Dashboard
+                Access Demo Dashboard
               </Link>
             </div>
           </div>
