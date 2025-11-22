@@ -49,10 +49,9 @@ export function DemoLayout({ children }: DemoLayoutProps) {
           <header className="flex items-center justify-between p-2 border-b shrink-0">
             <div className="flex items-center gap-2">
               <SidebarTrigger data-testid="button-sidebar-toggle" className="h-10 min-h-10" />
-              <span className="font-semibold text-sm sm:text-base lg:hidden">ConsoleBlue Demo</span>
               
-              {/* Navigation Arrows */}
-              <div className="hidden sm:flex items-center gap-1 ml-2">
+              {/* Navigation Arrows - visible on all screen sizes */}
+              <div className="flex items-center gap-1">
                 <Button 
                   size="icon" 
                   variant="ghost" 
@@ -76,6 +75,8 @@ export function DemoLayout({ children }: DemoLayoutProps) {
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
+              
+              <span className="font-semibold text-sm sm:text-base lg:hidden">ConsoleBlue Demo</span>
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
               <ThemeToggle />
