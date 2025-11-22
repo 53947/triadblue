@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { Sidebar, SidebarContent, SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { AlertCircle, ExternalLink, Home, Mail, Image, Map, Layout } from "lucide-react";
+import { AlertCircle, ExternalLink, Home, Mail, Image, Map, Layout, ChevronLeft, ChevronRight } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import consoleBlueLogo from "@assets/ConsoleBlue-logo_1763756605648.png";
@@ -10,10 +10,35 @@ interface DemoLayoutProps {
   children: React.ReactNode;
 }
 
+const DEMO_PAGES = [
+  { path: "/demo", label: "Demo Home" },
+  { path: "/demo/email-chat", label: "Email Chat" },
+  { path: "/demo/assets", label: "Asset Management" },
+  { path: "/demo/site-map", label: "Site Map" },
+  { path: "/demo/site-planner", label: "Site Planner" },
+];
+
 export function DemoLayout({ children }: DemoLayoutProps) {
+  const [location, setLocation] = useLocation();
   const style = {
     "--sidebar-width": "20rem",
     "--sidebar-width-icon": "4rem",
+  };
+
+  const currentIndex = DEMO_PAGES.findIndex(page => page.path === location);
+  const hasPrev = currentIndex > 0;
+  const hasNext = currentIndex < DEMO_PAGES.length - 1;
+
+  const goToPrev = () => {
+    if (hasPrev) {
+      setLocation(DEMO_PAGES[currentIndex - 1].path);
+    }
+  };
+
+  const goToNext = () => {
+    if (hasNext) {
+      setLocation(DEMO_PAGES[currentIndex + 1].path);
+    }
   };
 
   return (
@@ -25,6 +50,32 @@ export function DemoLayout({ children }: DemoLayoutProps) {
             <div className="flex items-center gap-2">
               <SidebarTrigger data-testid="button-sidebar-toggle" className="h-10 min-h-10" />
               <span className="font-semibold text-sm sm:text-base lg:hidden">ConsoleBlue Demo</span>
+              
+              {/* Navigation Arrows */}
+              <div className="hidden sm:flex items-center gap-1 ml-2">
+                <Button 
+                  size="icon" 
+                  variant="ghost" 
+                  onClick={goToPrev}
+                  disabled={!hasPrev}
+                  data-testid="button-nav-prev"
+                  aria-label="Go to previous demo page"
+                  title="Previous page"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button 
+                  size="icon" 
+                  variant="ghost" 
+                  onClick={goToNext}
+                  disabled={!hasNext}
+                  data-testid="button-nav-next"
+                  aria-label="Go to next demo page"
+                  title="Next page"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
               <ThemeToggle />
