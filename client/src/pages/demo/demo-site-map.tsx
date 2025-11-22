@@ -92,18 +92,18 @@ export default function DemoSiteMap() {
           }`}
           onClick={() => hasChildren && togglePath(node.path)}
         >
-          <div className="flex items-center gap-2 flex-1">
+          <div className="flex items-center gap-2 flex-1 min-w-0 flex-wrap">
             {hasChildren ? (
               isExpanded ? (
-                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
               ) : (
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
               )
             ) : (
-              <FileCode className="h-4 w-4 text-muted-foreground ml-5" />
+              <FileCode className="h-4 w-4 text-muted-foreground ml-5 shrink-0" />
             )}
             <span className="font-medium text-sm">{node.name}</span>
-            <code className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+            <code className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded break-all">
               {node.path}
             </code>
           </div>

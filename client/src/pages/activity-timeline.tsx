@@ -165,7 +165,7 @@ export default function ActivityTimeline() {
         </div>
 
         <div className="flex gap-3 flex-wrap">
-          <div className="relative flex-1 min-w-[200px]">
+          <div className="relative flex-1 min-w-0 sm:min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Search activities..."
@@ -177,7 +177,7 @@ export default function ActivityTimeline() {
           </div>
 
           <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-[180px]" data-testid="select-type-filter">
+            <SelectTrigger className="w-full sm:w-[180px]" data-testid="select-type-filter">
               <SelectValue placeholder="All types" />
             </SelectTrigger>
             <SelectContent>
@@ -190,7 +190,7 @@ export default function ActivityTimeline() {
           </Select>
 
           <Select value={projectFilter} onValueChange={setProjectFilter}>
-            <SelectTrigger className="w-[200px]" data-testid="select-project-filter">
+            <SelectTrigger className="w-full sm:w-[200px]" data-testid="select-project-filter">
               <SelectValue placeholder="All projects" />
             </SelectTrigger>
             <SelectContent>

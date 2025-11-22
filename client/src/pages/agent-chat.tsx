@@ -211,9 +211,9 @@ export default function AgentChat() {
           </Dialog>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap min-w-0">
           <Select value={selectedConnectionId || ""} onValueChange={setSelectedConnectionId}>
-            <SelectTrigger className="w-64" data-testid="select-agent-connection">
+            <SelectTrigger className="w-full sm:w-64" data-testid="select-agent-connection">
               <SelectValue placeholder="Select an agent" />
             </SelectTrigger>
             <SelectContent>

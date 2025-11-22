@@ -106,9 +106,9 @@ export default function DemoEmailChat() {
 
   return (
     <DemoLayout>
-      <div className="flex h-[calc(100vh-8rem)] p-4 gap-4">
+      <div className="flex flex-col md:flex-row h-[calc(100vh-8rem)] p-4 gap-4 min-w-0">
         {/* Thread List */}
-        <Card className="w-80 flex flex-col">
+        <Card className="w-full md:w-80 md:max-w-80 flex flex-col min-h-0 md:min-h-full">
           <div className="p-4 border-b">
             <h2 className="font-semibold flex items-center gap-2">
               <Mail className="h-4 w-4" />
@@ -145,7 +145,7 @@ export default function DemoEmailChat() {
         </Card>
 
         {/* Message View */}
-        <Card className="flex-1 flex flex-col">
+        <Card className="flex-1 flex flex-col min-w-0 min-h-0">
           {currentThread ? (
             <>
               <div className="p-4 border-b">

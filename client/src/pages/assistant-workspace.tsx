@@ -177,9 +177,9 @@ export default function AssistantWorkspace() {
         </p>
       </div>
 
-      <div className="flex-1 flex overflow-hidden min-w-0">
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-w-0">
         {/* Thread List */}
-        <div className="basis-80 lg:basis-96 max-w-sm border-r flex flex-col flex-shrink-0">
+        <div className="w-full md:basis-80 lg:basis-96 md:max-w-sm md:border-r flex flex-col md:flex-shrink-0 min-h-0">
           <div className="p-4 border-b">
             <h2 className="font-semibold">All Email Threads</h2>
             <p className="text-xs text-muted-foreground mt-1">

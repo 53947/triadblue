@@ -113,11 +113,11 @@ export default function DemoAssets() {
               {sampleAssets.map((asset) => (
                 <div
                   key={asset.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover-elevate"
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border rounded-lg hover-elevate gap-4"
                   data-testid={`asset-${asset.id}`}
                 >
                   <div className="flex items-center gap-4 flex-1 min-w-0">
-                    <div className="w-16 h-16 border rounded flex items-center justify-center bg-muted p-2">
+                    <div className="w-16 h-16 shrink-0 border rounded flex items-center justify-center bg-muted p-2">
                       <img
                         src={asset.previewUrl}
                         alt={asset.fileName}
@@ -125,28 +125,28 @@ export default function DemoAssets() {
                       />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <h4 className="font-medium truncate">{asset.fileName}</h4>
                         {asset.active && (
-                          <Badge variant="default" className="gap-1">
+                          <Badge variant="default" className="gap-1 shrink-0">
                             <CheckCircle2 className="h-3 w-3" />
                             Active
                           </Badge>
                         )}
                       </div>
-                      <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                        <Badge variant="outline" className="capitalize">
+                      <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                        <Badge variant="outline" className="capitalize shrink-0">
                           {asset.type}
                         </Badge>
-                        <span>{asset.project}</span>
-                        <span>•</span>
-                        <span>{asset.size}</span>
-                        <span>•</span>
-                        <span>{asset.uploadedAt}</span>
+                        <span className="shrink-0">{asset.project}</span>
+                        <span className="hidden sm:inline">•</span>
+                        <span className="shrink-0">{asset.size}</span>
+                        <span className="hidden sm:inline">•</span>
+                        <span className="shrink-0">{asset.uploadedAt}</span>
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 self-end sm:self-auto">
                     {!asset.active && (
                       <Button size="sm" variant="outline" disabled data-testid={`button-activate-${asset.id}`}>
                         Activate
