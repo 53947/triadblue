@@ -29,7 +29,7 @@ const navigation = [
   { title: "Email Chat", url: "/email-chat", icon: Mail },
   { title: "Email Settings", url: "/email-settings", icon: Settings2 },
   { title: "Assistant Workspace", url: "/assistant-workspace", icon: Headphones },
-  // { title: "Agent Chat", url: "/agent-chat", icon: MessagesSquare },
+  { title: "Agent Chat", url: "/agent-chat", icon: MessagesSquare },
   // { title: "Agent Setup", url: "/agent-setup", icon: Plug },
   // { title: "Project Embeds", url: "/embeds", icon: ExternalLink },
   { title: "Activity Timeline", url: "/timeline", icon: Clock },

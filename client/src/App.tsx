@@ -7,6 +7,8 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { NotificationBell } from "@/components/notification-bell";
+import { Button } from "@/components/ui/button";
+import { RefreshCw, RotateCcw } from "lucide-react";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import Login from "@/pages/login";
@@ -85,6 +87,22 @@ function ProtectedApp() {
   const hasShownNotificationRef = useRef(false);
   const redirectTimeoutRef = useRef<number | null>(null);
   const { logo: contextLogo, alt: contextLogoAlt } = useContextLogo();
+
+  const handleHardReset = async () => {
+    try {
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+      }
+      
+      queryClient.clear();
+      
+      window.location.reload();
+    } catch (error) {
+      console.error('Hard reset error:', error);
+      window.location.reload();
+    }
+  };
   
   useEffect(() => {
     const handleSessionExpired = () => {
@@ -152,6 +170,24 @@ function ProtectedApp() {
           <header className="flex items-center justify-between gap-2 px-2 sm:px-4 py-2 border-b shrink-0">
             <div className="flex items-center gap-2">
               <SidebarTrigger data-testid="button-sidebar-toggle" className="h-10 min-h-10" />
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => window.location.reload()}
+                title="Reload page"
+                data-testid="button-reload"
+              >
+                <RefreshCw className="w-4 h-4" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={handleHardReset}
+                title="Hard reset (clears cache)"
+                data-testid="button-hard-reset"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </Button>
               <span className="font-semibold text-sm sm:text-base lg:hidden">ConsoleBlue</span>
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
