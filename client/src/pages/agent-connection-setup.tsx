@@ -58,12 +58,20 @@ export default function AgentConnectionSetup() {
     )
   );
 
+  // Fetch all projects to map names to IDs
+  const { data: projects = [] } = useQuery<Project[]>({
+    queryKey: ["/api/projects"],
+  });
+
   const createConnectionMutation = useMutation({
     mutationFn: async (data: { name: string; endpoint: string; apiKey: string }) => {
-      // Create a default project first (we'll just use the first one or create one)
-      let projectId = "default";
+      // Find the project ID by matching the name
+      const project = projects.find(p => p.name === data.name);
+      if (!project) {
+        throw new Error(`Project "${data.name}" not found. Please make sure it's been seeded.`);
+      }
       
-      return await apiRequest("POST", `/api/projects/${projectId}/agent-connections`, {
+      return await apiRequest("POST", `/api/projects/${project.id}/agent-connections`, {
         name: data.name,
         agentEndpointUrl: data.endpoint,
         agentApiKey: data.apiKey,
