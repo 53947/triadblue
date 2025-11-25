@@ -81,6 +81,43 @@ All builders are **equal** - no hierarchical structure. Email chat is preferred 
 - **Site Planner:** Visual flowchart tool at `/site-planner` for planning page layouts and user flows. Uses ReactFlow for interactive node-based editing with drag-and-drop, connection creation, and real-time updates. Supports multiple node types (page, component, decision, data) with auto-save functionality. Project-scoped diagrams stored in site_planner_nodes and site_planner_edges tables with JSON-based position and styling data. Designed for planning application structure before implementation.
 - **Site Map:** Hierarchical route explorer at `/site-map` displaying auto-generated tree view of actual routes from TriadBlue projects. ConsoleBlue routes are scanned directly from codebase (App.tsx and pages directory) via regex-based parser. External projects (BusinessBlueprint, HostsBlue, SwipesBlue, List It) can POST routes via API with "write_routes" permission. Features include collapsible tree navigation with path-based nesting, route metadata display (name, path, file location, type, framework), and dual-source support (scanned vs external). Database schema (project_routes table) tracks route information with source attribution and JSON metadata field. Scanner service parses wouter routes including component imports, inline routes, public routes, and dynamic segments.
 
+## TriadBlue Standard URL Configuration
+
+**⚠️ MANDATORY FOR ALL ECOSYSTEM PROJECTS**
+
+All TriadBlue projects use standardized URL patterns configured in `server/triadblue-config.ts`:
+
+### Required Endpoints
+
+Every TriadBlue project **MUST** implement these two API endpoints:
+
+1. **Metadata API**: `https://{projectname}.replit.app/api/metadata`
+   - Returns project features and tech stack as JSON
+   - Used by Documentation Generator
+   
+2. **Agent API**: `https://{projectname}.replit.app/api/agent`
+   - Handles conversational AI requests
+   - Used by Agent Chat for multi-project communication
+
+### Automatic Configuration
+
+ConsoleBlue automatically:
+- **Seeds all 5 TriadBlue projects** at startup (Site Inspector, BusinessBlueprint, HostsBlue, SwipesBlue, List It)
+- **Pre-fills metadata URLs** in Project Settings based on project name
+- **Creates agent connections** with standard endpoint URLs
+- **Normalizes legacy connections** to use canonical URLs and naming
+
+### Implementation Guide
+
+See `TRIADBLUE_REQUIRED_ENDPOINTS.md` for:
+- Complete endpoint specifications
+- Node.js and Python implementation examples
+- Request/response schemas
+- Testing instructions
+- Security considerations
+
+**Agents:** Before working on any TriadBlue project, review `TRIADBLUE_REQUIRED_ENDPOINTS.md` to ensure compliance with the standard endpoint requirements.
+
 ## API Key & Secret Naming Standards
 
 **⚠️ IMPORTANT:** All API keys and secrets MUST follow the naming conventions in `API_KEY_NAMING_GUIDE.md`. This guide provides:
