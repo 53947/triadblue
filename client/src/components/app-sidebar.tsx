@@ -12,7 +12,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Link, useLocation } from "wouter";
-import { Home, FolderKanban, MessageSquare, Settings, Plus, Github, MessagesSquare, Clock, BarChart3, ListTodo, LogOut, ImageIcon, FileText, ExternalLink, Plug, Mail, Settings2, Headphones, Map, Network } from "lucide-react";
+import { Home, FolderKanban, MessageSquare, Settings, Plus, Github, MessagesSquare, Clock, BarChart3, ListTodo, LogOut, ImageIcon, FileText, ExternalLink, Plug, Mail, Settings2, Headphones, Map, Network, Microscope } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { Project } from "@shared/schema";
@@ -37,6 +37,7 @@ const navigation = [
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
   { title: "Documentation", url: "/documentation", icon: FileText },
   { title: "Assets", url: "/assets", icon: ImageIcon },
+  { title: "Site Inspector", url: "/site-inspector", icon: Microscope },
   { title: "Site Planner", url: "/site-planner", icon: Network },
   { title: "Site Map", url: "/site-map", icon: Map },
   { title: "Settings", url: "/settings", icon: Settings },

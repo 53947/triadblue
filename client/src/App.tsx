@@ -29,6 +29,7 @@ import EmailSettings from "@/pages/email-settings";
 import AssistantWorkspace from "@/pages/assistant-workspace";
 import SitePlanner from "@/pages/site-planner";
 import SiteMap from "@/pages/site-map";
+import SiteInspector from "@/pages/site-inspector";
 import DemoHome from "@/pages/demo";
 import DemoEmailChat from "@/pages/demo/demo-email-chat";
 import DemoAssets from "@/pages/demo/demo-assets";
@@ -63,6 +64,7 @@ function ProtectedRouter() {
       <Route path="/assistant-workspace" component={AssistantWorkspace} />
       <Route path="/site-planner" component={SitePlanner} />
       <Route path="/site-map" component={SiteMap} />
+      <Route path="/site-inspector" component={SiteInspector} />
       <Route path="/embeds" component={ProjectEmbeds} />
       <Route path="/agent-setup" component={AgentConnectionSetup} />
       <Route path="/github">
