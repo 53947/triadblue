@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useState, useMemo } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,33 +8,41 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Check, ExternalLink, Loader2 } from "lucide-react";
 import { useLocation } from "wouter";
+import type { Project } from "@shared/schema";
 
 interface QuickSetupConfig {
   name: string;
   suggestedEndpoint: string;
   description: string;
+  projectId?: string;
 }
 
-const QUICK_SETUPS: QuickSetupConfig[] = [
+// Standard TriadBlue projects with pre-configured endpoints
+const STANDARD_TRIADBLUE_SETUPS: QuickSetupConfig[] = [
   {
-    name: "List It",
-    suggestedEndpoint: "https://listit.replit.app/api/agent/chat",
-    description: "Task and list management agent",
+    name: "Site Inspector",
+    suggestedEndpoint: "https://siteinspector.replit.app/api/agent",
+    description: "Site analysis and inspection agent",
   },
   {
     name: "BusinessBlueprint",
-    suggestedEndpoint: "https://businessblueprint.replit.app/api/agent/chat",
+    suggestedEndpoint: "https://businessblueprint.replit.app/api/agent",
     description: "Business planning and strategy agent",
   },
   {
     name: "HostsBlue",
-    suggestedEndpoint: "https://hostsblue.replit.app/api/agent/chat",
+    suggestedEndpoint: "https://hostsblue.replit.app/api/agent",
     description: "Hosting and infrastructure agent",
   },
   {
     name: "SwipesBlue",
-    suggestedEndpoint: "https://swipesblue.replit.app/api/agent/chat",
+    suggestedEndpoint: "https://swipesblue.replit.app/api/agent",
     description: "Swipe interaction agent",
+  },
+  {
+    name: "List It",
+    suggestedEndpoint: "https://listit.replit.app/api/agent",
+    description: "Task and list management agent",
   },
 ];
 
@@ -43,7 +51,7 @@ export default function AgentConnectionSetup() {
   const [, navigate] = useLocation();
   const [customConfigs, setCustomConfigs] = useState<Record<string, { endpoint: string; apiKey: string }>>(
     Object.fromEntries(
-      QUICK_SETUPS.map(setup => [
+      STANDARD_TRIADBLUE_SETUPS.map(setup => [
         setup.name,
         { endpoint: setup.suggestedEndpoint, apiKey: "" }
       ])
@@ -125,8 +133,8 @@ export default function AgentConnectionSetup() {
             </CardHeader>
             <CardContent className="space-y-2">
               <ol className="list-decimal list-inside space-y-1 text-sm">
-                <li>Make sure the project has an endpoint at <code className="bg-muted px-1 rounded">/api/agent/chat</code></li>
-                <li>Get your deployed URL (e.g., <code className="bg-muted px-1 rounded">https://listit.username.repl.co</code>)</li>
+                <li>Make sure the project has the standard endpoint at <code className="bg-muted px-1 rounded">/api/agent</code></li>
+                <li>Get your deployed URL (e.g., <code className="bg-muted px-1 rounded">https://listit.replit.app</code>)</li>
                 <li>Update the endpoint URL below if needed</li>
                 <li>Add your API key (if required)</li>
                 <li>Click "Connect" to add it to your Agent Chat</li>
@@ -134,7 +142,7 @@ export default function AgentConnectionSetup() {
             </CardContent>
           </Card>
 
-          {QUICK_SETUPS.map((config) => {
+          {STANDARD_TRIADBLUE_SETUPS.map((config) => {
             const customConfig = customConfigs[config.name];
             const isPending = createConnectionMutation.isPending;
             
@@ -172,11 +180,11 @@ export default function AgentConnectionSetup() {
                       id={`endpoint-${config.name}`}
                       value={customConfig.endpoint}
                       onChange={(e) => handleUpdateConfig(config.name, 'endpoint', e.target.value)}
-                      placeholder="https://your-project.replit.app/api/agent/chat"
+                      placeholder="https://your-project.replit.app/api/agent"
                       data-testid={`input-endpoint-${config.name.toLowerCase().replace(/\s+/g, '-')}`}
                     />
                     <p className="text-xs text-muted-foreground mt-1">
-                      Update this with your actual deployed URL
+                      Standard pattern: https://&#123;projectname&#125;.replit.app/api/agent
                     </p>
                   </div>
 
@@ -201,9 +209,9 @@ export default function AgentConnectionSetup() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Endpoint Requirements</CardTitle>
+              <CardTitle>Standard TriadBlue Agent Endpoint</CardTitle>
               <CardDescription>
-                Each project needs this endpoint format
+                All TriadBlue projects must implement this endpoint format
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -211,14 +219,15 @@ export default function AgentConnectionSetup() {
                 <div>
                   <p className="text-sm font-medium mb-2">Request Format:</p>
                   <pre className="bg-muted p-3 rounded-md text-xs overflow-auto">
-{`POST /api/agent/chat
-Authorization: Bearer YOUR_API_KEY
+{`POST /api/agent
 Content-Type: application/json
 
 {
-  "messages": [
-    { "role": "user", "content": "Hello" }
-  ]
+  "message": "User's message content",
+  "context": {
+    "conversationId": "optional-conversation-id",
+    "userId": "optional-user-id"
+  }
 }`}
                   </pre>
                 </div>
@@ -227,21 +236,20 @@ Content-Type: application/json
                   <p className="text-sm font-medium mb-2">Response Format:</p>
                   <pre className="bg-muted p-3 rounded-md text-xs overflow-auto">
 {`{
-  "reply": "Hi there! How can I help you?"
-}
-
-// OR
-
-{
-  "response": "Hi there! How can I help you?"
+  "content": "Agent's text response",
+  "screenshot": "https://optional-screenshot-url.png",
+  "metadata": {
+    "processingTime": 1234,
+    "model": "gpt-4"
+  }
 }`}
                   </pre>
                 </div>
 
                 <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-md">
                   <p className="text-sm">
-                    <strong>Note:</strong> The endpoint path can be anything you want (not just <code className="bg-muted px-1 rounded">/api/agent/chat</code>). 
-                    Just make sure to update the full URL above to match what your project uses.
+                    <strong>Standard Pattern:</strong> All TriadBlue projects use <code className="bg-muted px-1 rounded">https://&#123;projectname&#125;.replit.app/api/agent</code>. 
+                    See <code className="bg-muted px-1 rounded">TRIADBLUE_REQUIRED_ENDPOINTS.md</code> for complete implementation guide.
                   </p>
                 </div>
               </div>

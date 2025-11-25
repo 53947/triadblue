@@ -282,6 +282,55 @@ This application includes a built-in Asset Management system accessible from the
 ## Scalability Strategy
 
 {{SCALABILITY_STRATEGY}}
+
+## ⚠️ Required API Endpoints (TriadBlue Standard)
+
+**All TriadBlue ecosystem projects MUST implement these two standard endpoints:**
+
+### 1. Metadata Endpoint (\`/api/metadata\`)
+
+- **Purpose**: Provides project features and tech stack for ConsoleBlue's Documentation Generator
+- **Method**: GET
+- **Authentication**: None (public endpoint)
+- **Pre-configured URL**: \`https://{{PROJECT_CODE}}.replit.app/api/metadata\`
+
+**Response Format**:
+\`\`\`json
+{
+  "features": ["Feature 1", "Feature 2"],
+  "techStack": ["Technology 1", "Technology 2"]
+}
+\`\`\`
+
+### 2. Agent Endpoint (\`/api/agent\`)
+
+- **Purpose**: Enables conversational AI interaction through ConsoleBlue's Agent Chat interface
+- **Method**: POST
+- **Authentication**: Optional (Bearer token if needed)
+- **Pre-configured URL**: \`https://{{PROJECT_CODE}}.replit.app/api/agent\`
+
+**Request Format**:
+\`\`\`json
+{
+  "message": "User's message content",
+  "context": { "conversationId": "optional-id" }
+}
+\`\`\`
+
+**Response Format**:
+\`\`\`json
+{
+  "content": "Agent's text response",
+  "screenshot": "https://optional-screenshot-url.png",
+  "metadata": { "processingTime": 1234 }
+}
+\`\`\`
+
+**Implementation Guides**:
+- \`/api/metadata\` - See \`EXTERNAL_PROJECT_METADATA_API.md\`
+- \`/api/agent\` - See \`TRIADBLUE_REQUIRED_ENDPOINTS.md\`
+
+**Integration**: These endpoints are pre-configured in ConsoleBlue and automatically used for documentation generation and agent chat functionality.
 `,
       createdById,
     },

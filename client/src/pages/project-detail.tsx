@@ -59,8 +59,14 @@ export default function ProjectDetail() {
   }, [project?.id]); // Only run when project ID changes (initial load)
 
   useEffect(() => {
-    if (project && !metadataApiUrl && project.metadataApiUrl) {
-      setMetadataApiUrl(project.metadataApiUrl);
+    if (project) {
+      if (project.metadataApiUrl) {
+        setMetadataApiUrl(project.metadataApiUrl);
+      } else if (!metadataApiUrl && project.name) {
+        // Pre-fill with standard TriadBlue pattern if not already set
+        const projectCode = project.name.toLowerCase().replace(/\s+/g, '');
+        setMetadataApiUrl(`https://${projectCode}.replit.app/api/metadata`);
+      }
     }
   }, [project?.id]); // Only run when project ID changes (initial load)
 

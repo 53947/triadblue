@@ -1,6 +1,7 @@
 import { db } from "./db";
-import { users } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { users, projects, agentConnections } from "@shared/schema";
+import { eq, and } from "drizzle-orm";
+import { TRIADBLUE_PROJECTS } from "./triadblue-config";
 
 export async function seedDefaultUser() {
   try {
@@ -22,6 +23,102 @@ export async function seedDefaultUser() {
     return newUser;
   } catch (error) {
     console.error("Error seeding default user:", error);
+    throw error;
+  }
+}
+
+export async function seedTriadBlueProjects() {
+  try {
+    const defaultUser = await seedDefaultUser();
+    let seededCount = 0;
+    let skippedCount = 0;
+
+    for (const projectConfig of TRIADBLUE_PROJECTS) {
+      // Check if project already exists by name
+      const [existingProject] = await db
+        .select()
+        .from(projects)
+        .where(eq(projects.name, projectConfig.name));
+
+      if (existingProject) {
+        skippedCount++;
+        
+        // Update existing project with standard metadata URL if different
+        if (existingProject.metadataApiUrl !== projectConfig.metadataApiUrl) {
+          await db.update(projects)
+            .set({ metadataApiUrl: projectConfig.metadataApiUrl })
+            .where(eq(projects.id, existingProject.id));
+          console.log(`  ✓ Updated metadata URL for existing project: ${projectConfig.name}`);
+        }
+        
+        // Update ALL agent connections for this project to use standard URL and name
+        const existingConnections = await db
+          .select()
+          .from(agentConnections)
+          .where(eq(agentConnections.projectId, existingProject.id));
+
+        if (existingConnections.length === 0) {
+          // No connections exist - create the canonical one
+          await db.insert(agentConnections).values({
+            projectId: existingProject.id,
+            name: `${projectConfig.name} Agent`,
+            agentEndpointUrl: projectConfig.agentApiUrl,
+            agentApiKey: "", // Empty initially - can be added later if needed
+            isActive: true,
+          });
+          console.log(`  ✓ Agent connection created for existing project: ${projectConfig.name}`);
+        } else {
+          // Update all existing connections to use standard URL and name
+          for (const connection of existingConnections) {
+            const needsUpdate = 
+              connection.agentEndpointUrl !== projectConfig.agentApiUrl ||
+              connection.name !== `${projectConfig.name} Agent`;
+            
+            if (needsUpdate) {
+              await db.update(agentConnections)
+                .set({
+                  agentEndpointUrl: projectConfig.agentApiUrl,
+                  name: `${projectConfig.name} Agent`,
+                })
+                .where(eq(agentConnections.id, connection.id));
+              console.log(`  ✓ Updated agent connection to standard URL and name for: ${projectConfig.name}`);
+            }
+          }
+        }
+        continue;
+      }
+
+      // Create new project
+      const [newProject] = await db.insert(projects).values({
+        name: projectConfig.name,
+        description: `${projectConfig.name} - TriadBlue Ecosystem Project`,
+        color: projectConfig.color,
+        icon: projectConfig.icon,
+        createdById: defaultUser.id,
+        metadataApiUrl: projectConfig.metadataApiUrl,
+      }).returning();
+
+      // Create agent connection for this project
+      await db.insert(agentConnections).values({
+        projectId: newProject.id,
+        name: `${projectConfig.name} Agent`,
+        agentEndpointUrl: projectConfig.agentApiUrl,
+        agentApiKey: "", // Empty initially - can be added later if needed
+        isActive: true,
+      });
+
+      seededCount++;
+      console.log(`  ✓ Created project and agent connection: ${projectConfig.name}`);
+    }
+
+    if (seededCount > 0) {
+      console.log(`✓ Seeded ${seededCount} TriadBlue project(s) with agent connections`);
+    }
+    if (skippedCount > 0) {
+      console.log(`  (${skippedCount} project(s) already existed)`);
+    }
+  } catch (error) {
+    console.error("Error seeding TriadBlue projects:", error);
     throw error;
   }
 }

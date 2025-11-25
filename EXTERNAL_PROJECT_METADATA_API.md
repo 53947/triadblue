@@ -1,10 +1,18 @@
 # External Project Metadata API Setup Guide
 
-This guide explains how to set up a metadata API endpoint in your external Replit projects so ConsoleBlue can automatically pull Features and Tech Stack information.
+## ⚠️ MANDATORY FOR ALL TRIADBLUE PROJECTS
+
+**All TriadBlue ecosystem projects MUST implement the `/api/metadata` endpoint.**
+
+This is a TriadBlue standard that enables ConsoleBlue to automatically pull Features and Tech Stack information for documentation generation. Projects are pre-configured with this URL pattern in ConsoleBlue:
+
+```
+https://{projectname}.replit.app/api/metadata
+```
 
 ## Overview
 
-ConsoleBlue pulls metadata from your project's API endpoint when you click "Refresh from API" in the Documentation Generator. Your project needs to expose a simple GET endpoint that returns JSON with your features and tech stack.
+ConsoleBlue pulls metadata from your project's `/api/metadata` endpoint when you click "Refresh from API" in the Documentation Generator. Your project must expose this GET endpoint that returns JSON with your features and tech stack.
 
 ---
 

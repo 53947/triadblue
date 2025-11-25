@@ -124,17 +124,49 @@ In each Project Detail page → GitHub Integration:
 
 ---
 
-## 5️⃣ Quick Reference Checklist
+## 5️⃣ TriadBlue Standard API Endpoints
 
-### Setting Up a New Project
+**All TriadBlue ecosystem projects MUST implement these two standard endpoints:**
 
-- [ ] Create project in ConsoleBlue
+### Required Endpoints
+
+| Endpoint | Purpose | Pre-configured URL Pattern |
+|----------|---------|---------------------------|
+| `/api/metadata` | Documentation metadata (features, tech stack) | `https://{projectname}.replit.app/api/metadata` |
+| `/api/agent` | Agent Chat conversation interface | `https://{projectname}.replit.app/api/agent` |
+
+### URL Examples by Project
+
+| Project | Metadata URL | Agent URL |
+|---------|--------------|-----------|
+| Site Inspector | `https://siteinspector.replit.app/api/metadata` | `https://siteinspector.replit.app/api/agent` |
+| BusinessBlueprint | `https://businessblueprint.replit.app/api/metadata` | `https://businessblueprint.replit.app/api/agent` |
+| HostsBlue | `https://hostsblue.replit.app/api/metadata` | `https://hostsblue.replit.app/api/agent` |
+| SwipesBlue | `https://swipesblue.replit.app/api/metadata` | `https://swipesblue.replit.app/api/agent` |
+| List It | `https://listit.replit.app/api/metadata` | `https://listit.replit.app/api/agent` |
+
+**Note:** These URLs are pre-configured in ConsoleBlue. They're editable in Project Settings if using custom domains.
+
+**Implementation Guides:**
+- `/api/metadata` - See `EXTERNAL_PROJECT_METADATA_API.md`
+- `/api/agent` - See `TRIADBLUE_REQUIRED_ENDPOINTS.md`
+
+---
+
+## 6️⃣ Quick Reference Checklist
+
+### Setting Up a New TriadBlue Project
+
+- [ ] Create project in ConsoleBlue (automatically seeded with standard config)
+- [ ] **Implement `/api/metadata` endpoint** in project (MANDATORY)
+- [ ] **Implement `/api/agent` endpoint** in project (MANDATORY)
 - [ ] Create AgentMail inbox for the project (any email address you want)
 - [ ] Copy AgentMail Inbox ID to ConsoleBlue Email Settings
 - [ ] Configure sender email in ConsoleBlue Email Settings
 - [ ] Generate API key: `[ProjectName] - Production - Full Access`
 - [ ] Add `GITHUB_TOKEN` to Replit Secrets (if using GitHub)
 - [ ] Configure GitHub repo in Project Detail: `owner/repo`
+- [ ] Test both API endpoints before deployment
 
 **Note:** Assistant sessions (like `listit.assistant`) automatically monitor project inboxes - no additional setup needed.
 

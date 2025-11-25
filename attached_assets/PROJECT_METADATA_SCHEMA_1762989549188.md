@@ -102,6 +102,25 @@ TECH_STACK:
   deployment: "Replit"
 ```
 
+## ⚠️ Required API Endpoints (TriadBlue Standard)
+
+**All TriadBlue projects MUST expose these standard endpoints:**
+
+```yaml
+AGENT_API_URL: "https://{projectcode}.replit.app/api/agent"
+METADATA_API_URL: "https://{projectcode}.replit.app/api/metadata"
+
+# Example for Site Inspector:
+# AGENT_API_URL: "https://siteinspector.replit.app/api/agent"
+# METADATA_API_URL: "https://siteinspector.replit.app/api/metadata"
+```
+
+**Implementation**: See `TRIADBLUE_REQUIRED_ENDPOINTS.md` for complete specifications.
+
+**Integration**: These URLs are pre-configured in ConsoleBlue and used for:
+- Agent Chat conversations (`/api/agent`)
+- Documentation generation (`/api/metadata`)
+
 ## Usage Notes
 
 When setting up a new project dashboard:

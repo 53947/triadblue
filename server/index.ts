@@ -4,7 +4,7 @@ import pgSession from "connect-pg-simple";
 import { Pool } from "@neondatabase/serverless";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { seedDefaultUser } from "./seed";
+import { seedDefaultUser, seedTriadBlueProjects } from "./seed";
 import { seedDocumentationTemplates } from "./seed-documentation-templates";
 
 const app = express();
@@ -82,6 +82,9 @@ app.use((req, res, next) => {
 (async () => {
   // Seed default user for foreign key constraints
   const systemUser = await seedDefaultUser();
+  
+  // Seed TriadBlue projects and agent connections
+  await seedTriadBlueProjects();
   
   // Seed documentation templates
   await seedDocumentationTemplates(systemUser.id);
