@@ -14,6 +14,8 @@ export interface ProjectEndpoints {
   agentApiUrl: string;
   metadataApiUrl: string;
   primaryDomain?: string;
+  emailAddress?: string; // Shared or isolated inbox
+  inboxCategory?: "siteinspector" | "agent" | "assistant"; // Type of inbox
 }
 
 export const TRIADBLUE_PROJECTS: ProjectEndpoints[] = [
@@ -25,6 +27,8 @@ export const TRIADBLUE_PROJECTS: ProjectEndpoints[] = [
     agentApiUrl: "https://siteinspector.replit.app/api/agent",
     metadataApiUrl: "https://siteinspector.replit.app/api/metadata",
     primaryDomain: "siteinspector.dev",
+    emailAddress: "siteinspector@agentmail.triadblue.com",
+    inboxCategory: "siteinspector",
   },
   {
     name: "BusinessBlueprint",
@@ -34,6 +38,8 @@ export const TRIADBLUE_PROJECTS: ProjectEndpoints[] = [
     agentApiUrl: "https://businessblueprint.replit.app/api/agent",
     metadataApiUrl: "https://businessblueprint.replit.app/api/metadata",
     primaryDomain: "businessblueprint.io",
+    emailAddress: "agents@agentmail.triadblue.com",
+    inboxCategory: "agent",
   },
   {
     name: "HostsBlue",
@@ -42,6 +48,8 @@ export const TRIADBLUE_PROJECTS: ProjectEndpoints[] = [
     icon: "Server",
     agentApiUrl: "https://hostsblue.replit.app/api/agent",
     metadataApiUrl: "https://hostsblue.replit.app/api/metadata",
+    emailAddress: "agents@agentmail.triadblue.com",
+    inboxCategory: "agent",
   },
   {
     name: "SwipesBlue",
@@ -50,6 +58,8 @@ export const TRIADBLUE_PROJECTS: ProjectEndpoints[] = [
     icon: "Heart",
     agentApiUrl: "https://swipesblue.replit.app/api/agent",
     metadataApiUrl: "https://swipesblue.replit.app/api/metadata",
+    emailAddress: "agents@agentmail.triadblue.com",
+    inboxCategory: "agent",
   },
   {
     name: "List It",
@@ -58,6 +68,8 @@ export const TRIADBLUE_PROJECTS: ProjectEndpoints[] = [
     icon: "List",
     agentApiUrl: "https://listit.replit.app/api/agent",
     metadataApiUrl: "https://listit.replit.app/api/metadata",
+    emailAddress: "agents@agentmail.triadblue.com",
+    inboxCategory: "agent",
   },
 ];
 

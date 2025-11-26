@@ -2,6 +2,7 @@ import { db } from "./db";
 import { users, projects, agentConnections, emailGithubConfigs } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 import { TRIADBLUE_PROJECTS } from "./triadblue-config";
+import { randomUUID } from "crypto";
 
 export async function seedDefaultUser() {
   try {
@@ -173,17 +174,21 @@ export async function seedSharedEmailInboxes() {
     let configCount = 0;
     let skippedCount = 0;
 
+    // Use hardcoded config from TRIADBLUE_PROJECTS instead of re-querying
+    const siteInspectorConfig = TRIADBLUE_PROJECTS.find(p => p.code === "siteinspector");
+    const agentProjectsConfig = TRIADBLUE_PROJECTS.filter(p => p.inboxCategory === "agent");
+
     // 1. Configure Site Inspector with SEPARATE siteinspector@ inbox
-    const siteInspectorConfig = await db.select().from(emailGithubConfigs)
+    const siteInspectorEmailConfig = await db.select().from(emailGithubConfigs)
       .where(eq(emailGithubConfigs.projectId, siteInspectorProject.id));
     
-    if (siteInspectorConfig.length === 0) {
+    if (siteInspectorEmailConfig.length === 0 && siteInspectorConfig) {
       await db.insert(emailGithubConfigs).values({
         projectId: siteInspectorProject.id,
-        emailAddress: "siteinspector@agentmail.triadblue.com",
+        emailAddress: siteInspectorConfig.emailAddress || "siteinspector@agentmail.triadblue.com",
         inboxId: process.env.AGENTMAIL_SITEINSPECTOR_INBOX_ID || "",
       });
-      console.log("  ✓ Site Inspector → siteinspector@agentmail.triadblue.com (isolated)");
+      console.log(`  ✓ Site Inspector → ${siteInspectorConfig.emailAddress} (isolated)`);
       configCount++;
     } else {
       skippedCount++;
@@ -194,13 +199,15 @@ export async function seedSharedEmailInboxes() {
       const existingConfig = await db.select().from(emailGithubConfigs)
         .where(eq(emailGithubConfigs.projectId, project.id));
       
-      if (existingConfig.length === 0) {
+      const projectConfig = agentProjectsConfig.find(p => p.name === project.name);
+      
+      if (existingConfig.length === 0 && projectConfig) {
         await db.insert(emailGithubConfigs).values({
           projectId: project.id,
-          emailAddress: "agents@agentmail.triadblue.com",
+          emailAddress: projectConfig.emailAddress || "agents@agentmail.triadblue.com",
           inboxId: process.env.AGENTMAIL_AGENTS_INBOX_ID || "",
         });
-        console.log(`  ✓ ${project.name} → agents@agentmail.triadblue.com (shared inbox)`);
+        console.log(`  ✓ ${project.name} → ${projectConfig.emailAddress} (shared inbox)`);
         configCount++;
       } else {
         skippedCount++;
