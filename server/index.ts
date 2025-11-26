@@ -4,7 +4,7 @@ import pgSession from "connect-pg-simple";
 import { Pool } from "@neondatabase/serverless";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { seedDefaultUser, seedTriadBlueProjects } from "./seed";
+import { seedDefaultUser, seedTriadBlueProjects, seedLocalPlatformBuilderAgent } from "./seed";
 import { seedDocumentationTemplates } from "./seed-documentation-templates";
 
 const app = express();
@@ -85,6 +85,9 @@ app.use((req, res, next) => {
   
   // Seed TriadBlue projects and agent connections
   await seedTriadBlueProjects();
+  
+  // Seed local Platform Builder agent for direct communication
+  await seedLocalPlatformBuilderAgent();
   
   // Seed documentation templates
   await seedDocumentationTemplates(systemUser.id);
