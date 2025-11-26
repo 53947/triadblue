@@ -27,6 +27,37 @@ export async function seedDefaultUser() {
   }
 }
 
+export async function seedLocalPlatformBuilderAgent() {
+  try {
+    // Check if local Platform Builder agent already exists (no projectId)
+    const [existing] = await db.select().from(agentConnections).where(
+      and(
+        eq(agentConnections.name, "Platform Builder"),
+        eq(agentConnections.agentEndpointUrl, "local")
+      )
+    );
+    
+    if (existing) {
+      return existing;
+    }
+    
+    // Create local Platform Builder agent
+    const [agent] = await db.insert(agentConnections).values({
+      projectId: null as any, // Local agent, no project association
+      name: "Platform Builder",
+      agentEndpointUrl: "local", // Special marker for local agent
+      agentApiKey: "", // Not needed for local agent
+      isActive: true,
+    }).returning();
+    
+    console.log("✓ Local Platform Builder agent seeded");
+    return agent;
+  } catch (error) {
+    console.error("Error seeding local Platform Builder agent:", error);
+    throw error;
+  }
+}
+
 export async function seedTriadBlueProjects() {
   try {
     const defaultUser = await seedDefaultUser();
