@@ -250,6 +250,19 @@ export const projectDocumentationOutputs = pgTable("project_documentation_output
   githubCommitSha: text("github_commit_sha"), // If pushed to GitHub
 });
 
+// Documentation Distribution Tracking - tracks which agents/projects have received documentation
+export const documentationDistributions = pgTable("documentation_distributions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  projectId: varchar("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  documentationType: text("documentation_type").notNull(), // 'required_endpoints', 'architecture', 'standards', etc.
+  distributionMethod: text("distribution_method").notNull(), // 'github_push', 'email', 'chat_upload', 'replit_md'
+  status: text("status").notNull().default("pending"), // 'pending', 'sent', 'received', 'acknowledged'
+  details: text("details"), // JSON string with additional info (GitHub commit SHA, email thread ID, etc.)
+  sentAt: timestamp("sent_at"),
+  acknowledgedAt: timestamp("acknowledged_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Email-GitHub Configurations - maps project emails to GitHub repos for issue tracking
 export const emailGithubConfigs = pgTable("email_github_configs", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
