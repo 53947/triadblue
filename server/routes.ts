@@ -2008,7 +2008,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const message = await storage.createEmailMessage({
         threadId: thread.id,
         direction: "sent",
-        fromEmail: config.emailAddress,
+        fromEmail: config.inboxAddress || config.emailAddress || "",
         toEmail: to,
         subject,
         body,

@@ -77,7 +77,7 @@ import {
   type InsertProjectRoute,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, sql, isNull } from "drizzle-orm";
+import { eq, desc, and, sql, isNull, or } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -849,7 +849,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getEmailConfigByEmail(emailAddress: string): Promise<EmailGithubConfig | undefined> {
-    const [config] = await db.select().from(emailGithubConfigs).where(eq(emailGithubConfigs.emailAddress, emailAddress));
+    // Look up by emailAddress (handles both individual and shared inbox emails)
+    const [config] = await db.select().from(emailGithubConfigs).where(
+      eq(emailGithubConfigs.emailAddress, emailAddress)
+    );
     return config || undefined;
   }
 
