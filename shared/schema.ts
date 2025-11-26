@@ -264,10 +264,13 @@ export const documentationDistributions = pgTable("documentation_distributions",
 });
 
 // Email-GitHub Configurations - maps project emails to GitHub repos for issue tracking
+// Multiple projects can share the same inbox (inboxAddress/inboxId) if they have the same inboxCategory
 export const emailGithubConfigs = pgTable("email_github_configs", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   projectId: varchar("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }).unique(),
-  emailAddress: text("email_address").notNull().unique(), // e.g., "listit@agentmail.triadblue.com"
+  emailAddress: text("email_address"), // e.g., "listit@agentmail.triadblue.com" - now nullable for shared inboxes
+  inboxAddress: text("inbox_address"), // Shared inbox address (e.g., "agents@agentmail.triadblue.com")
+  inboxCategory: text("inbox_category").notNull().default("agent"), // 'siteinspector', 'agent', 'assistant' - determines which shared inbox to use
   inboxId: text("inbox_id"), // AgentMail inbox ID required for sending emails
   githubOwner: text("github_owner"), // GitHub username or organization
   githubRepo: text("github_repo"), // Repository name
