@@ -219,6 +219,7 @@ export interface IStorage {
   updateEmailThread(id: string, updates: Partial<InsertEmailThread>): Promise<EmailThread | undefined>;
   updateEmailThreadLastMessage(id: string): Promise<void>;
   deleteEmailThread(id: string): Promise<void>;
+  getEmailThreadsBySharedInbox(inboxAddress: string): Promise<EmailThread[]>;
 
   // Email Messages
   getEmailMessagesByThread(threadId: string): Promise<EmailMessage[]>;
@@ -915,6 +916,24 @@ export class DatabaseStorage implements IStorage {
 
   async deleteEmailThread(id: string): Promise<void> {
     await db.delete(emailThreads).where(eq(emailThreads.id, id));
+  }
+
+  async getEmailThreadsBySharedInbox(inboxAddress: string): Promise<EmailThread[]> {
+    // Get all projects using this shared inbox
+    const projectConfigs = await db.select({ projectId: emailGithubConfigs.projectId })
+      .from(emailGithubConfigs)
+      .where(eq(emailGithubConfigs.emailAddress, inboxAddress));
+    
+    if (projectConfigs.length === 0) return [];
+    
+    const projectIds = projectConfigs.map(c => c.projectId);
+    
+    // Get threads from all projects sharing this inbox
+    const threads = await db.select().from(emailThreads).where(
+      sql`${emailThreads.projectId} = ANY(${JSON.stringify(projectIds).split(',').join("','")}::text[])`
+    );
+    
+    return threads;
   }
 
   // Email Messages

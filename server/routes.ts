@@ -2008,7 +2008,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const message = await storage.createEmailMessage({
         threadId: thread.id,
         direction: "sent",
-        fromEmail: config.inboxAddress || config.emailAddress || "",
+        fromEmail: config.emailAddress ?? "",
         toEmail: to,
         subject,
         body,
@@ -2261,7 +2261,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const sentMessage = await storage.createEmailMessage({
         threadId,
         direction: "sent",
-        fromEmail: emailConfig.emailAddress,
+        fromEmail: emailConfig.emailAddress ?? "",
         toEmail: recipientEmail,
         subject: `Re: ${thread.subject}`,
         body,

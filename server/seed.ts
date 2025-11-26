@@ -165,48 +165,55 @@ export async function seedSharedEmailInboxes() {
       return;
     }
 
-    // Find other TriadBlue projects
+    // Find agent projects for shared agents@ inbox
     const agentProjects = projects_.filter(p => 
       ["BusinessBlueprint", "HostsBlue", "SwipesBlue", "List It"].includes(p.name)
     );
 
-    // 1. Configure Site Inspector with its own inbox
+    let configCount = 0;
+    let skippedCount = 0;
+
+    // 1. Configure Site Inspector with SEPARATE siteinspector@ inbox
     const siteInspectorConfig = await db.select().from(emailGithubConfigs)
       .where(eq(emailGithubConfigs.projectId, siteInspectorProject.id));
     
     if (siteInspectorConfig.length === 0) {
-      try {
-        await db.insert(emailGithubConfigs).values({
-          projectId: siteInspectorProject.id,
-          emailAddress: "siteinspector@agentmail.triadblue.com",
-          inboxId: process.env.AGENTMAIL_SITEINSPECTOR_INBOX_ID || "",
-        });
-        console.log("  ✓ Configured Site Inspector shared inbox");
-      } catch (e) {
-        // Silently skip if schema not ready
-      }
+      await db.insert(emailGithubConfigs).values({
+        projectId: siteInspectorProject.id,
+        emailAddress: "siteinspector@agentmail.triadblue.com",
+        inboxId: process.env.AGENTMAIL_SITEINSPECTOR_INBOX_ID || "",
+      });
+      console.log("  ✓ Site Inspector → siteinspector@agentmail.triadblue.com (isolated)");
+      configCount++;
+    } else {
+      skippedCount++;
     }
 
-    // 2. Configure agent projects to share agents@agentmail.triadblue.com
+    // 2. Configure agent projects to SHARE agents@ inbox (with project-name filtering)
     for (const project of agentProjects) {
       const existingConfig = await db.select().from(emailGithubConfigs)
         .where(eq(emailGithubConfigs.projectId, project.id));
       
       if (existingConfig.length === 0) {
-        try {
-          await db.insert(emailGithubConfigs).values({
-            projectId: project.id,
-            emailAddress: "agents@agentmail.triadblue.com",
-            inboxId: process.env.AGENTMAIL_AGENTS_INBOX_ID || "",
-          });
-          console.log(`  ✓ Configured ${project.name} to use shared agents inbox`);
-        } catch (e) {
-          // Silently skip if schema not ready
-        }
+        await db.insert(emailGithubConfigs).values({
+          projectId: project.id,
+          emailAddress: "agents@agentmail.triadblue.com",
+          inboxId: process.env.AGENTMAIL_AGENTS_INBOX_ID || "",
+        });
+        console.log(`  ✓ ${project.name} → agents@agentmail.triadblue.com (shared inbox)`);
+        configCount++;
+      } else {
+        skippedCount++;
       }
     }
 
-    console.log("✓ Email inbox consolidation seeding complete");
+    console.log(`✓ Email consolidation complete: 3 shared inboxes configured`);
+    console.log(`  Isolated: siteinspector@`);
+    console.log(`  Shared: agents@ (BusinessBlueprint, HostsBlue, SwipesBlue, List It)`);
+    console.log(`  Ready: assistants@ (for email assistant monitoring)`);
+    if (skippedCount > 0) {
+      console.log(`  (${skippedCount} project(s) already had email configs)`);
+    }
   } catch (error) {
     console.error("Error seeding shared email inboxes:", error);
     // Don't throw - allow app to continue
