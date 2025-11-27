@@ -83,7 +83,7 @@ export class AgentService {
 
     // Help commands
     if (lowerMessage.includes("help") || lowerMessage.includes("?")) {
-      return `I'm Platform Builder, your AI assistant for Blue Link. I can help you with:
+      return `I'm Platform Builder, your AI assistant for ConsoleBlue. I can help you with:
 
 📋 **Documentation** - Generate docs, push to GitHub, track distribution
 🤖 **Agents** - Talk to agents across TriadBlue projects, manage connections
@@ -108,7 +108,7 @@ All distributions are tracked - you can see who received what in the tracking da
 
     // Email commands
     if (lowerMessage.includes("email") || lowerMessage.includes("inbox")) {
-      return `Email system in Blue Link:
+      return `Email system in ConsoleBlue:
 📧 **3 Shared Inboxes:**
 - siteinspector@agentmail.triadblue.com (Site Inspector specific)
 - agents@agentmail.triadblue.com (All agents, filtered by project)
@@ -132,7 +132,7 @@ Go to Agent Chat page to:
 
     // Status/health check
     if (lowerMessage.includes("status") || lowerMessage.includes("health")) {
-      return `✓ Blue Link is running and healthy
+      return `✓ ConsoleBlue is running and healthy
 ✓ Database connected
 ✓ Email system active
 ✓ TriadBlue projects seeded
@@ -142,7 +142,7 @@ All systems operational! What do you need?`;
     }
 
     // Default helpful response
-    return `I'm ready to help with Blue Link! You can ask me about:
+    return `I'm ready to help with ConsoleBlue! You can ask me about:
 - Documentation generation and distribution
 - Agent communication across projects
 - Email management and filtering

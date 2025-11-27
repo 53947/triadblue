@@ -40,7 +40,7 @@ export default function DemoHome() {
     <DemoLayout>
       <div className="p-6 max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Welcome to BlueLink Demo</h1>
+          <h1 className="text-3xl font-bold mb-2">Welcome to ConsoleBlue Demo</h1>
           <p className="text-muted-foreground">
             Explore key features of the TriadBlue command center. Click any card below to see it in action.
           </p>
@@ -75,7 +75,7 @@ export default function DemoHome() {
           <CardHeader>
             <CardTitle>Ready to explore the full platform?</CardTitle>
             <CardDescription>
-              This demo showcases just a few of BlueLink's capabilities. Login to access the complete dashboard with real data, task management, GitHub integration, AI conversations, and more.
+              This demo showcases just a few of ConsoleBlue's capabilities. Login to access the complete dashboard with real data, task management, GitHub integration, AI conversations, and more.
             </CardDescription>
           </CardHeader>
           <CardContent>

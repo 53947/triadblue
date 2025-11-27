@@ -35,7 +35,7 @@ app.use(
       pool: sessionPool,
       createTableIfMissing: true,
     }),
-    secret: process.env.SESSION_SECRET || "bluelink-secret-key-change-in-production",
+    secret: process.env.SESSION_SECRET || "consoleblue-secret-key-change-in-production",
     resave: false,
     saveUninitialized: false,
     rolling: true, // Refresh session on each request

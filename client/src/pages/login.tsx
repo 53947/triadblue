@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import blueLinkLockup from "@assets/BlueLinkLOGO_1764208811063.png";
+import consoleBlueLockup from "@assets/TriadBlue-Logo-Lockup_1763606084811.png";
 import { login } from "@/lib/auth";
 
 export default function Login() {
@@ -34,11 +34,11 @@ export default function Login() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <img src={blueLinkLockup} alt="BlueLink" className="h-16 w-auto" />
+            <img src={consoleBlueLockup} alt="ConsoleBlue" className="h-16 w-auto" />
           </div>
           <CardTitle className="text-2xl" style={{ fontFamily: 'var(--font-heading)' }}>Dashboard Access</CardTitle>
           <CardDescription>
-            Enter password to access BlueLink
+            Enter password to access ConsoleBlue
           </CardDescription>
         </CardHeader>
         <CardContent>

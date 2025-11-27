@@ -5,7 +5,7 @@ This guide shows exactly what API keys and secrets each TriadBlue project needs,
 
 ---
 
-## 🏗️ BlueLink (Central Hub)
+## 🏗️ ConsoleBlue (Central Hub)
 
 ### Required Secrets in Replit
 
@@ -32,9 +32,9 @@ These are optional but recommended for multi-inbox support:
 2. For each inbox, copy the UUID shown next to the inbox name
 3. Paste into the corresponding env var above
 
-### Auto-Generated API Keys (in BlueLink)
+### Auto-Generated API Keys (in ConsoleBlue)
 
-When projects are seeded, BlueLink automatically generates API keys for each project so they can call back to BlueLink. These keys are hardcoded into project profiles:
+When projects are seeded, ConsoleBlue automatically generates API keys for each project so they can call back to ConsoleBlue. These keys are hardcoded into project profiles:
 
 ```
 [ProjectName] - Production - Full Access
@@ -55,19 +55,19 @@ When projects are seeded, BlueLink automatically generates API keys for each pro
 
 | Secret Name | Value | Purpose |
 |------------|-------|---------|
-| `AGENTMAIL_API_KEY` | Copy from BlueLink | Send/receive emails |
-| `AGENTMAIL_WEBHOOK_SECRET` | Copy from BlueLink | Verify email webhooks |
-| `BLUELINKREPLIT_API_KEY` | Auto-provided by BlueLink | Call BlueLink API |
-| `BLUELINKREPLIT_WEBHOOK_SECRET` | Auto-provided by BlueLink | Receive webhooks from BlueLink |
+| `AGENTMAIL_API_KEY` | Copy from ConsoleBlue | Send/receive emails |
+| `AGENTMAIL_WEBHOOK_SECRET` | Copy from ConsoleBlue | Verify email webhooks |
+| `CONSOLEBLUEREPLIT_API_KEY` | Auto-provided by ConsoleBlue | Call ConsoleBlue API |
+| `CONSOLEBLUEREPLIT_WEBHOOK_SECRET` | Auto-provided by ConsoleBlue | Receive webhooks from ConsoleBlue |
 
-**How to get BlueLink API Key:**
-1. Go to BlueLink → API Keys → Project Keys
+**How to get ConsoleBlue API Key:**
+1. Go to ConsoleBlue → API Keys → Project Keys
 2. Find "Site Inspector - Production - Full Access"
-3. Copy the key value into Site Inspector's `BLUELINKREPLIT_API_KEY`
+3. Copy the key value into Site Inspector's `CONSOLEBLUEREPLIT_API_KEY`
 
 ### Hardcoded Configuration (Auto-Populated)
 
-When Site Inspector is seeded in BlueLink, these are automatically set:
+When Site Inspector is seeded in ConsoleBlue, these are automatically set:
 
 ```typescript
 {
@@ -96,10 +96,10 @@ When Site Inspector is seeded in BlueLink, these are automatically set:
 
 | Secret Name | Value | Purpose |
 |------------|-------|---------|
-| `AGENTMAIL_API_KEY` | Copy from BlueLink | Send/receive emails |
-| `AGENTMAIL_WEBHOOK_SECRET` | Copy from BlueLink | Verify email webhooks |
-| `BLUELINKREPLIT_API_KEY` | Auto-provided by BlueLink | Call BlueLink API |
-| `BLUELINKREPLIT_WEBHOOK_SECRET` | Auto-provided by BlueLink | Receive webhooks from BlueLink |
+| `AGENTMAIL_API_KEY` | Copy from ConsoleBlue | Send/receive emails |
+| `AGENTMAIL_WEBHOOK_SECRET` | Copy from ConsoleBlue | Verify email webhooks |
+| `CONSOLEBLUEREPLIT_API_KEY` | Auto-provided by ConsoleBlue | Call ConsoleBlue API |
+| `CONSOLEBLUEREPLIT_WEBHOOK_SECRET` | Auto-provided by ConsoleBlue | Receive webhooks from ConsoleBlue |
 
 ### Hardcoded Configuration (Auto-Populated)
 
@@ -212,7 +212,7 @@ Repeat for each project:
 
 ## 🔄 What Gets Hardcoded Automatically
 
-When BlueLink runs, it **automatically hardcodes** these into project profiles:
+When ConsoleBlue runs, it **automatically hardcodes** these into project profiles:
 
 ### 1. Project Metadata (in database at startup)
 - Project name, color, icon
@@ -223,7 +223,7 @@ When BlueLink runs, it **automatically hardcodes** these into project profiles:
 ### 2. Agent Connections (auto-created)
 - Agent endpoint URL for each project
 - Agent is marked as active
-- Ready to receive conversations from BlueLink
+- Ready to receive conversations from ConsoleBlue
 
 ### 3. Email Configuration (auto-seeded)
 - Site Inspector → isolated `siteinspector@agentmail.triadblue.com`
@@ -239,7 +239,7 @@ When BlueLink runs, it **automatically hardcodes** these into project profiles:
 
 ## 🚀 Auto-Seeding Flow
 
-When BlueLink starts:
+When ConsoleBlue starts:
 
 ```
 1. seedDefaultUser() - Create system user
@@ -255,7 +255,7 @@ Result: All projects auto-configured, ready to use
 
 ## 📋 Quick Reference
 
-### BlueLink Secrets (Required)
+### ConsoleBlue Secrets (Required)
 ```bash
 DASHBOARD_PASSWORD=your_password
 AGENTMAIL_API_KEY=ak_live_xxxxx
@@ -269,18 +269,18 @@ AGENTMAIL_ASSISTANTS_INBOX_ID=uuid
 
 ### Site Inspector Secrets (Required)
 ```bash
-AGENTMAIL_API_KEY=[copy from BlueLink]
-AGENTMAIL_WEBHOOK_SECRET=[copy from BlueLink]
-BLUELINKREPLIT_API_KEY=[get from BlueLink API Keys]
-BLUELINKREPLIT_WEBHOOK_SECRET=$(openssl rand -base64 32)
+AGENTMAIL_API_KEY=[copy from ConsoleBlue]
+AGENTMAIL_WEBHOOK_SECRET=[copy from ConsoleBlue]
+CONSOLEBLUEREPLIT_API_KEY=[get from ConsoleBlue API Keys]
+CONSOLEBLUEREPLIT_WEBHOOK_SECRET=$(openssl rand -base64 32)
 ```
 
 ### Agent Projects Secrets (Required)
 ```bash
-AGENTMAIL_API_KEY=[copy from BlueLink]
-AGENTMAIL_WEBHOOK_SECRET=[copy from BlueLink]
-BLUELINKREPLIT_API_KEY=[get from BlueLink API Keys - one per project]
-BLUELINKREPLIT_WEBHOOK_SECRET=$(openssl rand -base64 32)
+AGENTMAIL_API_KEY=[copy from ConsoleBlue]
+AGENTMAIL_WEBHOOK_SECRET=[copy from ConsoleBlue]
+CONSOLEBLUEREPLIT_API_KEY=[get from ConsoleBlue API Keys - one per project]
+CONSOLEBLUEREPLIT_WEBHOOK_SECRET=$(openssl rand -base64 32)
 ```
 
 ---
@@ -290,7 +290,7 @@ BLUELINKREPLIT_WEBHOOK_SECRET=$(openssl rand -base64 32)
 1. **Never commit secrets** - All values stored in Replit Secrets
 2. **API Keys are unique per project** - Each project gets its own ConsoleBlue API key
 3. **Webhook secrets are per-project** - Different secret for each project's webhooks
-4. **AgentMail API Key is shared** - All projects use BlueLink's AgentMail key (for cost efficiency)
+4. **AgentMail API Key is shared** - All projects use ConsoleBlue's AgentMail key (for cost efficiency)
 5. **Email isolation is database-backed** - Shared inbox, project-level filtering in backend
 
 ---
@@ -299,20 +299,20 @@ BLUELINKREPLIT_WEBHOOK_SECRET=$(openssl rand -base64 32)
 
 ### API Key Not Working?
 - Verify it matches the project name exactly (case-sensitive)
-- Check permissions in BlueLink API Keys page
+- Check permissions in ConsoleBlue API Keys page
 - Regenerate if needed
 
 ### Emails Not Arriving?
-- Verify inbox ID is correctly set in BlueLink Email Settings
+- Verify inbox ID is correctly set in ConsoleBlue Email Settings
 - Check that project uses correct email address (siteinspector@ or agents@)
 - Confirm webhook secret matches in both systems
 
 ### Projects Not Seeding?
-- Restart BlueLink
+- Restart ConsoleBlue
 - Check server logs for seed errors
 - Verify database connection is working
 
 ---
 
-**Last Updated:** 2025-11-27  
-**Maintained by:** BlueLink Development Team
+**Last Updated:** 2025-11-26  
+**Maintained by:** ConsoleBlue Development Team

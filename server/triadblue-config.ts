@@ -2,7 +2,7 @@
  * TriadBlue Ecosystem Configuration
  * 
  * This file contains hard-coded standard URLs for all TriadBlue projects.
- * These URLs are pre-filled throughout The Blue Link but remain editable
+ * These URLs are pre-filled throughout ConsoleBlue but remain editable
  * in case of deployment changes or custom domains.
  */
 

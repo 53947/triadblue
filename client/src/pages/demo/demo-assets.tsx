@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Upload, CheckCircle2, Image as ImageIcon } from "lucide-react";
 import triadBlueLogo from "@assets/TriadBlue-Logo-Lockup_1763606084811.png";
-import blueLinkLogo from "@assets/BlueLinkLOGO_1764208811063.png";
+import consoleBlueLogo from "@assets/ConsoleBlue-logo_1763756605648.png";
 import businessBlueprintLogo from "@assets/BluePrint Header Logo minus io_1763756646639.png";
 
 export default function DemoAssets() {
@@ -12,12 +12,12 @@ export default function DemoAssets() {
     {
       id: "1",
       type: "logo",
-      fileName: "BlueLink-logo.png",
-      project: "BlueLink",
+      fileName: "ConsoleBlue-logo.png",
+      project: "ConsoleBlue",
       uploadedAt: "2 days ago",
       size: "45 KB",
       active: true,
-      previewUrl: blueLinkLogo
+      previewUrl: consoleBlueLogo
     },
     {
       id: "2",

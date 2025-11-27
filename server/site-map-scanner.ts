@@ -11,10 +11,10 @@ export interface ScannedRoute {
 }
 
 /**
- * Scans Blue Link's routes from App.tsx and pages directory
+ * Scans ConsoleBlue's routes from App.tsx and pages directory
  * Returns routes in the format expected by the database
  */
-export async function scanBlueLinkRoutes(projectId: string): Promise<InsertProjectRoute[]> {
+export async function scanConsoleBlueRoutes(projectId: string): Promise<InsertProjectRoute[]> {
   const routes: InsertProjectRoute[] = [];
   
   try {
@@ -106,7 +106,7 @@ export async function scanBlueLinkRoutes(projectId: string): Promise<InsertProje
     }
     
   } catch (error) {
-    console.error("Error scanning Blue Link routes:", error);
+    console.error("Error scanning ConsoleBlue routes:", error);
     throw error;
   }
   

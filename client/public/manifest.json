@@ -1,6 +1,6 @@
 {
-  "name": "Blue Link Dashboard",
-  "short_name": "Blue Link",
+  "name": "ConsoleBlue Dashboard",
+  "short_name": "ConsoleBlue",
   "description": "Centralized Task Management & Documentation Hub for TriadBlue Ecosystem",
   "start_url": "/",
   "display": "standalone",

@@ -16,7 +16,7 @@ import { Home, FolderKanban, MessageSquare, Settings, Plus, Github, MessagesSqua
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { Project } from "@shared/schema";
-import blueLinkLogo from "@assets/BlueLinkLOGO_1764208811063.png";
+import consoleBlueLogo from "@assets/ConsoleBlue-logo_1763756605648.png";
 import { logout } from "@/lib/auth";
 import { useLocation as useWouterLocation } from "wouter";
 import { useActiveLogo } from "@/hooks/use-active-logo";
@@ -70,8 +70,8 @@ export function AppSidebar({ projects = [], onNewProject }: AppSidebarProps) {
       <SidebarHeader className="p-4">
         <div className="flex flex-col gap-2 items-center">
           <img 
-            src={logoUrl || blueLinkLogo} 
-            alt="BlueLink" 
+            src={logoUrl || consoleBlueLogo} 
+            alt="ConsoleBlue" 
             className="h-10 w-auto object-contain"
           />
           <p className="text-xs text-muted-foreground">App Building Console</p>
