@@ -143,7 +143,7 @@ export default function SiteMap() {
     enabled: !!selectedProjectId,
   });
 
-  // Scan routes mutation (for ConsoleBlue only)
+  // Scan routes mutation (for BlueLink only)
   const scanRoutesMutation = useMutation({
     mutationFn: async (projectId: string) => {
       return apiRequest("POST", `/api/projects/${projectId}/routes/scan`);
@@ -166,7 +166,7 @@ export default function SiteMap() {
 
   // Get selected project details
   const selectedProject = projects.find(p => p.id === selectedProjectId);
-  const isConsoleBlue = selectedProject?.name === "ConsoleBlue";
+  const isBlueLink = selectedProject?.name === "BlueLink";
 
   // Build tree from routes
   useEffect(() => {
@@ -202,7 +202,7 @@ export default function SiteMap() {
             </SelectContent>
           </Select>
 
-          {isConsoleBlue && selectedProjectId && (
+          {isBlueLink && selectedProjectId && (
             <Button
               onClick={() => scanRoutesMutation.mutate(selectedProjectId)}
               disabled={scanRoutesMutation.isPending}
@@ -229,9 +229,9 @@ export default function SiteMap() {
                   <h4 className="text-sm font-medium">No routes found</h4>
                 </div>
                 <p className="text-sm text-muted-foreground mb-3">
-                  {isConsoleBlue 
-                    ? "Click 'Scan Routes' to detect routes from ConsoleBlue's codebase."
-                    : "This project hasn't submitted its routes yet. External projects can POST routes to ConsoleBlue's API with a valid API key."}
+                  {isBlueLink 
+                    ? "Click 'Scan Routes' to detect routes from BlueLink's codebase."
+                    : "This project hasn't submitted its routes yet. External projects can POST routes to BlueLink's API with a valid API key."}
                 </p>
               </Card>
             </div>

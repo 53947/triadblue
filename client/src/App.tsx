@@ -190,7 +190,7 @@ function ProtectedApp() {
               >
                 <RotateCcw className="w-4 h-4" />
               </Button>
-              <span className="font-semibold text-sm sm:text-base lg:hidden">ConsoleBlue</span>
+              <span className="font-semibold text-sm sm:text-base lg:hidden">BlueLink</span>
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
               <NotificationBell />
@@ -219,14 +219,14 @@ function ProtectedApp() {
 }
 
 function AppContent() {
-  const isConsoleBlue = window.location.hostname.includes('console');
+  const isBlueLink = window.location.hostname.includes('bluelink');
   
   return (
     <>
       <DynamicFavicon />
       <Switch>
         <Route path="/login" component={Login} />
-        {!isConsoleBlue && <Route path="/" component={Landing} />}
+        {!isBlueLink && <Route path="/" component={Landing} />}
         <Route path="/demo" component={DemoHome} />
         <Route path="/demo/email-chat" component={DemoEmailChat} />
         <Route path="/demo/assets" component={DemoAssets} />

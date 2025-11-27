@@ -4,7 +4,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { AlertCircle, ExternalLink, Home, Mail, Image, Map, Layout, ChevronLeft, ChevronRight } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import consoleBlueLogo from "@assets/ConsoleBlue-logo_1763756605648.png";
+import blueLinkLogo from "@assets/BlueLinkLOGO_1764208811063.png";
 
 interface DemoLayoutProps {
   children: React.ReactNode;
@@ -76,13 +76,13 @@ export function DemoLayout({ children }: DemoLayoutProps) {
                 </Button>
               </div>
               
-              <span className="font-semibold text-sm sm:text-base lg:hidden">ConsoleBlue Demo</span>
+              <span className="font-semibold text-sm sm:text-base lg:hidden">BlueLink Demo</span>
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
               <ThemeToggle />
               <img 
-                src={consoleBlueLogo} 
-                alt="ConsoleBlue" 
+                src={blueLinkLogo} 
+                alt="BlueLink" 
                 className="h-8 sm:h-11 w-auto object-contain"
                 data-testid="header-demo-logo"
               />
@@ -132,7 +132,7 @@ function DemoSidebar() {
         <div className="p-4 space-y-2">
           <div className="mb-4 pb-4 border-b">
             <div className="flex items-center gap-2 mb-2">
-              <img src={consoleBlueLogo} alt="ConsoleBlue" className="h-8 w-auto" />
+              <img src={blueLinkLogo} alt="BlueLink" className="h-8 w-auto" />
             </div>
             <h3 className="font-semibold text-sm text-muted-foreground mb-1">Demo Navigation</h3>
             <p className="text-xs text-muted-foreground">Explore key features</p>

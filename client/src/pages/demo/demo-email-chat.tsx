@@ -44,7 +44,7 @@ export default function DemoEmailChat() {
     },
     {
       id: "thread-4",
-      project: "ConsoleBlue",
+      project: "BlueLink",
       subject: "Custom Integration Request",
       from: "alex.rivera@techcorp.com",
       preview: "Looking for a custom SaaS solution that integrates with our existing systems...",
@@ -94,7 +94,7 @@ export default function DemoEmailChat() {
     "thread-4": [
       {
         from: "alex.rivera@techcorp.com",
-        content: "Looking for a custom SaaS solution that integrates with our existing CRM and inventory systems. Is this something ConsoleBlue can handle?",
+        content: "Looking for a custom SaaS solution that integrates with our existing CRM and inventory systems. Is this something BlueLink can handle?",
         timestamp: "2 days ago",
         isMe: false
       }
