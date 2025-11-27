@@ -1,6 +1,6 @@
-# ConsoleBlue API Key & Secret Naming Guide
+# BlueLink API Key & Secret Naming Guide
 
-**Purpose:** This document defines the EXACT names for all API keys and secrets used in ConsoleBlue. Follow these names precisely - no creativity allowed!
+**Purpose:** This document defines the EXACT names for all API keys and secrets used in BlueLink. Follow these names precisely - no creativity allowed!
 
 ---
 
@@ -12,7 +12,7 @@ These are stored in Replit's Secrets tool and accessed as environment variables.
 
 | Secret Name | Purpose | Example Value | Where to Get It |
 |------------|---------|---------------|-----------------|
-| `DASHBOARD_PASSWORD` | Password to log into ConsoleBlue dashboard | `MySecurePass123!` | You create this |
+| `DASHBOARD_PASSWORD` | Password to log into BlueLink dashboard | `MySecurePass123!` | You create this |
 | `AGENTMAIL_API_KEY` | AgentMail service API key | `ak_live_xxxxx` | AgentMail Dashboard → Settings → API Keys |
 | `AGENTMAIL_WEBHOOK_SECRET` | Verify AgentMail webhooks | `whsec_xxxxx` | AgentMail Dashboard → Webhooks → Signing Secret |
 | `DATABASE_URL` | PostgreSQL connection string | `postgresql://user:pass@host/db` | Auto-created by Replit Database |
@@ -35,7 +35,7 @@ These are stored in Replit's Secrets tool and accessed as environment variables.
 
 ### Inbox Setup
 
-Each TriadBlue project has one AgentMail inbox. Configure in ConsoleBlue → Project → Email Settings:
+Each TriadBlue project has one AgentMail inbox. Configure in BlueLink → Project → Email Settings:
 
 | Project | Project Email Inbox | Assistant Session Name |
 |---------|---------------------|----------------------|
@@ -43,13 +43,13 @@ Each TriadBlue project has one AgentMail inbox. Configure in ConsoleBlue → Pro
 | HostsBlue | (Configure in Email Settings) | `hostsblue.assistant` |
 | SwipesBlue | (Configure in Email Settings) | `swipesblue.assistant` |
 | List It | (Configure in Email Settings) | `listit.assistant` |
-| ConsoleBlue | (Configure in Email Settings) | `consoleblue.assistant` |
+| BlueLink | (Configure in Email Settings) | `bluelink.assistant` |
 
 **Note:** Assistant names (like `listit.assistant`) are just labels for AI sessions that monitor project inboxes. They do NOT have separate email addresses.
 
-### Email Settings in ConsoleBlue
+### Email Settings in BlueLink
 
-For each project in ConsoleBlue → Email Settings:
+For each project in BlueLink → Email Settings:
 
 1. **Inbox ID:** Copy the exact UUID from AgentMail Dashboard
    - ❌ Wrong: `businessblueprint-inbox`
@@ -60,9 +60,9 @@ For each project in ConsoleBlue → Email Settings:
 
 ---
 
-## 3️⃣ ConsoleBlue API Keys (for External Projects)
+## 3️⃣ BlueLink API Keys (for External Projects)
 
-These are generated IN ConsoleBlue for external Replit projects to push tasks/conversations.
+These are generated IN BlueLink for external Replit projects to push tasks/conversations.
 
 ### Naming Convention
 
@@ -110,12 +110,12 @@ Store in Replit Secrets as: `GITHUB_TOKEN`
 - `read:user` (read user profile data)
 
 **Token Name in GitHub:**
-- Format: `ConsoleBlue - [YourName] - [Date]`
-- Example: `ConsoleBlue - Jordan - 2025-11`
+- Format: `BlueLink - [YourName] - [Date]`
+- Example: `BlueLink - Jordan - 2025-11`
 
 ### Repository Configuration
 
-In each Project Detail page → GitHub Integration:
+In each Project Detail page → GitHub Integration (via BlueLink):
 
 | Field | Format | Example |
 |-------|--------|---------|
@@ -145,7 +145,7 @@ In each Project Detail page → GitHub Integration:
 | SwipesBlue | `https://swipesblue.replit.app/api/metadata` | `https://swipesblue.replit.app/api/agent` |
 | List It | `https://listit.replit.app/api/metadata` | `https://listit.replit.app/api/agent` |
 
-**Note:** These URLs are pre-configured in ConsoleBlue. They're editable in Project Settings if using custom domains.
+**Note:** These URLs are pre-configured in BlueLink. They're editable in Project Settings if using custom domains.
 
 **Implementation Guides:**
 - `/api/metadata` - See `EXTERNAL_PROJECT_METADATA_API.md`
@@ -157,12 +157,12 @@ In each Project Detail page → GitHub Integration:
 
 ### Setting Up a New TriadBlue Project
 
-- [ ] Create project in ConsoleBlue (automatically seeded with standard config)
+- [ ] Create project in BlueLink (automatically seeded with standard config)
 - [ ] **Implement `/api/metadata` endpoint** in project (MANDATORY)
 - [ ] **Implement `/api/agent` endpoint** in project (MANDATORY)
 - [ ] Create AgentMail inbox for the project (any email address you want)
-- [ ] Copy AgentMail Inbox ID to ConsoleBlue Email Settings
-- [ ] Configure sender email in ConsoleBlue Email Settings
+- [ ] Copy AgentMail Inbox ID to BlueLink Email Settings
+- [ ] Configure sender email in BlueLink Email Settings
 - [ ] Generate API key: `[ProjectName] - Production - Full Access`
 - [ ] Add `GITHUB_TOKEN` to Replit Secrets (if using GitHub)
 - [ ] Configure GitHub repo in Project Detail: `owner/repo`
@@ -208,5 +208,5 @@ In each Project Detail page → GitHub Integration:
 
 ---
 
-**Last Updated:** 2025-11-15  
-**Maintained By:** ConsoleBlue Development Team
+**Last Updated:** 2025-11-27  
+**Maintained By:** BlueLink Development Team

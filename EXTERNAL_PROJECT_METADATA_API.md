@@ -4,7 +4,7 @@
 
 **All TriadBlue ecosystem projects MUST implement the `/api/metadata` endpoint.**
 
-This is a TriadBlue standard that enables ConsoleBlue to automatically pull Features and Tech Stack information for documentation generation. Projects are pre-configured with this URL pattern in ConsoleBlue:
+This is a TriadBlue standard that enables BlueLink to automatically pull Features and Tech Stack information for documentation generation. Projects are pre-configured with this URL pattern in BlueLink:
 
 ```
 https://{projectname}.replit.app/api/metadata
@@ -12,7 +12,7 @@ https://{projectname}.replit.app/api/metadata
 
 ## Overview
 
-ConsoleBlue pulls metadata from your project's `/api/metadata` endpoint when you click "Refresh from API" in the Documentation Generator. Your project must expose this GET endpoint that returns JSON with your features and tech stack.
+BlueLink pulls metadata from your project's `/api/metadata` endpoint when you click "Refresh from API" in the Documentation Generator. Your project must expose this GET endpoint that returns JSON with your features and tech stack.
 
 ---
 
@@ -72,9 +72,9 @@ def get_metadata():
 
 ---
 
-## Step 2: Configure in ConsoleBlue
+## Step 2: Configure in BlueLink
 
-1. Log into ConsoleBlue
+1. Log into BlueLink
 2. Go to **Projects** page
 3. Click on your project
 4. Find the **Metadata API URL** field
@@ -88,7 +88,7 @@ def get_metadata():
 
 ## Step 3: Use in Documentation Generator
 
-1. Go to **Documentation Generator** in ConsoleBlue
+1. Go to **Documentation Generator** in BlueLink
 2. Select your project
 3. Click the **"Refresh from API"** button
 4. Features and Tech Stack will auto-fill from your API!

@@ -358,7 +358,7 @@ When starting a new TriadBlue project:
 
 ## Examples & Templates
 
-Refer to **ConsoleBlue** as the reference implementation:
+Refer to **BlueLink** as the reference implementation:
 - `shared/schema.ts` - Assets table definition
 - `server/storage.ts` - Asset CRUD operations
 - `server/routes.ts` - Upload API with multer

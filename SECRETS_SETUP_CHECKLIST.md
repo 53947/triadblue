@@ -3,7 +3,7 @@
 
 ---
 
-## 🟢 Step 1: ConsoleBlue (Central Hub)
+## 🟢 Step 1: BlueLink (Central Hub)
 
 ### Replit Secrets to Add
 
@@ -24,18 +24,18 @@ AGENTMAIL_ASSISTANTS_INBOX_ID = [UUID from agentmail.triadblue.com]
    - `assistants@agentmail.triadblue.com`
 2. For each inbox, copy the UUID shown in AgentMail Dashboard
 3. Paste the 3 UUIDs into the env vars above
-4. Restart ConsoleBlue
+4. Restart BlueLink
 
 ### Auto-Generated (No Action Needed)
 
-When ConsoleBlue restarts, these are automatically created:
+When BlueLink restarts, these are automatically created:
 - ✅ 5 Projects auto-seeded
 - ✅ Agent connections auto-configured
 - ✅ Email inboxes auto-assigned
 - ✅ API keys auto-generated (one per project)
 
 **Access auto-generated API keys:**
-- Go to ConsoleBlue → API Keys → Project Keys
+- Go to BlueLink → API Keys → Project Keys
 - Copy the key for each project below
 
 ---
@@ -45,22 +45,22 @@ When ConsoleBlue restarts, these are automatically created:
 ### Replit Secrets to Add
 
 ```
-AGENTMAIL_API_KEY = [COPY FROM CONSOLEBLUE]
-AGENTMAIL_WEBHOOK_SECRET = [COPY FROM CONSOLEBLUE]
-CONSOLEBLUEREPLIT_API_KEY = [GET FROM CONSOLEBLUE API KEYS PAGE]
-CONSOLEBLUEREPLIT_WEBHOOK_SECRET = [run: openssl rand -base64 32]
+AGENTMAIL_API_KEY = [COPY FROM BLUELINK]
+AGENTMAIL_WEBHOOK_SECRET = [COPY FROM BLUELINK]
+BLUELINKREPLIT_API_KEY = [GET FROM BLUELINK API KEYS PAGE]
+BLUELINKREPLIT_WEBHOOK_SECRET = [run: openssl rand -base64 32]
 ```
 
 **How to copy:**
-1. Open ConsoleBlue → Settings → Secrets (or use Replit Secrets tool)
+1. Open BlueLink → Settings → Secrets (or use Replit Secrets tool)
 2. Copy `AGENTMAIL_API_KEY` value
 3. Paste into Site Inspector Replit Secrets as `AGENTMAIL_API_KEY`
 4. Repeat for `AGENTMAIL_WEBHOOK_SECRET`
-5. Open ConsoleBlue → API Keys page
+5. Open BlueLink → API Keys page
 6. Find "Site Inspector - Production - Full Access"
 7. Copy that API key value
-8. Paste into Site Inspector as `CONSOLEBLUEREPLIT_API_KEY`
-9. Generate and paste a new secret for `CONSOLEBLUEREPLIT_WEBHOOK_SECRET`
+8. Paste into Site Inspector as `BLUELINKREPLIT_API_KEY`
+9. Generate and paste a new secret for `BLUELINKREPLIT_WEBHOOK_SECRET`
 
 ---
 
@@ -69,10 +69,10 @@ CONSOLEBLUEREPLIT_WEBHOOK_SECRET = [run: openssl rand -base64 32]
 ### Replit Secrets to Add
 
 ```
-AGENTMAIL_API_KEY = [COPY FROM CONSOLEBLUE]
-AGENTMAIL_WEBHOOK_SECRET = [COPY FROM CONSOLEBLUE]
-CONSOLEBLUEREPLIT_API_KEY = [GET FROM CONSOLEBLUE API KEYS PAGE]
-CONSOLEBLUEREPLIT_WEBHOOK_SECRET = [run: openssl rand -base64 32]
+AGENTMAIL_API_KEY = [COPY FROM BLUELINK]
+AGENTMAIL_WEBHOOK_SECRET = [COPY FROM BLUELINK]
+BLUELINKREPLIT_API_KEY = [GET FROM BLUELINK API KEYS PAGE]
+BLUELINKREPLIT_WEBHOOK_SECRET = [run: openssl rand -base64 32]
 ```
 
 **How to get:**
@@ -85,10 +85,10 @@ CONSOLEBLUEREPLIT_WEBHOOK_SECRET = [run: openssl rand -base64 32]
 ### Replit Secrets to Add
 
 ```
-AGENTMAIL_API_KEY = [COPY FROM CONSOLEBLUE]
-AGENTMAIL_WEBHOOK_SECRET = [COPY FROM CONSOLEBLUE]
-CONSOLEBLUEREPLIT_API_KEY = [GET FROM CONSOLEBLUE API KEYS PAGE]
-CONSOLEBLUEREPLIT_WEBHOOK_SECRET = [run: openssl rand -base64 32]
+AGENTMAIL_API_KEY = [COPY FROM BLUELINK]
+AGENTMAIL_WEBHOOK_SECRET = [COPY FROM BLUELINK]
+BLUELINKREPLIT_API_KEY = [GET FROM BLUELINK API KEYS PAGE]
+BLUELINKREPLIT_WEBHOOK_SECRET = [run: openssl rand -base64 32]
 ```
 
 **How to get:**
@@ -101,10 +101,10 @@ CONSOLEBLUEREPLIT_WEBHOOK_SECRET = [run: openssl rand -base64 32]
 ### Replit Secrets to Add
 
 ```
-AGENTMAIL_API_KEY = [COPY FROM CONSOLEBLUE]
-AGENTMAIL_WEBHOOK_SECRET = [COPY FROM CONSOLEBLUE]
-CONSOLEBLUEREPLIT_API_KEY = [GET FROM CONSOLEBLUE API KEYS PAGE]
-CONSOLEBLUEREPLIT_WEBHOOK_SECRET = [run: openssl rand -base64 32]
+AGENTMAIL_API_KEY = [COPY FROM BLUELINK]
+AGENTMAIL_WEBHOOK_SECRET = [COPY FROM BLUELINK]
+BLUELINKREPLIT_API_KEY = [GET FROM BLUELINK API KEYS PAGE]
+BLUELINKREPLIT_WEBHOOK_SECRET = [run: openssl rand -base64 32]
 ```
 
 **How to get:**
@@ -117,10 +117,10 @@ CONSOLEBLUEREPLIT_WEBHOOK_SECRET = [run: openssl rand -base64 32]
 ### Replit Secrets to Add
 
 ```
-AGENTMAIL_API_KEY = [COPY FROM CONSOLEBLUE]
-AGENTMAIL_WEBHOOK_SECRET = [COPY FROM CONSOLEBLUE]
-CONSOLEBLUEREPLIT_API_KEY = [GET FROM CONSOLEBLUE API KEYS PAGE]
-CONSOLEBLUEREPLIT_WEBHOOK_SECRET = [run: openssl rand -base64 32]
+AGENTMAIL_API_KEY = [COPY FROM BLUELINK]
+AGENTMAIL_WEBHOOK_SECRET = [COPY FROM BLUELINK]
+BLUELINKREPLIT_API_KEY = [GET FROM BLUELINK API KEYS PAGE]
+BLUELINKREPLIT_WEBHOOK_SECRET = [run: openssl rand -base64 32]
 ```
 
 **How to get:**
@@ -130,15 +130,15 @@ CONSOLEBLUEREPLIT_WEBHOOK_SECRET = [run: openssl rand -base64 32]
 
 ## 📋 Quick Summary Table
 
-| Env Var | ConsoleBlue | Site Inspector | BusinessBlueprint | HostsBlue | SwipesBlue | List It |
+| Env Var | BlueLink | Site Inspector | BusinessBlueprint | HostsBlue | SwipesBlue | List It |
 |---------|------------|---------------|-----------------|---------|-----------|----|
-| AGENTMAIL_API_KEY | ✅ Set | Copy from CB | Copy from CB | Copy from CB | Copy from CB | Copy from CB |
-| AGENTMAIL_WEBHOOK_SECRET | ✅ Set | Copy from CB | Copy from CB | Copy from CB | Copy from CB | Copy from CB |
+| AGENTMAIL_API_KEY | ✅ Set | Copy from BL | Copy from BL | Copy from BL | Copy from BL | Copy from BL |
+| AGENTMAIL_WEBHOOK_SECRET | ✅ Set | Copy from BL | Copy from BL | Copy from BL | Copy from BL | Copy from BL |
 | AGENTMAIL_SITEINSPECTOR_INBOX_ID | ✅ Set | — | — | — | — | — |
 | AGENTMAIL_AGENTS_INBOX_ID | ✅ Set | — | — | — | — | — |
 | AGENTMAIL_ASSISTANTS_INBOX_ID | ✅ Set | — | — | — | — | — |
-| CONSOLEBLUEREPLIT_API_KEY | — | Get from CB | Get from CB | Get from CB | Get from CB | Get from CB |
-| CONSOLEBLUEREPLIT_WEBHOOK_SECRET | — | ✅ Generate | ✅ Generate | ✅ Generate | ✅ Generate | ✅ Generate |
+| BLUELINKREPLIT_API_KEY | — | Get from BL | Get from BL | Get from BL | Get from BL | Get from BL |
+| BLUELINKREPLIT_WEBHOOK_SECRET | — | ✅ Generate | ✅ Generate | ✅ Generate | ✅ Generate | ✅ Generate |
 | SESSION_SECRET | ✅ Generate | — | — | — | — | — |
 | DASHBOARD_PASSWORD | ✅ Set | — | — | — | — | — |
 
@@ -146,7 +146,7 @@ CONSOLEBLUEREPLIT_WEBHOOK_SECRET = [run: openssl rand -base64 32]
 
 ## 🔄 What Gets Hardcoded Automatically
 
-When ConsoleBlue starts with the secrets above, it **auto-hardcodes**:
+When BlueLink starts with the secrets above, it **auto-hardcodes**:
 
 ### Email Inbox Configuration
 - ✅ Site Inspector → `siteinspector@agentmail.triadblue.com` (isolated)
@@ -175,7 +175,7 @@ When ConsoleBlue starts with the secrets above, it **auto-hardcodes**:
 
 After setting all secrets:
 
-- [ ] ConsoleBlue starts without errors
+- [ ] BlueLink starts without errors
 - [ ] Go to Projects page - see all 5 projects with colors/icons
 - [ ] Go to Email Settings - see inbox assignments:
   - Site Inspector → `siteinspector@`
@@ -184,7 +184,7 @@ After setting all secrets:
 - [ ] Go to Agent Chat - select Platform Builder, type "help"
 - [ ] Start Site Inspector project
 - [ ] Verify its secrets are set
-- [ ] Go to ConsoleBlue → Projects → Site Inspector → Details
+- [ ] Go to BlueLink → Projects → Site Inspector → Details
 - [ ] Verify agent connection shows "Online"
 
 ---
@@ -192,7 +192,7 @@ After setting all secrets:
 ## 🚨 Troubleshooting
 
 **Projects not showing?**
-- Restart ConsoleBlue
+- Restart BlueLink
 - Check server logs for seed errors
 
 **Emails not configured?**
@@ -210,4 +210,4 @@ After setting all secrets:
 
 See: `TRIADBLUE_PROJECT_SETUP_GUIDE.md` for full explanation of each config
 
-Last Updated: 2025-11-26
+Last Updated: 2025-11-27

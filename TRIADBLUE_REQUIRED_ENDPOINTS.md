@@ -2,7 +2,7 @@
 
 ## ⚠️ MANDATORY FOR ALL TRIADBLUE ECOSYSTEM PROJECTS
 
-All projects in the TriadBlue ecosystem must implement these two standard API endpoints. ConsoleBlue is pre-configured with these URL patterns for all projects:
+All projects in the TriadBlue ecosystem must implement these two standard API endpoints. BlueLink is pre-configured with these URL patterns for all projects:
 
 ```
 https://{projectname}.replit.app/api/metadata
@@ -17,7 +17,7 @@ These endpoints enable:
 
 ## 1. Metadata Endpoint (`/api/metadata`)
 
-**Purpose**: Provides project features and tech stack for ConsoleBlue's Documentation Generator.
+**Purpose**: Provides project features and tech stack for BlueLink's Documentation Generator.
 
 ### Requirements
 
@@ -84,7 +84,7 @@ def get_metadata():
 
 ## 2. Agent Endpoint (`/api/agent`)
 
-**Purpose**: Enables conversational AI interaction through ConsoleBlue's Agent Chat interface.
+**Purpose**: Enables conversational AI interaction through BlueLink's Agent Chat interface.
 
 ### Requirements
 
