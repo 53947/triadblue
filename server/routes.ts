@@ -2516,34 +2516,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Accept routes from external projects (API key authenticated)
-  app.post("/api/projects/:projectId/routes", validateApiKey, requirePermission("write_routes"), async (req, res) => {
+  app.post("/api/projects/:projectId/routes", validateApiKey, requirePermission("write_routes"), async (req: any, res) => {
     try {
       const { projectId } = req.params;
       
       // Verify that the API key belongs to this project
-      if (req.apiKey.projectId !== projectId) {
+      if (req.apiKey?.projectId !== projectId) {
         return res.status(403).json({ error: "API key does not belong to this project" });
       }
       
       // Validate request body
       const externalRoutesSchema = z.object({
-        routes: z.array(insertProjectRouteSchema.omit({ projectId: true, createdAt: true, lastSyncedAt: true })),
+        routes: z.array(insertProjectRouteSchema.pick({ name: true, path: true, framework: true, filePath: true, routeType: true, parentId: true, meta: true })),
       });
       
       const validated = externalRoutesSchema.parse(req.body);
       
       // Inject projectId and ensure source is 'external'
-      const routesWithProjectId = validated.routes.map(route => ({
+      const routesWithProjectId: typeof validated.routes[] = validated.routes.map(route => ({
         ...route,
         projectId,
-        source: "external",
+        source: "external" as const,
       }));
       
       // Delete existing external routes for this project
       await storage.deleteProjectRoutesBySource(projectId, "external");
       
       // Insert new routes
-      const savedRoutes = await storage.bulkUpsertProjectRoutes(projectId, routesWithProjectId);
+      const savedRoutes = await storage.bulkUpsertProjectRoutes(projectId, routesWithProjectId as any);
       
       res.json({ 
         success: true, 
