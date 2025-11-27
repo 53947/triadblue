@@ -13,7 +13,7 @@ import { initializeSyncScheduler } from "./sync-scheduler";
 import { NotificationService } from "./notification";
 import { analyticsService } from "./analytics";
 import { templatingService } from "./templating";
-import { scanTheBlueLinkRoutes } from "./site-map-scanner";
+import { scanBlueLinkRoutes } from "./site-map-scanner";
 import { randomBytes, createHmac, randomUUID } from "crypto";
 import AdmZip from "adm-zip";
 import { z } from "zod";
