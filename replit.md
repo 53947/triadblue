@@ -1,17 +1,17 @@
-# ConsoleBlue - Centralized Task Management & Documentation Hub
+# The Blue Link - Centralized Task Management & Documentation Hub
 
 ## Overview
 
-ConsoleBlue is a unified, password-protected task management and documentation hub built within the **TriadBlue Replit Account**. It serves as the command center for managing multiple sibling projects (BusinessBlueprint, HostsBlue, SwipesBlue, List It) that are also built under the same TriadBlue account.
+The Blue Link is a unified, password-protected task management and documentation hub built within the **TriadBlue Replit Account**. It serves as the command center for managing multiple sibling projects (BusinessBlueprint, HostsBlue, SwipesBlue, List It) that are also built under the same TriadBlue account.
 
-**Public Demo:** ConsoleBlue features a public demo dashboard at `/demo` (no login required) that showcases key features with mock data, allowing visitors to explore the platform's capabilities before signing in.
+**Public Demo:** The Blue Link features a public demo dashboard at `/demo` (no login required) that showcases key features with mock data, allowing visitors to explore the platform's capabilities before signing in.
 
 **Organizational Structure:**
 - **TriadBlue** = Replit Account (top-level)
-- **ConsoleBlue** = Sub-project (this application)
+- **The Blue Link** = Sub-project (this application)
 - **BusinessBlueprint, HostsBlue, SwipesBlue, List It** = Sibling sub-projects at the same level
 
-ConsoleBlue features a public landing page for the TriadBlue ecosystem and acts as a centralized hub for tracking tasks, conversations, GitHub activity, and project data across all TriadBlue projects. The system includes AI-powered conversation extraction for action items, API key-based integration for external projects, and a Project Documentation Generator for creating standardized documentation using Handlebars templates. It follows a dark-first design aesthetic with fluorescent blue accents, Archivo typography, and is built as a full-stack web application with React and Express.js, drawing inspiration from Linear, Notion, and GitHub for productivity and information density.
+The Blue Link features a public landing page for the TriadBlue ecosystem and acts as a centralized hub for tracking tasks, conversations, GitHub activity, and project data across all TriadBlue projects. The system includes AI-powered conversation extraction for action items, API key-based integration for external projects, and a Project Documentation Generator for creating standardized documentation using Handlebars templates. It follows a dark-first design aesthetic with fluorescent blue accents, Archivo typography, and is built as a full-stack web application with React and Express.js, drawing inspiration from Linear, Notion, and GitHub for productivity and information density.
 
 ## User Preferences
 
@@ -22,14 +22,14 @@ Preferred communication style: Simple, everyday language.
 ConsoleBlue supports multiple AI builder roles, each with equal status and distinct responsibilities:
 
 ### Platform Builder
-- **Role:** Builds and maintains ConsoleBlue application features
+- **Role:** Builds and maintains The Blue Link application features
 - **Access:** This chat interface
 - **Responsibilities:** Code development, bug fixes, feature implementation, infrastructure
 - **Naming:** Standard agent session
 
 ### Email Assistant
 - **Role:** Monitors and responds to project emails
-- **Access:** `/assistant-workspace` page in ConsoleBlue
+- **Access:** `/assistant-workspace` page in The Blue Link
 - **Responsibilities:** Read emails across all projects, reply to user instructions, create tasks/conversations based on email content
 - **Naming Convention:** `{project}.assistant` (e.g., `listit.assistant`, `businessblueprint.assistant`)
 - **Email Access:** Monitors existing project email inboxes configured in Email Settings
@@ -101,8 +101,8 @@ Every TriadBlue project **MUST** implement these two API endpoints:
 
 ### Automatic Configuration
 
-ConsoleBlue automatically:
-- **Seeds all 5 TriadBlue projects** at startup (Site Inspector, BusinessBlueprint, HostsBlue, SwipesBlue, List It)
+The Blue Link automatically:
+- **Seeds all 7 TriadBlue projects** at startup (Site Inspector, BusinessBlueprint, HostsBlue, SwipesBlue, List It, GoFuckMe.com, Lady Carbón)
 - **Pre-fills metadata URLs** in Project Settings based on project name
 - **Creates agent connections** with standard endpoint URLs
 - **Normalizes legacy connections** to use canonical URLs and naming
@@ -123,7 +123,7 @@ See `TRIADBLUE_REQUIRED_ENDPOINTS.md` for:
 **⚠️ IMPORTANT:** All API keys and secrets MUST follow the naming conventions in `API_KEY_NAMING_GUIDE.md`. This guide provides:
 - Exact names for all Replit Secrets (DASHBOARD_PASSWORD, AGENTMAIL_API_KEY, etc.)
 - AgentMail inbox configuration (email format: `[projectname]@agentmail.triadblue.com`)
-- ConsoleBlue API key naming format: `[ProjectName] - [Environment] - [Purpose]`
+- The Blue Link API key naming format: `[ProjectName] - [Environment] - [Purpose]`
 - GitHub token setup and repository configuration
 - Common mistakes to avoid
 
