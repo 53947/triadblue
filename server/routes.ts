@@ -2490,13 +2490,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Trigger route scan for ConsoleBlue project
+  // Trigger route scan for Blue Link project
   app.post("/api/projects/:projectId/routes/scan", authRequired, async (req, res) => {
     try {
       const { projectId } = req.params;
       
-      // Scan routes from ConsoleBlue codebase
-      const scannedRoutes = await scanConsoleBlueRoutes(projectId);
+      // Scan routes from Blue Link codebase
+      const scannedRoutes = await scanBlueLinkRoutes(projectId);
       
       // Delete existing scanned routes for this project
       await storage.deleteProjectRoutesBySource(projectId, "scan");
