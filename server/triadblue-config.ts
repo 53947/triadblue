@@ -71,6 +71,26 @@ export const TRIADBLUE_PROJECTS: ProjectEndpoints[] = [
     emailAddress: "agents@agentmail.triadblue.com",
     inboxCategory: "agent",
   },
+  {
+    name: "GoFuckMe.com",
+    code: "gofuckme",
+    color: "#06B6D4", // cyan-500
+    icon: "Zap",
+    agentApiUrl: "https://gofuckme.replit.app/api/agent",
+    metadataApiUrl: "https://gofuckme.replit.app/api/metadata",
+    emailAddress: "agents@agentmail.triadblue.com",
+    inboxCategory: "agent",
+  },
+  {
+    name: "Lady Carbón",
+    code: "ladycarbon",
+    color: "#EF4444", // red-500
+    icon: "Sparkles",
+    agentApiUrl: "https://ladycarbon.replit.app/api/agent",
+    metadataApiUrl: "https://ladycarbon.replit.app/api/metadata",
+    emailAddress: "agents@agentmail.triadblue.com",
+    inboxCategory: "agent",
+  },
 ];
 
 /**
