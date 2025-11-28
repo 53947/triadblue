@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
+import { Plus, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FilterBar } from "@/components/filter-bar";
 import { TaskFeedItem, ConversationFeedItem, GithubFeedItem } from "@/components/feed-item";
@@ -26,6 +26,7 @@ export default function Dashboard() {
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [showConversationModal, setShowConversationModal] = useState(false);
+  const [pushingStandards, setPushingStandards] = useState(false);
 
   const { data: projects = [], isLoading: projectsLoading } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
@@ -133,11 +134,55 @@ export default function Dashboard() {
     }
   };
 
+  const handlePushStandards = async () => {
+    setPushingStandards(true);
+    try {
+      const response = await fetch('/api/standards/push-to-github', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to push standards');
+      }
+      
+      const successCount = result.results?.filter((r: any) => r.status === 'success').length || 0;
+      toast({
+        title: "Standards pushed",
+        description: `Updated ${successCount} project(s) on GitHub`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to push standards. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setPushingStandards(false);
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto p-3 sm:p-4 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <h1 className="text-xl sm:text-2xl font-semibold" style={{ fontFamily: 'var(--font-heading)' }}>Dashboard</h1>
         <div className="flex items-center gap-2 flex-wrap">
+          <Button 
+            onClick={handlePushStandards}
+            disabled={pushingStandards}
+            variant="outline" 
+            data-testid="button-push-standards"
+            className="flex-1 sm:flex-none"
+            size="sm"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            <span className="hidden xs:inline">{pushingStandards ? 'Pushing...' : 'Push Standards'}</span>
+            <span className="xs:hidden">{pushingStandards ? 'Pushing...' : 'Push'}</span>
+          </Button>
           <Button onClick={() => setShowConversationModal(true)} variant="outline" data-testid="button-log-conversation" className="flex-1 sm:flex-none">
             <Plus className="w-4 h-4 mr-2" />
             <span className="hidden xs:inline">Log Conversation</span>
