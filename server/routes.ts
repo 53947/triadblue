@@ -14,6 +14,8 @@ import { NotificationService } from "./notification";
 import { analyticsService } from "./analytics";
 import { templatingService } from "./templating";
 import { scanConsoleBlueRoutes } from "./site-map-scanner";
+import { StandardsService } from "./standards-service";
+import { TRIADBLUE_PROJECTS } from "./triadblue-config";
 import { randomBytes, createHmac, randomUUID } from "crypto";
 import AdmZip from "adm-zip";
 import { z } from "zod";
@@ -2557,6 +2559,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       console.error("Error saving external routes:", error);
       res.status(500).json({ error: error.message || "Failed to save routes" });
+    }
+  });
+
+  // ============= TriadBlue Standards API =============
+
+  // Public endpoint: Get current TriadBlue standards
+  app.get("/api/standards", async (req, res) => {
+    try {
+      const standards = StandardsService.generateStandards();
+      res.json(standards);
+    } catch (error: any) {
+      console.error("Error fetching standards:", error);
+      res.status(500).json({ error: "Failed to fetch standards" });
+    }
+  });
+
+  // Protected endpoint: Push standardized replit.md to all TriadBlue projects
+  app.post("/api/standards/push-to-github", authRequired, async (req, res) => {
+    try {
+      if (!process.env.GITHUB_TOKEN) {
+        return res.status(500).json({ error: "GITHUB_TOKEN not configured" });
+      }
+
+      const replitMdContent = StandardsService.generateReplitMdContent();
+      const results: any[] = [];
+
+      // Push to all 7 TriadBlue projects
+      for (const project of TRIADBLUE_PROJECTS) {
+        try {
+          const baseUrl = `https://api.github.com/repos/triadblue/${project.code}`;
+          const branch = "main";
+          const headers = {
+            "Authorization": `Bearer ${process.env.GITHUB_TOKEN}`,
+            "Accept": "application/vnd.github.v3+json",
+            "Content-Type": "application/json",
+          };
+
+          // Get latest commit
+          const refResponse = await fetch(`${baseUrl}/git/refs/heads/${branch}`, { headers });
+          if (!refResponse.ok) throw new Error(`Failed to fetch latest commit`);
+          const ref = await refResponse.json();
+          const latestCommitSha = ref.object.sha;
+
+          // Get base tree
+          const commitResponse = await fetch(`${baseUrl}/git/commits/${latestCommitSha}`, { headers });
+          if (!commitResponse.ok) throw new Error(`Failed to get base tree`);
+          const commitData = await commitResponse.json();
+          const baseTreeSha = commitData.tree.sha;
+
+          // Create blob
+          const blobResponse = await fetch(`${baseUrl}/git/blobs`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+              content: Buffer.from(replitMdContent, "utf-8").toString("base64"),
+              encoding: "base64",
+            }),
+          });
+          const blobData = await blobResponse.json();
+
+          // Create tree
+          const treeResponse = await fetch(`${baseUrl}/git/trees`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+              base_tree: baseTreeSha,
+              tree: [{ path: "replit.md", mode: "100644", type: "blob", sha: blobData.sha }],
+            }),
+          });
+          const treeData = await treeResponse.json();
+
+          // Create commit
+          const newCommitResponse = await fetch(`${baseUrl}/git/commits`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+              message: "chore: Update TriadBlue standards from ConsoleBlue [automated]",
+              tree: treeData.sha,
+              parents: [latestCommitSha],
+            }),
+          });
+          const newCommitData = await newCommitResponse.json();
+
+          // Update ref
+          await fetch(`${baseUrl}/git/refs/heads/${branch}`, {
+            method: "PATCH",
+            headers,
+            body: JSON.stringify({ sha: newCommitData.sha }),
+          });
+
+          results.push({ project: project.name, status: "success", commitSha: newCommitData.sha });
+        } catch (error: any) {
+          results.push({ project: project.name, status: "failed", error: error.message });
+        }
+      }
+
+      res.json({ success: true, message: "Standards pushed to projects", results });
+    } catch (error: any) {
+      console.error("Error pushing standards:", error);
+      res.status(500).json({ error: error.message || "Failed to push standards" });
     }
   });
 

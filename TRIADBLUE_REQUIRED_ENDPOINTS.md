@@ -2,16 +2,18 @@
 
 ## ⚠️ MANDATORY FOR ALL TRIADBLUE ECOSYSTEM PROJECTS
 
-All projects in the TriadBlue ecosystem must implement these two standard API endpoints. ConsoleBlue is pre-configured with these URL patterns for all projects:
+All projects in the TriadBlue ecosystem must implement these **three** standard API endpoints. ConsoleBlue is pre-configured with these URL patterns for all projects:
 
 ```
 https://{projectname}.replit.app/api/metadata
 https://{projectname}.replit.app/api/agent
+https://{projectname}.replit.app/api/routes
 ```
 
 These endpoints enable:
 - **Metadata Endpoint**: Automatic documentation generation
 - **Agent Endpoint**: Conversational AI interaction via Agent Chat
+- **Routes Endpoint**: Site map generation and application structure visualization
 
 ---
 

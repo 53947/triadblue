@@ -81,15 +81,21 @@ All builders are **equal** - no hierarchical structure. Email chat is preferred 
 - **Site Planner:** Visual flowchart tool at `/site-planner` for planning page layouts and user flows. Uses ReactFlow for interactive node-based editing with drag-and-drop, connection creation, and real-time updates. Supports multiple node types (page, component, decision, data) with auto-save functionality. Project-scoped diagrams stored in site_planner_nodes and site_planner_edges tables with JSON-based position and styling data. Designed for planning application structure before implementation.
 - **Site Map:** Hierarchical route explorer at `/site-map` displaying auto-generated tree view of actual routes from TriadBlue projects. ConsoleBlue routes are scanned directly from codebase (App.tsx and pages directory) via regex-based parser. External projects (BusinessBlueprint, HostsBlue, SwipesBlue, List It) can POST routes via API with "write_routes" permission. Features include collapsible tree navigation with path-based nesting, route metadata display (name, path, file location, type, framework), and dual-source support (scanned vs external). Database schema (project_routes table) tracks route information with source attribution and JSON metadata field. Scanner service parses wouter routes including component imports, inline routes, public routes, and dynamic segments.
 
-## TriadBlue Standard URL Configuration
+## TriadBlue Standard URL Configuration & Standards Distribution
 
 **⚠️ MANDATORY FOR ALL ECOSYSTEM PROJECTS**
 
 All TriadBlue projects use standardized URL patterns configured in `server/triadblue-config.ts`:
 
+### Live Standards API
+
+ConsoleBlue publishes the current TriadBlue requirements at **`/api/standards`**. This is a public endpoint (no authentication required) that returns the authoritative list of required endpoints in JSON format.
+
+**Agents should fetch this endpoint to get the latest requirements instead of reading static documentation.**
+
 ### Required Endpoints
 
-Every TriadBlue project **MUST** implement these two API endpoints:
+Every TriadBlue project **MUST** implement these three API endpoints:
 
 1. **Metadata API**: `https://{projectname}.replit.app/api/metadata`
    - Returns project features and tech stack as JSON
@@ -99,13 +105,26 @@ Every TriadBlue project **MUST** implement these two API endpoints:
    - Handles conversational AI requests
    - Used by Agent Chat for multi-project communication
 
+3. **Routes API**: `https://{projectname}.replit.app/api/routes`
+   - Returns array of application routes
+   - Used by Site Map for hierarchical visualization
+
 ### Automatic Configuration
 
 ConsoleBlue automatically:
-- **Seeds all 5 TriadBlue projects** at startup (Site Inspector, BusinessBlueprint, HostsBlue, SwipesBlue, List It)
+- **Seeds all 7 TriadBlue projects** at startup (Site Inspector, BusinessBlueprint, HostsBlue, SwipesBlue, List It, GoFuckMe, Lady Carbón)
 - **Pre-fills metadata URLs** in Project Settings based on project name
 - **Creates agent connections** with standard endpoint URLs
 - **Normalizes legacy connections** to use canonical URLs and naming
+- **Distributes standardized replit.md** to all project repositories via automated GitHub commits
+
+### Standards Distribution System
+
+When requirements change, ConsoleBlue pushes updated `replit.md` files to all TriadBlue projects via GitHub:
+- Public endpoint `/api/standards` returns current requirements in JSON
+- Authenticated POST to `/api/standards/push-to-github` commits replit.md to all 7 projects
+- Each project's replit.md includes link to live standards: `https://consoleblue.replit.app/api/standards`
+- Agents read replit.md and fetch latest standards automatically on each conversation
 
 ### Implementation Guide
 
