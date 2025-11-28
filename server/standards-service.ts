@@ -112,8 +112,20 @@ Every TriadBlue project **MUST** implement these three API endpoints:
 ]
 \`\`\`
 
+## Standards Distribution
+
+Your project automatically receives updates from ConsoleBlue through an automated system. When ConsoleBlue maintainers need to update TriadBlue standards:
+
+1. They click the **"Push Standards"** button in ConsoleBlue's dashboard
+2. ConsoleBlue automatically generates updated documentation with the latest requirements
+3. All 7 TriadBlue projects (including yours) receive a GitHub commit with the new \`replit.md\`
+4. Your \`replit.md\` is automatically updated with zero manual effort
+
+**This means**: You don't need to manually track standards changes. Your project will always stay in sync with the latest TriadBlue requirements.
+
 ## Important Links
 - **Standards Documentation**: https://consoleblue.replit.app/api/standards
+- **ConsoleBlue Dashboard**: https://consoleblue.replit.app
 - **ConsoleBlue Docs**: https://consoleblue.replit.app/docs
 - **TriadBlue Ecosystem**: https://triadblue.com
 
