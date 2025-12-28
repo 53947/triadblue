@@ -1,0 +1,263 @@
+# TRIADBLUE WEBSITE COMPLETE UPDATE - SINGLE EXECUTION PROMPT
+
+You are updating the TriadBlue website. Execute ALL changes below in a single, complete implementation. 
+
+## CRITICAL CONSTRAINTS
+- **DO NOT perform a full codebase sweep** - make ONLY the specific changes listed below
+- **Preserve ALL existing settings and configurations** - these required significant time and care to establish
+- **Keep existing layouts and component structures** - only update content, text, and add specified new sections
+- **Do not refactor or reorganize code** unless explicitly required for new features
+- **Test all changes** before marking complete
+
+---
+
+## TASK 1: UPDATE HOMEPAGE PLATFORM SECTIONS
+
+### 1.1 BusinessBlueprint Section (businessblueprint.io)
+**KEEP existing layout and images. UPDATE text content only:**
+
+**Content Updates:**
+- **Mission:** "Elevate local and small businesses through improved Local SEO performance in their markets"
+- **Tagline:** "We Assess. We Prescribe. You Grow."
+- **5-Step Process:**
+  1. Complete Your Digital IQ Assessment
+  2. Prescribed Blueprint (custom action plan)
+  3. /localblue (listings + reputation management)
+  4. CoachBlue (24/7 AI business coach)
+  5. /commverse (complete communication suite)
+- **Technology:** Business IQ Scanner powered by Google Business Intelligence
+
+**Available Icons (use as appropriate for 5-step process):**
+- `Assessment.png` - for Digital IQ Assessment step
+- `Prescription.png` - for Prescribed Blueprint step
+- `localblue.png` - for /localblue step
+- `AI_Business_Coach_-_Coach_Blue.png` - for CoachBlue step
+- `commverse.png` - for /commverse step
+- `scanning_tool.png` - for Business IQ Scanner technology reference
+
+---
+
+### 1.2 HostsBlue Section (hostsblue.com)
+**KEEP existing layout and images. UPDATE text content only:**
+
+**Content Updates:**
+- **Status Badge:** Display "Under Construction" badge/banner
+- **Services:** 
+  - Custom website builder
+  - Domain registration, transfer, and purchasing
+- **Hosting:** 
+  - Native platform hosting
+  - Partnership with WPMUDev
+
+---
+
+### 1.3 SwipesBlue Section (swipesblue.com)
+**KEEP existing layout and images. UPDATE text content only:**
+
+**Content Updates:**
+- **Status Badge:** Display "Under Construction" badge/banner
+- **Capabilities:**
+  - Proprietary payment processing
+  - Custom checkout pages
+  - Shopping carts
+- **Features:** White-label affiliate program
+- **Strategic Note:** "All TriadBlue businesses use SwipesBlue exclusively"
+
+---
+
+## TASK 2: ADD DEVELOPMENT SECTION TO HOMEPAGE
+
+**CREATE new section on homepage using the same card layout format as the 3 consumer platforms above.**
+
+**Section Title:** "Development Tools" or "Platform Development" (use appropriate heading)
+
+### Card 1: /relationships
+- **Logo:** `__relationships_1766879925886.png` (text version preferred) or `__relationships_1766879158723.png` (icon version as alternative)
+- **Link URL:** businessblueprint.io/relationships
+- **Title:** /relationships
+- **Description:** Premier CRM - the hub for customer journey information, single source of truth for all apps. Client-facing dashboard incorporating every BusinessBlueprint app.
+
+### Card 2: SiteInspector
+- **Logo:** `SiteInspectorAgentIcon_1766861472435.png`
+- **Link URL:** agentinspector.dev
+- **Title:** SiteInspector
+- **Description:** QA and evaluation tool powered by DeepSeek.com AI. Evaluates website development progress, provides actionable feedback.
+
+### Card 3: AIPrompt.Builders
+- **Logo:** `PromptBuilderLogo_1766878027777.png`
+- **Link URL:** aiprompt.builders
+- **Title:** AIPrompt.Builders
+- **Description:** Prompt building application powered by Claude from Anthropic.
+
+### Card 4: Console.Blue
+- **Logo:** `ConsoleBlue-logo_1763756605648.png` (existing logo in image bank)
+- **Link URL:** console.blue
+- **Title:** Console.Blue
+- **Description:** Internal operations interface, central nervous system for the ecosystem.
+
+---
+
+## TASK 3: CREATE PRODUCTS PAGE (/apps)
+
+**CREATE new page at route `/apps` with full product catalog displaying logos and pricing.**
+
+**Design Requirements:**
+- Match existing landing page aesthetic (colors, fonts, spacing, card styles)
+- Use consistent card/grid layout for product display
+- Show product logo, name, description, and price clearly
+- Group products by tier/category as specified below
+
+---
+
+### 3.1 FREE TIER
+
+| Product | Logo | Price |
+|---------|------|-------|
+| Digital IQ Assessment | `Assessment.png` | Free |
+| /relationships Starter | `__relationships_1766879925886.png` | Free |
+
+---
+
+### 3.2 CUSTOMER RELATIONSHIPS
+
+| Product | Logo | Price |
+|---------|------|-------|
+| /relationships Performance | `__relationships_1766879925886.png` | $29/mo |
+
+---
+
+### 3.3 AI COACH
+
+| Product | Logo | Price |
+|---------|------|-------|
+| CoachBlue (AI Business Coach) | `AI_Business_Coach_-_Coach_Blue.png` | $99/mo |
+
+---
+
+### 3.4 LOCALBLUE BUNDLE - $59/mo
+
+**Display as a bundle with bundle header and component apps:**
+
+| Product | Logo | Individual Price | Bundle Price |
+|---------|------|------------------|--------------|
+| **LocalBlue Bundle** | `localblue_1766878739928.png` | N/A | **$59/mo** |
+| /listings | `listings_1766878739926.png` | $40/mo | (included) |
+| /reputation | `reputation_1766878739929.png` | $40/mo | (included) |
+
+**Bundle Note:** Show that bundle saves money vs. individual pricing
+
+---
+
+### 3.5 COMMVERSE BUNDLE - $99/mo
+
+**Display as a bundle with bundle header and component apps:**
+
+| Product | Logo | Individual Price | Bundle Price |
+|---------|------|------------------|--------------|
+| **Commverse Bundle** | `__commverse_bundle_logo_1766878686842.png` | N/A | **$99/mo** |
+| /send | `send_1766878706842.png` | $35/mo | (included) |
+| /inbox | `inbox_1766878706844.png` | $35/mo | (included) |
+| /livechat | `livechat_1766878706844.png` | $35/mo | (included) |
+| /content | `content_1766878706844.png` | $35/mo | (included) |
+
+**Bundle Note:** Show that bundle saves money vs. individual pricing
+
+---
+
+### 3.6 SUBSCRIPTION APPS
+
+| Product | Logo | Price |
+|---------|------|-------|
+| MealPrepPro | `MealPrepProIcon.png` (icon) or `mealpreppro_logo.png` (text) | TBD |
+| ListIt | `ListIt.png` (icon) or `LIst_It_NameMark.png` (text) | TBD |
+
+**Note:** "TBD" should display as-is (pricing to be determined)
+
+---
+
+## TASK 4: NAVIGATION & ROUTING SETUP
+
+### 4.1 Add Navigation Link
+- Add "Products" link to the landing page header navigation
+- Link should point to `/apps` route
+- Position appropriately in existing navigation menu
+
+### 4.2 Register Route
+- Register `/apps` route in `App.tsx` (or appropriate routing file)
+- Ensure route renders the new Products page component
+
+### 4.3 Styling Consistency
+- Apply existing TriadBlue theme/styling to Products page
+- Match typography, colors, spacing from landing page
+- Ensure responsive design works on mobile/tablet/desktop
+
+### 4.4 Image Import Verification
+- Verify all logo files are properly imported and accessible
+- Test that all images render correctly
+- Handle missing images gracefully with fallback if needed
+
+### 4.5 Link Testing
+- Test all product links (if applicable)
+- Verify navigation to/from Products page works
+- Test all Development section card links
+
+---
+
+## VERIFICATION CHECKLIST
+
+Before marking this implementation as complete, verify:
+
+**Task 1 - Platform Sections:**
+- [ ] BusinessBlueprint section text updated with new mission, tagline, 5-step process, technology
+- [ ] HostsBlue section marked "Under Construction" with updated services and hosting info
+- [ ] SwipesBlue section marked "Under Construction" with updated capabilities and strategic note
+- [ ] All existing layouts and images preserved
+
+**Task 2 - Development Section:**
+- [ ] Development section added to homepage
+- [ ] All 4 cards display with correct logos, titles, descriptions
+- [ ] All 4 cards link to correct URLs
+- [ ] Section uses same card layout as consumer platforms
+
+**Task 3 - Products Page:**
+- [ ] Products page created at `/apps` route
+- [ ] All product tiers display correctly (Free, Customer Relationships, AI Coach, LocalBlue Bundle, Commverse Bundle, Subscription Apps)
+- [ ] All logos render correctly
+- [ ] All pricing displays correctly
+- [ ] Bundle pricing shows savings vs. individual components
+- [ ] Page styling matches landing page aesthetic
+
+**Task 4 - Navigation & Routes:**
+- [ ] "Products" link added to header navigation
+- [ ] `/apps` route registered and functional
+- [ ] All navigation links work correctly
+- [ ] Page is responsive across devices
+
+**General Quality:**
+- [ ] No existing functionality broken
+- [ ] All images load properly
+- [ ] No console errors
+- [ ] Code is clean and maintainable
+- [ ] Settings and configurations preserved
+
+---
+
+## EXECUTION NOTES
+
+**Image Asset Locations:**
+- **Newly uploaded assets:** Available in uploaded files (Assessment.png, AI_Business_Coach_-_Coach_Blue.png, etc.)
+- **Existing image bank assets:** Referenced by numbered filenames (e.g., `__relationships_1766879925886.png`)
+
+**Implementation Approach:**
+1. Start with Task 1 (updates to existing sections - lowest risk)
+2. Proceed to Task 2 (new Development section on existing page)
+3. Then Task 3 (entirely new Products page)
+4. Finish with Task 4 (navigation and routing integration)
+5. Run verification checklist
+6. Test thoroughly before deployment
+
+**Important:** This is a single, complete execution. All tasks should be completed together, not incrementally.
+
+---
+
+END OF IMPLEMENTATION SPECIFICATION

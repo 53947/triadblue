@@ -4,8 +4,12 @@ import hostsBlueLogo from "@assets/archive/HostsBlue Logo_1762989341854.png";
 import swipesBlueLogo from "@assets/archive/SwipesBlue Logo_1762989341855.png";
 import consoleBlueLogo from "@assets/ConsoleBlue-logo_1763756605648.png";
 import consoleBlueDashboardButton from "@assets/ConsoleBlue dahsboard_1763759506138.png";
-import { Link } from "wouter";
-import { ArrowRight, CheckCircle2, Zap, Shield, Globe } from "lucide-react";
+import relationshipsLogo from "@assets/__relationships_1766879925886.png";
+import siteInspectorIcon from "@assets/SiteInspectorAgentIcon_1766861472435.png";
+import promptBuilderLogo from "@assets/PromptBuilderLogo_1766878027777.png";
+import localBlueLogo from "@assets/localblue_1766878739928.png";
+import commverseLogo from "@assets/__commverse_bundle_logo_1766878686842.png";
+import { ArrowRight, CheckCircle2, Zap, Shield, Globe, Construction, Clipboard, FileText, Bot, Users } from "lucide-react";
 import { useActiveLogo } from "@/hooks/use-active-logo";
 
 export default function Landing() {
@@ -25,12 +29,14 @@ export default function Landing() {
             <a href="#blueprint">BusinessBlueprint</a>
             <a href="#hosts">HostsBlue</a>
             <a href="#swipes">SwipesBlue</a>
+            <a href="#development">Development</a>
+            <a href="/apps">Products</a>
             <a href="#faq">FAQ</a>
           </nav>
           <div className="landing-actions">
-            <Link href="/login" className="landing-cta-green" data-testid="link-dashboard-login" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px 24px' }}>
+            <a href="/login" className="landing-cta-green" data-testid="link-dashboard-login" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px 24px' }}>
               <img src={consoleBlueDashboardButton} alt="ConsoleBlue Dashboard" style={{ height: '40px', width: 'auto' }} />
-            </Link>
+            </a>
           </div>
         </div>
       </header>
@@ -79,33 +85,65 @@ export default function Landing() {
               <img src={businessBlueprintLogo} alt="BusinessBlueprint.io" style={{ height: '50px', width: 'auto' }} />
             </a>
             <p>
-              Diagnose and prescribe your path to growth with a comprehensive Digital IQ™ score and custom strategic blueprint tailored to your business.
+              Elevate local and small businesses through improved Local SEO performance in their markets. We Assess. We Prescribe. You Grow.
             </p>
-            <a className="landing-mini-cta" href="#blueprint">
+            <a className="landing-mini-cta" href="#blueprint" data-testid="link-blueprint-learn-more">
               Learn More <ArrowRight size={16} style={{ display: 'inline' }} />
             </a>
           </article>
 
-          <article className="landing-card">
+          <article className="landing-card" style={{ position: 'relative' }}>
+            <span style={{ 
+              position: 'absolute', 
+              top: '12px', 
+              right: '12px', 
+              background: '#f59e0b', 
+              color: '#000', 
+              padding: '4px 8px', 
+              borderRadius: '4px', 
+              fontSize: '0.7rem', 
+              fontWeight: 'bold',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}>
+              <Construction size={12} /> Under Construction
+            </span>
             <a href="https://hostsblue.com" target="_blank" rel="noopener noreferrer" style={{ display: 'block', marginBottom: '20px' }}>
               <img src={hostsBlueLogo} alt="HostsBlue.com" style={{ height: '50px', width: 'auto' }} />
             </a>
             <p>
-              Fast, secure cloud infrastructure—domains, SSL certificates, email, and hosting with one-click deployment and automated backups.
+              Custom website builder, domain registration, transfer, and purchasing. Native platform hosting with WPMUDev partnership.
             </p>
-            <a className="landing-mini-cta" href="#hosts">
+            <a className="landing-mini-cta" href="#hosts" data-testid="link-hosts-learn-more">
               Learn More <ArrowRight size={16} style={{ display: 'inline' }} />
             </a>
           </article>
 
-          <article className="landing-card">
+          <article className="landing-card" style={{ position: 'relative' }}>
+            <span style={{ 
+              position: 'absolute', 
+              top: '12px', 
+              right: '12px', 
+              background: '#f59e0b', 
+              color: '#000', 
+              padding: '4px 8px', 
+              borderRadius: '4px', 
+              fontSize: '0.7rem', 
+              fontWeight: 'bold',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}>
+              <Construction size={12} /> Under Construction
+            </span>
             <a href="https://swipesblue.com" target="_blank" rel="noopener noreferrer" style={{ display: 'block', marginBottom: '20px' }}>
               <img src={swipesBlueLogo} alt="SwipesBlue.com" style={{ height: '50px', width: 'auto' }} />
             </a>
             <p>
-              Embedded payment processing online and in-person—subscriptions, invoices, and real-time tracking with PCI-compliant security.
+              Proprietary payment processing with custom checkout pages and shopping carts. White-label affiliate program available.
             </p>
-            <a className="landing-mini-cta" href="#swipes">
+            <a className="landing-mini-cta" href="#swipes" data-testid="link-swipes-learn-more">
               Learn More <ArrowRight size={16} style={{ display: 'inline' }} />
             </a>
           </article>
@@ -119,15 +157,33 @@ export default function Landing() {
         <article className="landing-mod">
           <img src={businessBlueprintLogo} alt="BusinessBlueprint.io Platform Dashboard" style={{ height: '80px', width: 'auto' }} />
           <div>
-            <h2>BusinessBlueprint.io<br />Diagnose & Prescribe</h2>
+            <h2>BusinessBlueprint.io<br />We Assess. We Prescribe. You Grow.</h2>
+            <p style={{ marginBottom: '16px', color: '#9ca3af' }}>
+              Elevate local and small businesses through improved Local SEO performance in their markets.
+            </p>
+            <h4 style={{ marginBottom: '12px', color: '#60a5fa' }}>A Blueprint to Your Growth:</h4>
             <ul>
-              <li>Digital IQ™ report with prescriptive strategic blueprint</li>
-              <li>Local SEO optimization, review management, and social media integration</li>
-              <li>Flexible paths: DIY tools, managed services (MSP), or à-la-carte options</li>
-              <li>Unified login with HostsBlue and SwipesBlue for seamless workflow</li>
+              <li><Clipboard size={16} style={{ display: 'inline', marginRight: '8px', color: '#3b82f6' }} />Step 1: Complete Your Digital IQ Assessment</li>
+              <li><FileText size={16} style={{ display: 'inline', marginRight: '8px', color: '#3b82f6' }} />Step 2: Prescribed Blueprint — custom action plan with SEO, content strategy, and revenue-focused steps</li>
+              <li>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <img src={localBlueLogo} alt="/localblue" style={{ height: '20px', width: 'auto' }} />
+                  Step 3: Listings management + reputation building for stronger local visibility
+                </span>
+              </li>
+              <li><Bot size={16} style={{ display: 'inline', marginRight: '8px', color: '#10b981' }} />Step 4: CoachBlue — 24/7 AI business coach guiding you through every step</li>
+              <li>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <img src={commverseLogo} alt="/commverse" style={{ height: '20px', width: 'auto' }} />
+                  Step 5: Complete communication suite — /send, /inbox, /livechat, /content
+                </span>
+              </li>
             </ul>
+            <p style={{ marginTop: '16px', fontSize: '0.9rem', color: '#9ca3af' }}>
+              <strong>Technology:</strong> Business IQ Scanner powered by Google Business Intelligence
+            </p>
             <div style={{ marginTop: '24px' }}>
-              <a className="landing-cta-green" href="https://businessblueprint.io" target="_blank" rel="noopener noreferrer">
+              <a className="landing-cta-green" href="https://businessblueprint.io" target="_blank" rel="noopener noreferrer" data-testid="button-get-digital-iq">
                 Get Your Digital IQ™ Score
               </a>
             </div>
@@ -137,18 +193,34 @@ export default function Landing() {
 
       {/* HostsBlue Section */}
       <section id="hosts" className="landing-section landing-container">
-        <article className="landing-mod">
+        <article className="landing-mod" style={{ position: 'relative' }}>
+          <span style={{ 
+            position: 'absolute', 
+            top: '16px', 
+            right: '16px', 
+            background: '#f59e0b', 
+            color: '#000', 
+            padding: '6px 12px', 
+            borderRadius: '6px', 
+            fontSize: '0.8rem', 
+            fontWeight: 'bold',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px'
+          }}>
+            <Construction size={14} /> Under Construction
+          </span>
           <img src={hostsBlueLogo} alt="HostsBlue.com Hosting Platform" style={{ height: '80px', width: 'auto' }} />
           <div>
             <h2>HostsBlue.com<br />Power Your Presence</h2>
             <ul>
-              <li>Fast, secure cloud hosting with enterprise-grade infrastructure</li>
-              <li>Domain registration, DNS management, and SSL certificates</li>
-              <li>Integrated email hosting with spam protection and analytics</li>
-              <li>Website deployment, management, and automated daily backups</li>
+              <li>Custom website builder with drag-and-drop functionality</li>
+              <li>Domain registration, transfer, and purchasing</li>
+              <li>Native platform hosting for BusinessBlueprint users</li>
+              <li>Partnership with WPMUDev.com for external hosting needs</li>
             </ul>
             <div style={{ marginTop: '24px' }}>
-              <a className="landing-cta-green" href="https://hostsblue.com" target="_blank" rel="noopener noreferrer">
+              <a className="landing-cta-green" href="https://hostsblue.com" target="_blank" rel="noopener noreferrer" data-testid="button-launch-infrastructure">
                 Launch Your Infrastructure
               </a>
             </div>
@@ -158,18 +230,37 @@ export default function Landing() {
 
       {/* SwipesBlue Section */}
       <section id="swipes" className="landing-section landing-container">
-        <article className="landing-mod">
+        <article className="landing-mod" style={{ position: 'relative' }}>
+          <span style={{ 
+            position: 'absolute', 
+            top: '16px', 
+            right: '16px', 
+            background: '#f59e0b', 
+            color: '#000', 
+            padding: '6px 12px', 
+            borderRadius: '6px', 
+            fontSize: '0.8rem', 
+            fontWeight: 'bold',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px'
+          }}>
+            <Construction size={14} /> Under Construction
+          </span>
           <img src={swipesBlueLogo} alt="SwipesBlue.com Payment Platform" style={{ height: '80px', width: 'auto' }} />
           <div>
             <h2>SwipesBlue.com<br />Simplify How You Get Paid</h2>
             <ul>
-              <li>Online and in-person payment processing with unified reporting</li>
+              <li>Proprietary payment processing — online and in-person</li>
+              <li>Custom checkout pages and shopping carts</li>
+              <li>White-label affiliate program for partners</li>
               <li>PCI-compliant architecture with bank-grade encryption</li>
-              <li>Automated invoicing, subscription billing, and payment tracking</li>
-              <li>Real-time analytics and seamless integration with BusinessBlueprint</li>
             </ul>
+            <p style={{ marginTop: '16px', fontSize: '0.9rem', color: '#60a5fa', fontWeight: '500' }}>
+              Strategic Commitment: All TriadBlue businesses use SwipesBlue exclusively — no third-party gateways
+            </p>
             <div style={{ marginTop: '24px' }}>
-              <a className="landing-cta-green" href="https://swipesblue.com" target="_blank" rel="noopener noreferrer">
+              <a className="landing-cta-green" href="https://swipesblue.com" target="_blank" rel="noopener noreferrer" data-testid="button-start-payments">
                 Start Accepting Payments
               </a>
             </div>
@@ -195,25 +286,71 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ConsoleBlue Section */}
-      <section id="console" className="landing-section landing-container">
-        <article className="landing-mod">
-          <img src={consoleBlueLogo} alt="ConsoleBlue Development Platform" style={{ height: '80px', width: 'auto' }} />
-          <div>
-            <h2>ConsoleBlue<br />Where New Platforms Are Born</h2>
-            <ul>
-              <li>Custom SaaS development and AI-powered automation solutions</li>
-              <li>Real-time data synchronization and white-label module creation</li>
-              <li>Built to integrate seamlessly with Blueprint, HostsBlue, and SwipesBlue</li>
-              <li>Centralized command center for managing all your TriadBlue services</li>
-            </ul>
-            <div style={{ marginTop: '24px' }}>
-              <Link href="/demo" className="landing-cta-green">
-                Access Demo Dashboard
-              </Link>
-            </div>
-          </div>
-        </article>
+      <div className="landing-divider"></div>
+
+      {/* Development Tools Section */}
+      <section id="development" className="landing-section landing-container">
+        <div style={{ textAlign: 'center', maxWidth: '900px', margin: '0 auto' }}>
+          <h2>Development Tools</h2>
+          <p className="landing-subhead">
+            The internal infrastructure powering the TriadBlue ecosystem — where platforms are built, managed, and optimized.
+          </p>
+        </div>
+        
+        <div className="landing-cards" style={{ marginTop: '48px' }}>
+          <article className="landing-card">
+            <a href="https://businessblueprint.io/relationships" target="_blank" rel="noopener noreferrer" style={{ display: 'block', marginBottom: '20px' }}>
+              <img src={relationshipsLogo} alt="/relationships" style={{ height: '40px', width: 'auto' }} />
+            </a>
+            <p style={{ fontSize: '0.85rem', color: '#9ca3af', marginBottom: '8px' }}>businessblueprint.io/relationships</p>
+            <p>
+              <Users size={16} style={{ display: 'inline', marginRight: '6px', color: '#10b981' }} />
+              Premier CRM — the hub for customer journey information. Single source of truth for all apps, incorporating every BusinessBlueprint feature.
+            </p>
+            <a className="landing-mini-cta" href="https://businessblueprint.io/relationships" target="_blank" rel="noopener noreferrer" data-testid="link-relationships">
+              Learn More <ArrowRight size={16} style={{ display: 'inline' }} />
+            </a>
+          </article>
+
+          <article className="landing-card">
+            <a href="https://agentinspector.dev" target="_blank" rel="noopener noreferrer" style={{ display: 'block', marginBottom: '20px' }}>
+              <img src={siteInspectorIcon} alt="SiteInspector" style={{ height: '50px', width: 'auto' }} />
+            </a>
+            <p style={{ fontSize: '0.85rem', color: '#9ca3af', marginBottom: '8px' }}>agentinspector.dev</p>
+            <p>
+              QA and evaluation tool powered by DeepSeek.com AI. Evaluates website development progress and provides actionable feedback on completion requirements.
+            </p>
+            <a className="landing-mini-cta" href="https://agentinspector.dev" target="_blank" rel="noopener noreferrer" data-testid="link-siteinspector">
+              Learn More <ArrowRight size={16} style={{ display: 'inline' }} />
+            </a>
+          </article>
+
+          <article className="landing-card">
+            <a href="https://aiprompt.builders" target="_blank" rel="noopener noreferrer" style={{ display: 'block', marginBottom: '20px' }}>
+              <img src={promptBuilderLogo} alt="AIPrompt.Builders" style={{ height: '50px', width: 'auto' }} />
+            </a>
+            <p style={{ fontSize: '0.85rem', color: '#9ca3af', marginBottom: '8px' }}>aiprompt.builders</p>
+            <p>
+              Prompt building application powered by Claude from Anthropic. Developed to support and enhance the broader TriadBlue ecosystem.
+            </p>
+            <a className="landing-mini-cta" href="https://aiprompt.builders" target="_blank" rel="noopener noreferrer" data-testid="link-aipromptbuilders">
+              Learn More <ArrowRight size={16} style={{ display: 'inline' }} />
+            </a>
+          </article>
+
+          <article className="landing-card">
+            <a href="https://console.blue" target="_blank" rel="noopener noreferrer" style={{ display: 'block', marginBottom: '20px' }}>
+              <img src={consoleBlueLogo} alt="Console.Blue" style={{ height: '50px', width: 'auto' }} />
+            </a>
+            <p style={{ fontSize: '0.85rem', color: '#9ca3af', marginBottom: '8px' }}>console.blue</p>
+            <p>
+              Internal operations interface — the central nervous system for the entire ecosystem. Enables seamless global integration across all platforms.
+            </p>
+            <a href="/demo" className="landing-mini-cta" data-testid="link-consoleblue">
+              Access Demo <ArrowRight size={16} style={{ display: 'inline' }} />
+            </a>
+          </article>
+        </div>
       </section>
 
       <div className="landing-divider"></div>

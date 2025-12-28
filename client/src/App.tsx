@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw, RotateCcw } from "lucide-react";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
+import Products from "@/pages/products";
 import Login from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
 import Tasks from "@/pages/tasks";
@@ -227,6 +228,7 @@ function AppContent() {
       <Switch>
         <Route path="/login" component={Login} />
         {!isConsoleBlue && <Route path="/" component={Landing} />}
+        <Route path="/apps" component={Products} />
         <Route path="/demo" component={DemoHome} />
         <Route path="/demo/email-chat" component={DemoEmailChat} />
         <Route path="/demo/assets" component={DemoAssets} />
