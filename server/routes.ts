@@ -156,15 +156,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ============= Dual Login System (LINKBlue & ConsoleBlue) =============
   
-  // Helper function to hash passwords using bcrypt-compatible method
+  // Secure password hashing using bcrypt
   async function hashPassword(password: string): Promise<string> {
-    const crypto = await import("crypto");
-    return crypto.createHash("sha256").update(password).digest("hex");
+    const bcrypt = await import("bcrypt");
+    const saltRounds = 12;
+    return bcrypt.hash(password, saltRounds);
   }
 
   async function verifyPassword(password: string, hash: string): Promise<boolean> {
-    const passwordHash = await hashPassword(password);
-    return constantTimeCompare(passwordHash, hash);
+    const bcrypt = await import("bcrypt");
+    return bcrypt.compare(password, hash);
+  }
+
+  // Platform-specific middleware to enforce access on protected routes
+  async function linkblueAuthRequired(req: Request, res: Response, next: NextFunction) {
+    const authReq = req as AuthRequest;
+    if (!authReq.session?.user) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    // Verify session token is still valid
+    if (authReq.session.adminSessionToken) {
+      const session = await storage.getAdminSessionByToken(authReq.session.adminSessionToken);
+      if (!session || new Date() > session.expiresAt) {
+        authReq.session.destroy(() => {});
+        return res.status(401).json({ error: "Session expired" });
+      }
+      
+      // Verify platform access
+      if (session.platform !== "linkblue") {
+        return res.status(403).json({ error: "LINKBlue access required" });
+      }
+      
+      // Verify user still has access
+      const user = await storage.getAdminUser(session.userId);
+      if (!user?.linkblueAccess) {
+        return res.status(403).json({ error: "LINKBlue access revoked" });
+      }
+      
+      await storage.updateAdminSessionActivity(authReq.session.adminSessionToken);
+    }
+    
+    next();
+  }
+
+  async function consoleblueAuthRequired(req: Request, res: Response, next: NextFunction) {
+    const authReq = req as AuthRequest;
+    if (!authReq.session?.user) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    if (authReq.session.adminSessionToken) {
+      const session = await storage.getAdminSessionByToken(authReq.session.adminSessionToken);
+      if (!session || new Date() > session.expiresAt) {
+        authReq.session.destroy(() => {});
+        return res.status(401).json({ error: "Session expired" });
+      }
+      
+      if (session.platform !== "consoleblue") {
+        return res.status(403).json({ error: "ConsoleBlue access required" });
+      }
+      
+      const user = await storage.getAdminUser(session.userId);
+      if (!user?.consoleblueAccess) {
+        return res.status(403).json({ error: "ConsoleBlue access revoked" });
+      }
+      
+      await storage.updateAdminSessionActivity(authReq.session.adminSessionToken);
+    }
+    
+    next();
   }
 
   // LINKBlue Login

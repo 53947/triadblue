@@ -26,9 +26,18 @@ Preferred communication style: Simple, everyday language.
 - **AI Integration:** OpenAI via Replit AI Integrations (GPT-5).
 
 ### Authentication
-- **Public Access:** Landing page, Login page, Demo Dashboard.
+- **Public Access:** Landing page, Login pages, Demo Dashboard.
 - **Protected Access:** Main dashboard routes require authentication.
-- **Method:** Password-based (DASHBOARD_PASSWORD env var), server-side session management with httpOnly cookies.
+- **Dual Login System:** Separate authentication for LINKBlue Dashboard and ConsoleBlue Panel.
+  - **LINKBlue Dashboard:** `/linkblue/login` - Platform health monitoring and client management.
+  - **ConsoleBlue Panel:** `/consoleblue/login` - Task management and documentation hub.
+- **Admin Users:** Stored in `admin_users` table with platform-specific access flags (`linkblueAccess`, `consoleblueAccess`).
+- **Security:** 
+  - bcrypt password hashing with 12 salt rounds.
+  - Account locking after 5 failed attempts (15-minute lockout).
+  - Platform-specific middleware validates access on every protected request.
+  - Session tokens stored in `admin_sessions` table with expiration tracking.
+- **Legacy Access:** Password-based (DASHBOARD_PASSWORD env var) still supported for ConsoleBlue.
 
 ### Key Features
 - **Public Demo Dashboard:** `/demo` with mock data, showcasing features like Email Chat inbox, Asset Management, Site Map, and Site Planner.
