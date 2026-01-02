@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
 import { useLocation } from "wouter";
-import linkblueIcon from "@assets/LinkBlue_Icon_1767376653986.png";
+import linkblueIcon from "@assets/LinkBlue_Icon_1767377569222.png";
 import consoleblueIcon from "@assets/ConsoleBlue_Favicon_Lit_1767372218913.png";
 
 export function LoginDropdown() {
