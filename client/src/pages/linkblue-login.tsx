@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import linkblueLogo from "@assets/LINKBlue_Logo_1767376549797.png";
+import linkblueLogo from "@assets/LINKBlue_Logo_1767377727413.png";
 import linkblueIcon from "@assets/LinkBlue_Icon_1767377569222.png";
 
 export default function LinkBlueLogin() {
