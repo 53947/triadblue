@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import { Link2, Wrench, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { useLocation } from "wouter";
+import linkblueIcon from "@assets/LinkBlue_Icon_1767376653986.png";
+import consoleblueIcon from "@assets/ConsoleBlue_Favicon_Lit_1767372218913.png";
 
 export function LoginDropdown() {
   const [isOpen, setIsOpen] = useState(false);
@@ -27,8 +29,8 @@ export function LoginDropdown() {
     <div className="relative" ref={dropdownRef} onKeyDown={handleKeyDown}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="landing-cta-green flex items-center gap-2"
-        style={{ padding: "12px 24px", cursor: "pointer" }}
+        className="landing-cta-green inline-flex items-center justify-center gap-2 whitespace-nowrap"
+        style={{ padding: "12px 24px", cursor: "pointer", minWidth: "100px" }}
         data-testid="button-login-dropdown"
         aria-expanded={isOpen}
         aria-haspopup="true"
@@ -38,7 +40,8 @@ export function LoginDropdown() {
           size={16} 
           style={{ 
             transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
-            transition: "transform 0.2s ease"
+            transition: "transform 0.2s ease",
+            flexShrink: 0
           }} 
         />
       </button>
@@ -60,7 +63,7 @@ export function LoginDropdown() {
               setIsOpen(false);
               setLocation("/linkblue/login");
             }}
-            className="w-full text-left px-4 py-4 flex items-start gap-3 transition-all"
+            className="w-full text-left px-4 py-4 flex items-center gap-3 transition-all"
             style={{ 
               borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
               background: "transparent"
@@ -70,17 +73,17 @@ export function LoginDropdown() {
             role="menuitem"
             data-testid="button-login-linkblue"
           >
-            <div 
-              className="flex items-center justify-center rounded-lg"
+            <img 
+              src={linkblueIcon} 
+              alt="LINKBlue" 
               style={{ 
                 width: 40, 
                 height: 40, 
-                background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                flexShrink: 0
+                borderRadius: "8px",
+                flexShrink: 0,
+                objectFit: "cover"
               }}
-            >
-              <Link2 size={20} style={{ color: "white" }} />
-            </div>
+            />
             <div>
               <div style={{ fontWeight: 600, color: "white", marginBottom: 2 }}>
                 LINKBlue Dashboard
@@ -96,24 +99,24 @@ export function LoginDropdown() {
               setIsOpen(false);
               setLocation("/consoleblue/login");
             }}
-            className="w-full text-left px-4 py-4 flex items-start gap-3 transition-all"
+            className="w-full text-left px-4 py-4 flex items-center gap-3 transition-all"
             style={{ background: "transparent" }}
             onMouseEnter={(e) => e.currentTarget.style.background = "rgba(59, 130, 246, 0.1)"}
             onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
             role="menuitem"
             data-testid="button-login-consoleblue"
           >
-            <div 
-              className="flex items-center justify-center rounded-lg"
+            <img 
+              src={consoleblueIcon} 
+              alt="ConsoleBlue" 
               style={{ 
                 width: 40, 
                 height: 40, 
-                background: "linear-gradient(135deg, #10b981, #059669)",
-                flexShrink: 0
+                borderRadius: "8px",
+                flexShrink: 0,
+                objectFit: "cover"
               }}
-            >
-              <Wrench size={20} style={{ color: "white" }} />
-            </div>
+            />
             <div>
               <div style={{ fontWeight: 600, color: "white", marginBottom: 2 }}>
                 ConsoleBlue Panel

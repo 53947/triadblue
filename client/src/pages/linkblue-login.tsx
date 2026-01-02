@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Link2, ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import linkblueLogo from "@assets/LINKBlue_Logo_1767376549797.png";
+import linkblueIcon from "@assets/LinkBlue_Icon_1767376653986.png";
 
 export default function LinkBlueLogin() {
   const [, setLocation] = useLocation();
@@ -56,20 +58,29 @@ export default function LinkBlueLogin() {
       <Card className="w-full max-w-md border-0" style={{ background: "rgba(15, 23, 42, 0.8)", backdropFilter: "blur(16px)" }}>
         <CardHeader className="text-center pb-2">
           <div className="flex justify-center mb-6">
-            <div 
-              className="flex items-center justify-center rounded-2xl"
+            <img 
+              src={linkblueIcon} 
+              alt="LINKBlue" 
               style={{ 
                 width: 72, 
                 height: 72, 
-                background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                borderRadius: "16px",
                 boxShadow: "0 8px 32px rgba(59, 130, 246, 0.3)"
               }}
-            >
-              <Link2 size={36} style={{ color: "white" }} />
-            </div>
+            />
+          </div>
+          <div className="flex justify-center mb-4">
+            <img 
+              src={linkblueLogo} 
+              alt="LINKBlue Logo" 
+              style={{ 
+                height: 48,
+                width: "auto"
+              }}
+            />
           </div>
           <CardTitle className="text-2xl text-white" style={{ fontFamily: "var(--font-heading)" }}>
-            LINKBlue Dashboard Login
+            Dashboard Login
           </CardTitle>
           <CardDescription className="text-slate-400">
             Access your cross-platform operations center

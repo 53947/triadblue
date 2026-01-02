@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Wrench, ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import consoleblueIcon from "@assets/ConsoleBlue_Favicon_Lit_1767372218913.png";
 
 export default function ConsoleBlueLgogin() {
   const [, setLocation] = useLocation();
@@ -56,17 +57,16 @@ export default function ConsoleBlueLgogin() {
       <Card className="w-full max-w-md border-0" style={{ background: "rgba(15, 23, 42, 0.8)", backdropFilter: "blur(16px)" }}>
         <CardHeader className="text-center pb-2">
           <div className="flex justify-center mb-6">
-            <div 
-              className="flex items-center justify-center rounded-2xl"
+            <img 
+              src={consoleblueIcon} 
+              alt="ConsoleBlue" 
               style={{ 
                 width: 72, 
                 height: 72, 
-                background: "linear-gradient(135deg, #10b981, #059669)",
+                borderRadius: "16px",
                 boxShadow: "0 8px 32px rgba(16, 185, 129, 0.3)"
               }}
-            >
-              <Wrench size={36} style={{ color: "white" }} />
-            </div>
+            />
           </div>
           <CardTitle className="text-2xl text-white" style={{ fontFamily: "var(--font-heading)" }}>
             ConsoleBlue Panel Login
