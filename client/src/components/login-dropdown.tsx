@@ -29,15 +29,24 @@ export function LoginDropdown() {
     <div className="relative" ref={dropdownRef} onKeyDown={handleKeyDown}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="landing-cta-green inline-flex items-center justify-center gap-2 whitespace-nowrap"
-        style={{ padding: "12px 24px", cursor: "pointer", minWidth: "100px" }}
+        className="landing-cta-green"
+        style={{ 
+          display: "inline-flex",
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "6px",
+          padding: "10px 20px", 
+          cursor: "pointer",
+          whiteSpace: "nowrap"
+        }}
         data-testid="button-login-dropdown"
         aria-expanded={isOpen}
         aria-haspopup="true"
       >
         <span style={{ fontWeight: 600, fontSize: "14px" }}>Login</span>
         <ChevronDown 
-          size={16} 
+          size={14} 
           style={{ 
             transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
             transition: "transform 0.2s ease",
