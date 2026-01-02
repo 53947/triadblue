@@ -127,6 +127,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/logout", async (req, res) => {
     try {
       const authReq = req as AuthRequest;
+      
+      // Clean up admin session if exists
+      if (authReq.session.adminSessionToken) {
+        await storage.deleteAdminSession(authReq.session.adminSessionToken);
+      }
+      
       authReq.session.destroy((err: any) => {
         if (err) {
           console.error("Session destroy error:", err);
