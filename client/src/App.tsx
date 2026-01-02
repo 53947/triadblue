@@ -39,6 +39,8 @@ import DemoSitePlanner from "@/pages/demo/demo-site-planner";
 import LinkBlueDashboard from "@/pages/linkblue-dashboard";
 import LinkBlueClients from "@/pages/linkblue-clients";
 import LinkBlueAlerts from "@/pages/linkblue-alerts";
+import LinkBlueLogin from "@/pages/linkblue-login";
+import ConsoleBlueLogin from "@/pages/consoleblue-login";
 import { ProtectedRoute } from "@/components/protected-route";
 import { DynamicFavicon } from "@/components/dynamic-favicon";
 import { useQuery } from "@tanstack/react-query";
@@ -234,6 +236,8 @@ function AppContent() {
       <DynamicFavicon />
       <Switch>
         <Route path="/login" component={Login} />
+        <Route path="/linkblue/login" component={LinkBlueLogin} />
+        <Route path="/consoleblue/login" component={ConsoleBlueLogin} />
         {!isConsoleBlue && <Route path="/" component={Landing} />}
         <Route path="/apps" component={Products} />
         <Route path="/demo" component={DemoHome} />

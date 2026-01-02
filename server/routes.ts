@@ -147,6 +147,219 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     res.json({ user: authReq.session.user });
   });
+
+  // ============= Dual Login System (LINKBlue & ConsoleBlue) =============
+  
+  // Helper function to hash passwords using bcrypt-compatible method
+  async function hashPassword(password: string): Promise<string> {
+    const crypto = await import("crypto");
+    return crypto.createHash("sha256").update(password).digest("hex");
+  }
+
+  async function verifyPassword(password: string, hash: string): Promise<boolean> {
+    const passwordHash = await hashPassword(password);
+    return constantTimeCompare(passwordHash, hash);
+  }
+
+  // LINKBlue Login
+  app.post("/api/auth/linkblue/login", async (req, res) => {
+    try {
+      const { email, password, rememberMe } = req.body;
+
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
+      }
+
+      const user = await storage.getAdminUserByEmail(email);
+
+      // Always perform password check to prevent timing attacks
+      if (!user) {
+        // Dummy hash to prevent timing attacks
+        await hashPassword(password);
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+
+      // Check if account is locked
+      if (await storage.isAccountLocked(user.id)) {
+        return res.status(423).json({ message: "Account is temporarily locked. Please try again in 15 minutes." });
+      }
+
+      // Verify password
+      const isValidPassword = await verifyPassword(password, user.passwordHash);
+      if (!isValidPassword) {
+        const { shouldLock } = await storage.incrementFailedLoginAttempts(user.id);
+        if (shouldLock) {
+          return res.status(423).json({ message: "Too many failed attempts. Account locked for 15 minutes." });
+        }
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+
+      // Check if user has LINKBlue access
+      if (!user.linkblueAccess) {
+        return res.status(403).json({ message: "You do not have access to LINKBlue Dashboard" });
+      }
+
+      // Create session
+      const sessionToken = randomUUID();
+      const expiresAt = new Date(Date.now() + (rememberMe ? 7 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000));
+
+      await storage.createAdminSession({
+        userId: user.id,
+        platform: "linkblue",
+        sessionToken,
+        ipAddress: req.ip || null,
+        userAgent: req.get("User-Agent") || null,
+        expiresAt,
+      });
+
+      await storage.updateAdminUserLogin(user.id);
+
+      // Store in express session for compatibility with existing auth
+      const authReq = req as AuthRequest;
+      authReq.session.user = {
+        id: user.id,
+        username: user.email,
+        role: user.role,
+      };
+      authReq.session.platform = "linkblue";
+      authReq.session.adminSessionToken = sessionToken;
+
+      authReq.session.save((err: any) => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.status(500).json({ message: "Failed to create session" });
+        }
+        res.json({ 
+          success: true, 
+          user: { 
+            email: user.email, 
+            displayName: user.displayName,
+            role: user.role,
+            linkblueAccess: user.linkblueAccess,
+            consoleblueAccess: user.consoleblueAccess,
+          }
+        });
+      });
+    } catch (error) {
+      console.error("LINKBlue login error:", error);
+      res.status(500).json({ message: "Login failed" });
+    }
+  });
+
+  // ConsoleBlue Login
+  app.post("/api/auth/consoleblue/login", async (req, res) => {
+    try {
+      const { email, password, rememberMe } = req.body;
+
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
+      }
+
+      const user = await storage.getAdminUserByEmail(email);
+
+      if (!user) {
+        await hashPassword(password);
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+
+      if (await storage.isAccountLocked(user.id)) {
+        return res.status(423).json({ message: "Account is temporarily locked. Please try again in 15 minutes." });
+      }
+
+      const isValidPassword = await verifyPassword(password, user.passwordHash);
+      if (!isValidPassword) {
+        const { shouldLock } = await storage.incrementFailedLoginAttempts(user.id);
+        if (shouldLock) {
+          return res.status(423).json({ message: "Too many failed attempts. Account locked for 15 minutes." });
+        }
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+
+      if (!user.consoleblueAccess) {
+        return res.status(403).json({ message: "You do not have access to ConsoleBlue Panel" });
+      }
+
+      const sessionToken = randomUUID();
+      const expiresAt = new Date(Date.now() + (rememberMe ? 7 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000));
+
+      await storage.createAdminSession({
+        userId: user.id,
+        platform: "consoleblue",
+        sessionToken,
+        ipAddress: req.ip || null,
+        userAgent: req.get("User-Agent") || null,
+        expiresAt,
+      });
+
+      await storage.updateAdminUserLogin(user.id);
+
+      const authReq = req as AuthRequest;
+      authReq.session.user = {
+        id: user.id,
+        username: user.email,
+        role: user.role,
+      };
+      authReq.session.platform = "consoleblue";
+      authReq.session.adminSessionToken = sessionToken;
+
+      authReq.session.save((err: any) => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.status(500).json({ message: "Failed to create session" });
+        }
+        res.json({ 
+          success: true, 
+          user: { 
+            email: user.email, 
+            displayName: user.displayName,
+            role: user.role,
+            linkblueAccess: user.linkblueAccess,
+            consoleblueAccess: user.consoleblueAccess,
+          }
+        });
+      });
+    } catch (error) {
+      console.error("ConsoleBlue login error:", error);
+      res.status(500).json({ message: "Login failed" });
+    }
+  });
+
+  // Seed admin user endpoint (for initial setup)
+  app.post("/api/auth/seed-admin", async (req, res) => {
+    try {
+      const { email, password, displayName } = req.body;
+
+      if (!email || !password) {
+        return res.status(400).json({ error: "Email and password are required" });
+      }
+
+      // Check if admin already exists
+      const existingUser = await storage.getAdminUserByEmail(email);
+      if (existingUser) {
+        return res.status(409).json({ error: "Admin user already exists" });
+      }
+
+      const passwordHash = await hashPassword(password);
+      const user = await storage.createAdminUser({
+        email,
+        passwordHash,
+        displayName: displayName || email.split("@")[0],
+        linkblueAccess: true,
+        consoleblueAccess: true,
+        role: "super_admin",
+        isActive: true,
+      });
+
+      res.json({ 
+        success: true, 
+        message: "Admin user created successfully",
+        user: { email: user.email, role: user.role }
+      });
+    } catch (error) {
+      console.error("Seed admin error:", error);
+      res.status(500).json({ error: "Failed to create admin user" });
+    }
+  });
   
   // ============= Projects API =============
   

@@ -34,6 +34,9 @@ import {
   linkblueAlerts,
   linkblueActivityFeed,
   linkblueIntegrationLogs,
+  // Admin users
+  adminUsers,
+  adminSessions,
   type User,
   type InsertUser,
   type Project,
@@ -101,6 +104,10 @@ import {
   type InsertLinkblueActivityFeed,
   type LinkblueIntegrationLog,
   type InsertLinkblueIntegrationLog,
+  type AdminUser,
+  type InsertAdminUser,
+  type AdminSession,
+  type InsertAdminSession,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, isNull, or } from "drizzle-orm";
@@ -1417,6 +1424,98 @@ export class DatabaseStorage implements IStorage {
       activeAlerts: alertCount?.count || 0,
       platformHealth,
     };
+  }
+
+  // ============= Admin Users =============
+  
+  async getAdminUserByEmail(email: string): Promise<AdminUser | undefined> {
+    const [user] = await db.select().from(adminUsers).where(eq(adminUsers.email, email.toLowerCase()));
+    return user || undefined;
+  }
+
+  async getAdminUser(id: string): Promise<AdminUser | undefined> {
+    const [user] = await db.select().from(adminUsers).where(eq(adminUsers.id, id));
+    return user || undefined;
+  }
+
+  async createAdminUser(user: InsertAdminUser): Promise<AdminUser> {
+    const [result] = await db.insert(adminUsers).values({
+      ...user,
+      email: user.email.toLowerCase(),
+    }).returning();
+    return result;
+  }
+
+  async updateAdminUserLogin(id: string): Promise<void> {
+    await db.update(adminUsers)
+      .set({ 
+        lastLogin: new Date(),
+        failedLoginAttempts: 0,
+        accountLocked: false,
+        lockedUntil: null,
+      })
+      .where(eq(adminUsers.id, id));
+  }
+
+  async incrementFailedLoginAttempts(id: string): Promise<{ failedAttempts: number; shouldLock: boolean }> {
+    const user = await this.getAdminUser(id);
+    if (!user) return { failedAttempts: 0, shouldLock: false };
+
+    const newAttempts = (user.failedLoginAttempts || 0) + 1;
+    const shouldLock = newAttempts >= 5;
+
+    await db.update(adminUsers)
+      .set({
+        failedLoginAttempts: newAttempts,
+        lastFailedLogin: new Date(),
+        accountLocked: shouldLock,
+        lockedUntil: shouldLock ? new Date(Date.now() + 15 * 60 * 1000) : null, // 15 minutes
+      })
+      .where(eq(adminUsers.id, id));
+
+    return { failedAttempts: newAttempts, shouldLock };
+  }
+
+  async isAccountLocked(userId: string): Promise<boolean> {
+    const user = await this.getAdminUser(userId);
+    if (!user) return false;
+    if (!user.accountLocked) return false;
+    if (user.lockedUntil && new Date() > user.lockedUntil) {
+      // Unlock the account
+      await db.update(adminUsers)
+        .set({ accountLocked: false, lockedUntil: null, failedLoginAttempts: 0 })
+        .where(eq(adminUsers.id, userId));
+      return false;
+    }
+    return true;
+  }
+
+  // ============= Admin Sessions =============
+
+  async createAdminSession(session: InsertAdminSession): Promise<AdminSession> {
+    const [result] = await db.insert(adminSessions).values(session).returning();
+    return result;
+  }
+
+  async getAdminSessionByToken(token: string): Promise<AdminSession | undefined> {
+    const [session] = await db.select().from(adminSessions)
+      .where(eq(adminSessions.sessionToken, token));
+    return session || undefined;
+  }
+
+  async deleteAdminSession(token: string): Promise<void> {
+    await db.delete(adminSessions).where(eq(adminSessions.sessionToken, token));
+  }
+
+  async updateAdminSessionActivity(token: string): Promise<void> {
+    await db.update(adminSessions)
+      .set({ lastActivity: new Date() })
+      .where(eq(adminSessions.sessionToken, token));
+  }
+
+  async deleteExpiredAdminSessions(): Promise<void> {
+    await db.delete(adminSessions)
+      .where(sql`${adminSessions.expiresAt} < NOW()`);
   }
 }
 

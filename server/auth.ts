@@ -9,6 +9,8 @@ declare module "express-session" {
       username: string;
       role: string;
     };
+    platform?: "linkblue" | "consoleblue";
+    adminSessionToken?: string;
   }
 }
 
@@ -19,6 +21,8 @@ export interface AuthRequest extends Request {
       username: string;
       role: string;
     };
+    platform?: "linkblue" | "consoleblue";
+    adminSessionToken?: string;
   };
 }
 

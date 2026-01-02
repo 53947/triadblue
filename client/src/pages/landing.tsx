@@ -3,7 +3,6 @@ import businessBlueprintLogo from "@assets/BluePrint Header Logo minus io_176375
 import hostsBlueLogo from "@assets/archive/HostsBlue Logo_1762989341854.png";
 import swipesBlueLogo from "@assets/archive/SwipesBlue Logo_1762989341855.png";
 import consoleBlueLogo from "@assets/ConsoleBlue-logo_1763756605648.png";
-import consoleBlueDashboardButton from "@assets/ConsoleBlue dahsboard_1763759506138.png";
 import relationshipsLogo from "@assets/__relationships_1766879925886.png";
 import siteInspectorIcon from "@assets/SiteInspectorAgentIcon_1766861472435.png";
 import promptBuilderLogo from "@assets/PromptBuilderLogo_1766878027777.png";
@@ -11,6 +10,7 @@ import localBlueLogo from "@assets/localblue_1766878739928.png";
 import commverseLogo from "@assets/__commverse_bundle_logo_1766878686842.png";
 import { ArrowRight, CheckCircle2, Zap, Shield, Globe, Construction, Clipboard, FileText, Bot, Users } from "lucide-react";
 import { useActiveLogo } from "@/hooks/use-active-logo";
+import { LoginDropdown } from "@/components/login-dropdown";
 
 export default function Landing() {
   const currentYear = new Date().getFullYear();
@@ -34,9 +34,7 @@ export default function Landing() {
             <a href="#faq">FAQ</a>
           </nav>
           <div className="landing-actions">
-            <a href="/login" className="landing-cta-green" data-testid="link-dashboard-login" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px 24px' }}>
-              <img src={consoleBlueDashboardButton} alt="ConsoleBlue Dashboard" style={{ height: '40px', width: 'auto' }} />
-            </a>
+            <LoginDropdown />
           </div>
         </div>
       </header>

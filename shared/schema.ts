@@ -1084,3 +1084,80 @@ export const insertLinkblueIntegrationLogSchema = createInsertSchema(linkblueInt
 });
 export type InsertLinkblueIntegrationLog = z.infer<typeof insertLinkblueIntegrationLogSchema>;
 export type LinkblueIntegrationLog = typeof linkblueIntegrationLogs.$inferSelect;
+
+// ==============================
+// Admin Users & Sessions (Dual Login System)
+// ==============================
+
+// Admin users with platform-specific access
+export const adminUsers = pgTable("admin_users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: text("email").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  displayName: text("display_name"),
+  linkblueAccess: boolean("linkblue_access").notNull().default(false),
+  consoleblueAccess: boolean("consoleblue_access").notNull().default(false),
+  role: text("role").notNull().default("user"), // 'super_admin', 'operations_manager', 'developer', 'read_only', 'user'
+  isActive: boolean("is_active").notNull().default(true),
+  accountLocked: boolean("account_locked").notNull().default(false),
+  failedLoginAttempts: integer("failed_login_attempts").notNull().default(0),
+  lastFailedLogin: timestamp("last_failed_login"),
+  lockedUntil: timestamp("locked_until"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  lastLogin: timestamp("last_login"),
+});
+
+// Admin sessions for tracking active logins
+export const adminSessions = pgTable("admin_sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => adminUsers.id, { onDelete: "cascade" }),
+  platform: text("platform").notNull(), // 'linkblue' or 'consoleblue'
+  sessionToken: text("session_token").notNull().unique(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  expiresAt: timestamp("expires_at").notNull(),
+  lastActivity: timestamp("last_activity").notNull().defaultNow(),
+});
+
+// Password reset tokens
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => adminUsers.id, { onDelete: "cascade" }),
+  token: text("token").notNull().unique(),
+  platform: text("platform").notNull(), // 'linkblue' or 'consoleblue'
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),
+});
+
+// Admin Users Insert Schema
+export const insertAdminUserSchema = createInsertSchema(adminUsers).omit({
+  id: true,
+  createdAt: true,
+  lastLogin: true,
+  failedLoginAttempts: true,
+  lastFailedLogin: true,
+  lockedUntil: true,
+  accountLocked: true,
+});
+export type InsertAdminUser = z.infer<typeof insertAdminUserSchema>;
+export type AdminUser = typeof adminUsers.$inferSelect;
+
+// Admin Sessions Insert Schema
+export const insertAdminSessionSchema = createInsertSchema(adminSessions).omit({
+  id: true,
+  createdAt: true,
+  lastActivity: true,
+});
+export type InsertAdminSession = z.infer<typeof insertAdminSessionSchema>;
+export type AdminSession = typeof adminSessions.$inferSelect;
+
+// Password Reset Token Insert Schema
+export const insertPasswordResetTokenSchema = createInsertSchema(passwordResetTokens).omit({
+  id: true,
+  createdAt: true,
+  usedAt: true,
+});
+export type InsertPasswordResetToken = z.infer<typeof insertPasswordResetTokenSchema>;
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
