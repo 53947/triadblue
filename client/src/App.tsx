@@ -36,6 +36,9 @@ import DemoEmailChat from "@/pages/demo/demo-email-chat";
 import DemoAssets from "@/pages/demo/demo-assets";
 import DemoSiteMap from "@/pages/demo/demo-site-map";
 import DemoSitePlanner from "@/pages/demo/demo-site-planner";
+import LinkBlueDashboard from "@/pages/linkblue-dashboard";
+import LinkBlueClients from "@/pages/linkblue-clients";
+import LinkBlueAlerts from "@/pages/linkblue-alerts";
 import { ProtectedRoute } from "@/components/protected-route";
 import { DynamicFavicon } from "@/components/dynamic-favicon";
 import { useQuery } from "@tanstack/react-query";
@@ -68,6 +71,10 @@ function ProtectedRouter() {
       <Route path="/site-inspector" component={SiteInspector} />
       <Route path="/embeds" component={ProjectEmbeds} />
       <Route path="/agent-setup" component={AgentConnectionSetup} />
+      <Route path="/linkblue" component={LinkBlueDashboard} />
+      <Route path="/linkblue/clients" component={LinkBlueClients} />
+      <Route path="/linkblue/clients/:id" component={LinkBlueClients} />
+      <Route path="/linkblue/alerts" component={LinkBlueAlerts} />
       <Route path="/github">
         <div className="p-8 text-center text-muted-foreground">
           GitHub Activity page - Coming soon

@@ -810,3 +810,277 @@ export const insertProjectRouteSchema = createInsertSchema(projectRoutes).omit({
 });
 export type InsertProjectRoute = z.infer<typeof insertProjectRouteSchema>;
 export type ProjectRoute = typeof projectRoutes.$inferSelect;
+
+// ============= LINKBlue - TriadBlue Integration Panel =============
+
+// LINKBlue Platforms - The three platforms in the ecosystem
+export const linkbluePlatforms = pgTable("linkblue_platforms", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(), // 'BusinessBlueprint.io', 'SwipesBlue.com', 'HostsBlue.com'
+  shortName: text("short_name").notNull(), // 'BB', 'Swipes', 'Hosts'
+  description: text("description"),
+  adminUrl: text("admin_url").notNull(), // URL to platform admin
+  apiBaseUrl: text("api_base_url"), // API base URL for integration
+  icon: text("icon"), // Lucide icon name
+  color: text("color").notNull().default("#3B82F6"), // Brand color
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// LINKBlue Platform Health - Health snapshots for each platform
+export const linkbluePlatformHealth = pgTable("linkblue_platform_health", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  platformId: varchar("platform_id").notNull().references(() => linkbluePlatforms.id, { onDelete: "cascade" }),
+  status: text("status").notNull().default("online"), // 'online', 'degraded', 'offline'
+  apiResponseTime: integer("api_response_time"), // Response time in ms
+  successRate: integer("success_rate"), // Percentage 0-100
+  activeClients: integer("active_clients").default(0),
+  errorCount: integer("error_count").default(0),
+  lastSyncAt: timestamp("last_sync_at").notNull().defaultNow(),
+  metadata: json("metadata").$type<Record<string, any>>(), // Additional platform-specific metrics
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// LINKBlue Platform Integrations - Connections between platforms
+export const linkbluePlatformIntegrations = pgTable("linkblue_platform_integrations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sourcePlatformId: varchar("source_platform_id").notNull().references(() => linkbluePlatforms.id, { onDelete: "cascade" }),
+  targetPlatformId: varchar("target_platform_id").notNull().references(() => linkbluePlatforms.id, { onDelete: "cascade" }),
+  name: text("name").notNull(), // e.g., 'Payment Processing', 'Website Hosting'
+  description: text("description"),
+  status: text("status").notNull().default("healthy"), // 'healthy', 'degraded', 'error', 'inactive'
+  lastSyncAt: timestamp("last_sync_at"),
+  syncFrequency: text("sync_frequency").default("realtime"), // 'realtime', 'hourly', 'daily'
+  errorCount: integer("error_count").default(0),
+  lastError: text("last_error"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// LINKBlue Clients - Unified client profiles across all platforms
+export const linkblueClients = pgTable("linkblue_clients", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  universalClientId: text("universal_client_id").notNull().unique(), // Shared ID across all platforms
+  companyName: text("company_name").notNull(),
+  contactName: text("contact_name"),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  domain: text("domain"),
+  totalRevenue: integer("total_revenue").default(0), // Total revenue in cents
+  lifetimeValue: integer("lifetime_value").default(0), // CLV in cents
+  engagementScore: integer("engagement_score").default(0), // 0-100
+  riskLevel: text("risk_level").default("low"), // 'low', 'medium', 'high', 'critical'
+  platformCount: integer("platform_count").default(0), // Number of platforms they use
+  tags: text("tags").array().default(sql`ARRAY[]::text[]`),
+  metadata: json("metadata").$type<Record<string, any>>(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// LINKBlue Client Platform Accounts - Client accounts on each platform
+export const linkblueClientAccounts = pgTable("linkblue_client_accounts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  clientId: varchar("client_id").notNull().references(() => linkblueClients.id, { onDelete: "cascade" }),
+  platformId: varchar("platform_id").notNull().references(() => linkbluePlatforms.id, { onDelete: "cascade" }),
+  platformAccountId: text("platform_account_id"), // ID in the external platform
+  status: text("status").notNull().default("active"), // 'active', 'inactive', 'suspended', 'trial'
+  subscriptionTier: text("subscription_tier"), // Plan/tier name
+  monthlyRevenue: integer("monthly_revenue").default(0), // MRR in cents
+  lastActivityAt: timestamp("last_activity_at"),
+  metadata: json("metadata").$type<Record<string, any>>(), // Platform-specific data
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  uniqueClientPlatform: unique().on(table.clientId, table.platformId),
+}));
+
+// LINKBlue Alerts - System alerts and notifications
+export const linkblueAlerts = pgTable("linkblue_alerts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  platformId: varchar("platform_id").references(() => linkbluePlatforms.id, { onDelete: "cascade" }),
+  integrationId: varchar("integration_id").references(() => linkbluePlatformIntegrations.id, { onDelete: "cascade" }),
+  clientId: varchar("client_id").references(() => linkblueClients.id, { onDelete: "cascade" }),
+  type: text("type").notNull(), // 'platform_outage', 'integration_failure', 'payment_issue', 'high_churn_risk', 'security', 'revenue_anomaly'
+  severity: text("severity").notNull().default("info"), // 'critical', 'warning', 'info'
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  isResolved: boolean("is_resolved").notNull().default(false),
+  isAcknowledged: boolean("is_acknowledged").notNull().default(false),
+  acknowledgedBy: varchar("acknowledged_by").references(() => users.id, { onDelete: "set null" }),
+  acknowledgedAt: timestamp("acknowledged_at"),
+  resolvedAt: timestamp("resolved_at"),
+  metadata: json("metadata").$type<Record<string, any>>(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// LINKBlue Activity Feed - Cross-platform activity stream
+export const linkblueActivityFeed = pgTable("linkblue_activity_feed", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  platformId: varchar("platform_id").references(() => linkbluePlatforms.id, { onDelete: "cascade" }),
+  clientId: varchar("client_id").references(() => linkblueClients.id, { onDelete: "cascade" }),
+  eventType: text("event_type").notNull(), // 'client_signup', 'payment_processed', 'website_deployed', 'integration_sync', 'alert'
+  title: text("title").notNull(),
+  description: text("description"),
+  severity: text("severity").default("info"), // 'info', 'success', 'warning', 'error'
+  metadata: json("metadata").$type<Record<string, any>>(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// LINKBlue Integration Logs - Detailed logs for debugging
+export const linkblueIntegrationLogs = pgTable("linkblue_integration_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  integrationId: varchar("integration_id").notNull().references(() => linkbluePlatformIntegrations.id, { onDelete: "cascade" }),
+  action: text("action").notNull(), // 'sync', 'webhook', 'api_call'
+  status: text("status").notNull(), // 'success', 'failure', 'pending'
+  requestPayload: text("request_payload"),
+  responsePayload: text("response_payload"),
+  errorMessage: text("error_message"),
+  duration: integer("duration"), // Duration in ms
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// LINKBlue Relations
+export const linkbluePlatformsRelations = relations(linkbluePlatforms, ({ many }) => ({
+  healthSnapshots: many(linkbluePlatformHealth),
+  sourceIntegrations: many(linkbluePlatformIntegrations),
+  clientAccounts: many(linkblueClientAccounts),
+  alerts: many(linkblueAlerts),
+  activityFeed: many(linkblueActivityFeed),
+}));
+
+export const linkbluePlatformHealthRelations = relations(linkbluePlatformHealth, ({ one }) => ({
+  platform: one(linkbluePlatforms, {
+    fields: [linkbluePlatformHealth.platformId],
+    references: [linkbluePlatforms.id],
+  }),
+}));
+
+export const linkbluePlatformIntegrationsRelations = relations(linkbluePlatformIntegrations, ({ one, many }) => ({
+  sourcePlatform: one(linkbluePlatforms, {
+    fields: [linkbluePlatformIntegrations.sourcePlatformId],
+    references: [linkbluePlatforms.id],
+  }),
+  targetPlatform: one(linkbluePlatforms, {
+    fields: [linkbluePlatformIntegrations.targetPlatformId],
+    references: [linkbluePlatforms.id],
+  }),
+  logs: many(linkblueIntegrationLogs),
+  alerts: many(linkblueAlerts),
+}));
+
+export const linkblueClientsRelations = relations(linkblueClients, ({ many }) => ({
+  accounts: many(linkblueClientAccounts),
+  alerts: many(linkblueAlerts),
+  activityFeed: many(linkblueActivityFeed),
+}));
+
+export const linkblueClientAccountsRelations = relations(linkblueClientAccounts, ({ one }) => ({
+  client: one(linkblueClients, {
+    fields: [linkblueClientAccounts.clientId],
+    references: [linkblueClients.id],
+  }),
+  platform: one(linkbluePlatforms, {
+    fields: [linkblueClientAccounts.platformId],
+    references: [linkbluePlatforms.id],
+  }),
+}));
+
+export const linkblueAlertsRelations = relations(linkblueAlerts, ({ one }) => ({
+  platform: one(linkbluePlatforms, {
+    fields: [linkblueAlerts.platformId],
+    references: [linkbluePlatforms.id],
+  }),
+  integration: one(linkbluePlatformIntegrations, {
+    fields: [linkblueAlerts.integrationId],
+    references: [linkbluePlatformIntegrations.id],
+  }),
+  client: one(linkblueClients, {
+    fields: [linkblueAlerts.clientId],
+    references: [linkblueClients.id],
+  }),
+  acknowledgedByUser: one(users, {
+    fields: [linkblueAlerts.acknowledgedBy],
+    references: [users.id],
+  }),
+}));
+
+export const linkblueActivityFeedRelations = relations(linkblueActivityFeed, ({ one }) => ({
+  platform: one(linkbluePlatforms, {
+    fields: [linkblueActivityFeed.platformId],
+    references: [linkbluePlatforms.id],
+  }),
+  client: one(linkblueClients, {
+    fields: [linkblueActivityFeed.clientId],
+    references: [linkblueClients.id],
+  }),
+}));
+
+export const linkblueIntegrationLogsRelations = relations(linkblueIntegrationLogs, ({ one }) => ({
+  integration: one(linkbluePlatformIntegrations, {
+    fields: [linkblueIntegrationLogs.integrationId],
+    references: [linkbluePlatformIntegrations.id],
+  }),
+}));
+
+// LINKBlue Insert Schemas
+export const insertLinkbluePlatformSchema = createInsertSchema(linkbluePlatforms).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertLinkbluePlatform = z.infer<typeof insertLinkbluePlatformSchema>;
+export type LinkbluePlatform = typeof linkbluePlatforms.$inferSelect;
+
+export const insertLinkbluePlatformHealthSchema = createInsertSchema(linkbluePlatformHealth).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertLinkbluePlatformHealth = z.infer<typeof insertLinkbluePlatformHealthSchema>;
+export type LinkbluePlatformHealth = typeof linkbluePlatformHealth.$inferSelect;
+
+export const insertLinkbluePlatformIntegrationSchema = createInsertSchema(linkbluePlatformIntegrations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertLinkbluePlatformIntegration = z.infer<typeof insertLinkbluePlatformIntegrationSchema>;
+export type LinkbluePlatformIntegration = typeof linkbluePlatformIntegrations.$inferSelect;
+
+export const insertLinkblueClientSchema = createInsertSchema(linkblueClients).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertLinkblueClient = z.infer<typeof insertLinkblueClientSchema>;
+export type LinkblueClient = typeof linkblueClients.$inferSelect;
+
+export const insertLinkblueClientAccountSchema = createInsertSchema(linkblueClientAccounts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertLinkblueClientAccount = z.infer<typeof insertLinkblueClientAccountSchema>;
+export type LinkblueClientAccount = typeof linkblueClientAccounts.$inferSelect;
+
+export const insertLinkblueAlertSchema = createInsertSchema(linkblueAlerts).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertLinkblueAlert = z.infer<typeof insertLinkblueAlertSchema>;
+export type LinkblueAlert = typeof linkblueAlerts.$inferSelect;
+
+export const insertLinkblueActivityFeedSchema = createInsertSchema(linkblueActivityFeed).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertLinkblueActivityFeed = z.infer<typeof insertLinkblueActivityFeedSchema>;
+export type LinkblueActivityFeed = typeof linkblueActivityFeed.$inferSelect;
+
+export const insertLinkblueIntegrationLogSchema = createInsertSchema(linkblueIntegrationLogs).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertLinkblueIntegrationLog = z.infer<typeof insertLinkblueIntegrationLogSchema>;
+export type LinkblueIntegrationLog = typeof linkblueIntegrationLogs.$inferSelect;

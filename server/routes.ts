@@ -19,7 +19,7 @@ import { TRIADBLUE_PROJECTS } from "./triadblue-config";
 import { randomBytes, createHmac, randomUUID } from "crypto";
 import AdmZip from "adm-zip";
 import { z } from "zod";
-import { insertProjectSchema, insertTaskSchema, insertConversationSchema, insertGithubActivitySchema, insertApiKeySchema, insertAgentConnectionSchema, insertAgentChatMessageSchema, insertTaskTemplateSchema, insertConversationTemplateSchema, insertAssetSchema, insertSitePlannerNodeSchema, insertSitePlannerEdgeSchema, insertProjectRouteSchema } from "@shared/schema";
+import { insertProjectSchema, insertTaskSchema, insertConversationSchema, insertGithubActivitySchema, insertApiKeySchema, insertAgentConnectionSchema, insertAgentChatMessageSchema, insertTaskTemplateSchema, insertConversationTemplateSchema, insertAssetSchema, insertSitePlannerNodeSchema, insertSitePlannerEdgeSchema, insertProjectRouteSchema, insertLinkbluePlatformSchema, insertLinkblueClientSchema, insertLinkblueAlertSchema, insertLinkblueActivityFeedSchema, insertLinkbluePlatformIntegrationSchema } from "@shared/schema";
 import { authRequired, constantTimeCompare, setStorageForAuth, type AuthRequest } from "./auth";
 import multer from "multer";
 import path from "path";
@@ -2659,6 +2659,464 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error pushing standards:", error);
       res.status(500).json({ error: error.message || "Failed to push standards" });
+    }
+  });
+
+  // ============= LINKBlue API Routes =============
+
+  // Dashboard Stats
+  app.get("/api/linkblue/dashboard", authRequired, async (req, res) => {
+    try {
+      const stats = await storage.getLinkblueDashboardStats();
+      const platforms = await storage.getLinkbluePlatforms();
+      const integrations = await storage.getLinkblueIntegrations();
+      const recentActivity = await storage.getLinkblueActivityFeed(20);
+      const activeAlerts = await storage.getLinkblueAlerts({ isResolved: false });
+
+      // Enrich platform data with health info
+      const platformsWithHealth = await Promise.all(
+        platforms.map(async (platform) => {
+          const health = await storage.getLatestPlatformHealth(platform.id);
+          return { ...platform, health };
+        })
+      );
+
+      res.json({
+        stats,
+        platforms: platformsWithHealth,
+        integrations,
+        recentActivity,
+        activeAlerts,
+      });
+    } catch (error) {
+      console.error("Error fetching LINKBlue dashboard:", error);
+      res.status(500).json({ error: "Failed to fetch dashboard data" });
+    }
+  });
+
+  // Platforms
+  app.get("/api/linkblue/platforms", authRequired, async (req, res) => {
+    try {
+      const platforms = await storage.getLinkbluePlatforms();
+      const platformsWithHealth = await Promise.all(
+        platforms.map(async (platform) => {
+          const health = await storage.getLatestPlatformHealth(platform.id);
+          return { ...platform, health };
+        })
+      );
+      res.json(platformsWithHealth);
+    } catch (error) {
+      console.error("Error fetching platforms:", error);
+      res.status(500).json({ error: "Failed to fetch platforms" });
+    }
+  });
+
+  app.get("/api/linkblue/platforms/:id", authRequired, async (req, res) => {
+    try {
+      const platform = await storage.getLinkbluePlatform(req.params.id);
+      if (!platform) {
+        return res.status(404).json({ error: "Platform not found" });
+      }
+      const health = await storage.getLatestPlatformHealth(platform.id);
+      const healthHistory = await storage.getPlatformHealthHistory(platform.id);
+      res.json({ ...platform, health, healthHistory });
+    } catch (error) {
+      console.error("Error fetching platform:", error);
+      res.status(500).json({ error: "Failed to fetch platform" });
+    }
+  });
+
+  app.post("/api/linkblue/platforms", authRequired, async (req, res) => {
+    try {
+      const data = insertLinkbluePlatformSchema.parse(req.body);
+      const platform = await storage.createLinkbluePlatform(data);
+      res.json(platform);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid input", details: error.errors });
+      }
+      console.error("Error creating platform:", error);
+      res.status(500).json({ error: "Failed to create platform" });
+    }
+  });
+
+  app.patch("/api/linkblue/platforms/:id", authRequired, async (req, res) => {
+    try {
+      const platform = await storage.updateLinkbluePlatform(req.params.id, req.body);
+      if (!platform) {
+        return res.status(404).json({ error: "Platform not found" });
+      }
+      res.json(platform);
+    } catch (error) {
+      console.error("Error updating platform:", error);
+      res.status(500).json({ error: "Failed to update platform" });
+    }
+  });
+
+  app.delete("/api/linkblue/platforms/:id", authRequired, async (req, res) => {
+    try {
+      await storage.deleteLinkbluePlatform(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting platform:", error);
+      res.status(500).json({ error: "Failed to delete platform" });
+    }
+  });
+
+  // Platform Integrations
+  app.get("/api/linkblue/integrations", authRequired, async (req, res) => {
+    try {
+      const integrations = await storage.getLinkblueIntegrations();
+      res.json(integrations);
+    } catch (error) {
+      console.error("Error fetching integrations:", error);
+      res.status(500).json({ error: "Failed to fetch integrations" });
+    }
+  });
+
+  app.get("/api/linkblue/integrations/:id", authRequired, async (req, res) => {
+    try {
+      const integration = await storage.getLinkblueIntegration(req.params.id);
+      if (!integration) {
+        return res.status(404).json({ error: "Integration not found" });
+      }
+      const logs = await storage.getIntegrationLogs(integration.id, 50);
+      res.json({ ...integration, logs });
+    } catch (error) {
+      console.error("Error fetching integration:", error);
+      res.status(500).json({ error: "Failed to fetch integration" });
+    }
+  });
+
+  app.post("/api/linkblue/integrations", authRequired, async (req, res) => {
+    try {
+      const data = insertLinkbluePlatformIntegrationSchema.parse(req.body);
+      const integration = await storage.createLinkblueIntegration(data);
+      res.json(integration);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid input", details: error.errors });
+      }
+      console.error("Error creating integration:", error);
+      res.status(500).json({ error: "Failed to create integration" });
+    }
+  });
+
+  app.patch("/api/linkblue/integrations/:id", authRequired, async (req, res) => {
+    try {
+      const integration = await storage.updateLinkblueIntegration(req.params.id, req.body);
+      if (!integration) {
+        return res.status(404).json({ error: "Integration not found" });
+      }
+      res.json(integration);
+    } catch (error) {
+      console.error("Error updating integration:", error);
+      res.status(500).json({ error: "Failed to update integration" });
+    }
+  });
+
+  // Clients (360° View)
+  app.get("/api/linkblue/clients", authRequired, async (req, res) => {
+    try {
+      const { search } = req.query;
+      let clients;
+      if (search && typeof search === 'string') {
+        clients = await storage.searchLinkblueClients(search);
+      } else {
+        clients = await storage.getLinkblueClients();
+      }
+      res.json(clients);
+    } catch (error) {
+      console.error("Error fetching clients:", error);
+      res.status(500).json({ error: "Failed to fetch clients" });
+    }
+  });
+
+  app.get("/api/linkblue/clients/:id", authRequired, async (req, res) => {
+    try {
+      const client = await storage.getLinkblueClient(req.params.id);
+      if (!client) {
+        return res.status(404).json({ error: "Client not found" });
+      }
+      
+      // Get all platform accounts for this client
+      const accounts = await storage.getClientAccounts(client.id);
+      const platforms = await storage.getLinkbluePlatforms();
+      
+      // Enrich accounts with platform info
+      const accountsWithPlatform = accounts.map(account => {
+        const platform = platforms.find(p => p.id === account.platformId);
+        return { ...account, platform };
+      });
+
+      // Get client-related activity
+      const activity = await storage.getLinkblueActivityFeed(50);
+      const clientActivity = activity.filter(a => a.clientId === client.id);
+
+      // Get client-related alerts
+      const alerts = await storage.getLinkblueAlerts({ isResolved: false });
+      const clientAlerts = alerts.filter(a => a.clientId === client.id);
+
+      res.json({
+        ...client,
+        accounts: accountsWithPlatform,
+        activity: clientActivity,
+        alerts: clientAlerts,
+      });
+    } catch (error) {
+      console.error("Error fetching client:", error);
+      res.status(500).json({ error: "Failed to fetch client" });
+    }
+  });
+
+  app.post("/api/linkblue/clients", authRequired, async (req, res) => {
+    try {
+      const data = insertLinkblueClientSchema.parse(req.body);
+      const client = await storage.createLinkblueClient(data);
+      res.json(client);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid input", details: error.errors });
+      }
+      console.error("Error creating client:", error);
+      res.status(500).json({ error: "Failed to create client" });
+    }
+  });
+
+  app.patch("/api/linkblue/clients/:id", authRequired, async (req, res) => {
+    try {
+      const client = await storage.updateLinkblueClient(req.params.id, req.body);
+      if (!client) {
+        return res.status(404).json({ error: "Client not found" });
+      }
+      res.json(client);
+    } catch (error) {
+      console.error("Error updating client:", error);
+      res.status(500).json({ error: "Failed to update client" });
+    }
+  });
+
+  app.delete("/api/linkblue/clients/:id", authRequired, async (req, res) => {
+    try {
+      await storage.deleteLinkblueClient(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting client:", error);
+      res.status(500).json({ error: "Failed to delete client" });
+    }
+  });
+
+  // Alerts
+  app.get("/api/linkblue/alerts", authRequired, async (req, res) => {
+    try {
+      const { resolved, severity } = req.query;
+      const alerts = await storage.getLinkblueAlerts({
+        isResolved: resolved === 'true' ? true : resolved === 'false' ? false : undefined,
+        severity: severity as string | undefined,
+      });
+      res.json(alerts);
+    } catch (error) {
+      console.error("Error fetching alerts:", error);
+      res.status(500).json({ error: "Failed to fetch alerts" });
+    }
+  });
+
+  app.get("/api/linkblue/alerts/:id", authRequired, async (req, res) => {
+    try {
+      const alert = await storage.getLinkblueAlert(req.params.id);
+      if (!alert) {
+        return res.status(404).json({ error: "Alert not found" });
+      }
+      res.json(alert);
+    } catch (error) {
+      console.error("Error fetching alert:", error);
+      res.status(500).json({ error: "Failed to fetch alert" });
+    }
+  });
+
+  app.post("/api/linkblue/alerts", authRequired, async (req, res) => {
+    try {
+      const data = insertLinkblueAlertSchema.parse(req.body);
+      const alert = await storage.createLinkblueAlert(data);
+      res.json(alert);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid input", details: error.errors });
+      }
+      console.error("Error creating alert:", error);
+      res.status(500).json({ error: "Failed to create alert" });
+    }
+  });
+
+  app.patch("/api/linkblue/alerts/:id/acknowledge", authRequired, async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      const userId = authReq.session?.user?.id || 'unknown';
+      const alert = await storage.acknowledgeAlert(req.params.id, userId);
+      if (!alert) {
+        return res.status(404).json({ error: "Alert not found" });
+      }
+      res.json(alert);
+    } catch (error) {
+      console.error("Error acknowledging alert:", error);
+      res.status(500).json({ error: "Failed to acknowledge alert" });
+    }
+  });
+
+  app.patch("/api/linkblue/alerts/:id/resolve", authRequired, async (req, res) => {
+    try {
+      const alert = await storage.resolveAlert(req.params.id);
+      if (!alert) {
+        return res.status(404).json({ error: "Alert not found" });
+      }
+      res.json(alert);
+    } catch (error) {
+      console.error("Error resolving alert:", error);
+      res.status(500).json({ error: "Failed to resolve alert" });
+    }
+  });
+
+  app.delete("/api/linkblue/alerts/:id", authRequired, async (req, res) => {
+    try {
+      await storage.deleteLinkblueAlert(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting alert:", error);
+      res.status(500).json({ error: "Failed to delete alert" });
+    }
+  });
+
+  // Activity Feed
+  app.get("/api/linkblue/activity", authRequired, async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 50;
+      const activity = await storage.getLinkblueActivityFeed(limit);
+      res.json(activity);
+    } catch (error) {
+      console.error("Error fetching activity feed:", error);
+      res.status(500).json({ error: "Failed to fetch activity feed" });
+    }
+  });
+
+  app.post("/api/linkblue/activity", authRequired, async (req, res) => {
+    try {
+      const data = insertLinkblueActivityFeedSchema.parse(req.body);
+      const activity = await storage.createLinkblueActivity(data);
+      res.json(activity);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid input", details: error.errors });
+      }
+      console.error("Error creating activity:", error);
+      res.status(500).json({ error: "Failed to create activity" });
+    }
+  });
+
+  // Seed initial platforms data (call once to set up)
+  app.post("/api/linkblue/seed", authRequired, async (req, res) => {
+    try {
+      const existingPlatforms = await storage.getLinkbluePlatforms();
+      if (existingPlatforms.length > 0) {
+        return res.json({ message: "Platforms already seeded", platforms: existingPlatforms });
+      }
+
+      // Create the three TriadBlue platforms
+      const platforms = [
+        {
+          name: "BusinessBlueprint.io",
+          shortName: "BB",
+          description: "Local business growth SaaS - comprehensive business management and growth tools",
+          adminUrl: "https://businessblueprint.io/admin",
+          apiBaseUrl: "https://businessblueprint.io/api",
+          icon: "Building2",
+          color: "#3B82F6",
+        },
+        {
+          name: "SwipesBlue.com",
+          shortName: "Swipes",
+          description: "Payment gateway - secure payment processing and merchant services",
+          adminUrl: "https://swipesblue.com/admin",
+          apiBaseUrl: "https://swipesblue.com/api",
+          icon: "CreditCard",
+          color: "#10B981",
+        },
+        {
+          name: "HostsBlue.com",
+          shortName: "Hosts",
+          description: "Web services - hosting, domains, and infrastructure management",
+          adminUrl: "https://hostsblue.com/admin",
+          apiBaseUrl: "https://hostsblue.com/api",
+          icon: "Server",
+          color: "#8B5CF6",
+        },
+      ];
+
+      const createdPlatforms = await Promise.all(
+        platforms.map(p => storage.createLinkbluePlatform(p))
+      );
+
+      // Create initial health records with mock data
+      for (const platform of createdPlatforms) {
+        await storage.createPlatformHealth({
+          platformId: platform.id,
+          status: "online",
+          apiResponseTime: Math.floor(Math.random() * 100) + 50,
+          successRate: Math.floor(Math.random() * 5) + 95,
+          activeClients: Math.floor(Math.random() * 500) + 100,
+          errorCount: Math.floor(Math.random() * 5),
+          lastSyncAt: new Date(),
+        });
+      }
+
+      // Create platform integrations
+      const integrations = [
+        {
+          sourcePlatformId: createdPlatforms[0].id, // BB
+          targetPlatformId: createdPlatforms[1].id, // Swipes
+          name: "Payment Processing",
+          description: "BB uses SwipesBlue for subscription payment processing",
+          status: "healthy" as const,
+          syncFrequency: "realtime",
+        },
+        {
+          sourcePlatformId: createdPlatforms[0].id, // BB
+          targetPlatformId: createdPlatforms[2].id, // Hosts
+          name: "Website Hosting",
+          description: "BB clients get websites hosted on HostsBlue",
+          status: "healthy" as const,
+          syncFrequency: "realtime",
+        },
+        {
+          sourcePlatformId: createdPlatforms[1].id, // Swipes
+          targetPlatformId: createdPlatforms[2].id, // Hosts
+          name: "Hosting Payments",
+          description: "HostsBlue uses SwipesBlue for hosting subscription payments",
+          status: "healthy" as const,
+          syncFrequency: "realtime",
+        },
+      ];
+
+      const createdIntegrations = await Promise.all(
+        integrations.map(i => storage.createLinkblueIntegration(i))
+      );
+
+      // Create sample activity
+      await storage.createLinkblueActivity({
+        platformId: createdPlatforms[0].id,
+        eventType: "integration_sync",
+        title: "LINKBlue initialized",
+        description: "TriadBlue integration panel has been set up with all three platforms",
+        severity: "success",
+      });
+
+      res.json({
+        message: "LINKBlue platforms seeded successfully",
+        platforms: createdPlatforms,
+        integrations: createdIntegrations,
+      });
+    } catch (error) {
+      console.error("Error seeding platforms:", error);
+      res.status(500).json({ error: "Failed to seed platforms" });
     }
   });
 

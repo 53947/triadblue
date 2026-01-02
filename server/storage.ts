@@ -25,6 +25,15 @@ import {
   sitePlannerNodes,
   sitePlannerEdges,
   projectRoutes,
+  // LINKBlue tables
+  linkbluePlatforms,
+  linkbluePlatformHealth,
+  linkbluePlatformIntegrations,
+  linkblueClients,
+  linkblueClientAccounts,
+  linkblueAlerts,
+  linkblueActivityFeed,
+  linkblueIntegrationLogs,
   type User,
   type InsertUser,
   type Project,
@@ -75,6 +84,23 @@ import {
   type InsertSitePlannerEdge,
   type ProjectRoute,
   type InsertProjectRoute,
+  // LINKBlue types
+  type LinkbluePlatform,
+  type InsertLinkbluePlatform,
+  type LinkbluePlatformHealth,
+  type InsertLinkbluePlatformHealth,
+  type LinkbluePlatformIntegration,
+  type InsertLinkbluePlatformIntegration,
+  type LinkblueClient,
+  type InsertLinkblueClient,
+  type LinkblueClientAccount,
+  type InsertLinkblueClientAccount,
+  type LinkblueAlert,
+  type InsertLinkblueAlert,
+  type LinkblueActivityFeed,
+  type InsertLinkblueActivityFeed,
+  type LinkblueIntegrationLog,
+  type InsertLinkblueIntegrationLog,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, isNull, or } from "drizzle-orm";
@@ -251,6 +277,66 @@ export interface IStorage {
   getProjectRoutes(projectId: string): Promise<ProjectRoute[]>;
   deleteProjectRoutesBySource(projectId: string, source: string): Promise<void>;
   bulkUpsertProjectRoutes(projectId: string, routes: InsertProjectRoute[]): Promise<ProjectRoute[]>;
+
+  // ============= LINKBlue Storage Methods =============
+
+  // Platforms
+  getLinkbluePlatforms(): Promise<LinkbluePlatform[]>;
+  getLinkbluePlatform(id: string): Promise<LinkbluePlatform | undefined>;
+  createLinkbluePlatform(platform: InsertLinkbluePlatform): Promise<LinkbluePlatform>;
+  updateLinkbluePlatform(id: string, updates: Partial<InsertLinkbluePlatform>): Promise<LinkbluePlatform | undefined>;
+  deleteLinkbluePlatform(id: string): Promise<void>;
+
+  // Platform Health
+  getLatestPlatformHealth(platformId: string): Promise<LinkbluePlatformHealth | undefined>;
+  getPlatformHealthHistory(platformId: string, limit?: number): Promise<LinkbluePlatformHealth[]>;
+  createPlatformHealth(health: InsertLinkbluePlatformHealth): Promise<LinkbluePlatformHealth>;
+
+  // Platform Integrations
+  getLinkblueIntegrations(): Promise<LinkbluePlatformIntegration[]>;
+  getLinkblueIntegration(id: string): Promise<LinkbluePlatformIntegration | undefined>;
+  createLinkblueIntegration(integration: InsertLinkbluePlatformIntegration): Promise<LinkbluePlatformIntegration>;
+  updateLinkblueIntegration(id: string, updates: Partial<InsertLinkbluePlatformIntegration>): Promise<LinkbluePlatformIntegration | undefined>;
+  deleteLinkblueIntegration(id: string): Promise<void>;
+
+  // Clients
+  getLinkblueClients(): Promise<LinkblueClient[]>;
+  getLinkblueClient(id: string): Promise<LinkblueClient | undefined>;
+  searchLinkblueClients(query: string): Promise<LinkblueClient[]>;
+  createLinkblueClient(client: InsertLinkblueClient): Promise<LinkblueClient>;
+  updateLinkblueClient(id: string, updates: Partial<InsertLinkblueClient>): Promise<LinkblueClient | undefined>;
+  deleteLinkblueClient(id: string): Promise<void>;
+
+  // Client Accounts
+  getClientAccounts(clientId: string): Promise<LinkblueClientAccount[]>;
+  getClientAccountByPlatform(clientId: string, platformId: string): Promise<LinkblueClientAccount | undefined>;
+  createClientAccount(account: InsertLinkblueClientAccount): Promise<LinkblueClientAccount>;
+  updateClientAccount(id: string, updates: Partial<InsertLinkblueClientAccount>): Promise<LinkblueClientAccount | undefined>;
+  deleteClientAccount(id: string): Promise<void>;
+
+  // Alerts
+  getLinkblueAlerts(options?: { isResolved?: boolean; severity?: string }): Promise<LinkblueAlert[]>;
+  getLinkblueAlert(id: string): Promise<LinkblueAlert | undefined>;
+  createLinkblueAlert(alert: InsertLinkblueAlert): Promise<LinkblueAlert>;
+  acknowledgeAlert(id: string, userId: string): Promise<LinkblueAlert | undefined>;
+  resolveAlert(id: string): Promise<LinkblueAlert | undefined>;
+  deleteLinkblueAlert(id: string): Promise<void>;
+
+  // Activity Feed
+  getLinkblueActivityFeed(limit?: number): Promise<LinkblueActivityFeed[]>;
+  createLinkblueActivity(activity: InsertLinkblueActivityFeed): Promise<LinkblueActivityFeed>;
+
+  // Integration Logs
+  getIntegrationLogs(integrationId: string, limit?: number): Promise<LinkblueIntegrationLog[]>;
+  createIntegrationLog(log: InsertLinkblueIntegrationLog): Promise<LinkblueIntegrationLog>;
+
+  // Dashboard aggregations
+  getLinkblueDashboardStats(): Promise<{
+    totalClients: number;
+    totalRevenue: number;
+    activeAlerts: number;
+    platformHealth: Array<{ platformId: string; status: string; activeClients: number }>;
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1060,6 +1146,277 @@ export class DatabaseStorage implements IStorage {
     // If there are routes to insert, insert them
     if (routes.length === 0) return [];
     return await db.insert(projectRoutes).values(routes).returning();
+  }
+
+  // ============= LINKBlue Storage Implementation =============
+
+  // Platforms
+  async getLinkbluePlatforms(): Promise<LinkbluePlatform[]> {
+    return await db.select().from(linkbluePlatforms).orderBy(linkbluePlatforms.name);
+  }
+
+  async getLinkbluePlatform(id: string): Promise<LinkbluePlatform | undefined> {
+    const [platform] = await db.select().from(linkbluePlatforms).where(eq(linkbluePlatforms.id, id));
+    return platform || undefined;
+  }
+
+  async createLinkbluePlatform(platform: InsertLinkbluePlatform): Promise<LinkbluePlatform> {
+    const [result] = await db.insert(linkbluePlatforms).values(platform).returning();
+    return result;
+  }
+
+  async updateLinkbluePlatform(id: string, updates: Partial<InsertLinkbluePlatform>): Promise<LinkbluePlatform | undefined> {
+    const [updated] = await db.update(linkbluePlatforms)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(linkbluePlatforms.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteLinkbluePlatform(id: string): Promise<void> {
+    await db.delete(linkbluePlatforms).where(eq(linkbluePlatforms.id, id));
+  }
+
+  // Platform Health
+  async getLatestPlatformHealth(platformId: string): Promise<LinkbluePlatformHealth | undefined> {
+    const [health] = await db.select().from(linkbluePlatformHealth)
+      .where(eq(linkbluePlatformHealth.platformId, platformId))
+      .orderBy(desc(linkbluePlatformHealth.createdAt))
+      .limit(1);
+    return health || undefined;
+  }
+
+  async getPlatformHealthHistory(platformId: string, limit = 24): Promise<LinkbluePlatformHealth[]> {
+    return await db.select().from(linkbluePlatformHealth)
+      .where(eq(linkbluePlatformHealth.platformId, platformId))
+      .orderBy(desc(linkbluePlatformHealth.createdAt))
+      .limit(limit);
+  }
+
+  async createPlatformHealth(health: InsertLinkbluePlatformHealth): Promise<LinkbluePlatformHealth> {
+    const [result] = await db.insert(linkbluePlatformHealth).values(health).returning();
+    return result;
+  }
+
+  // Platform Integrations
+  async getLinkblueIntegrations(): Promise<LinkbluePlatformIntegration[]> {
+    return await db.select().from(linkbluePlatformIntegrations).orderBy(linkbluePlatformIntegrations.name);
+  }
+
+  async getLinkblueIntegration(id: string): Promise<LinkbluePlatformIntegration | undefined> {
+    const [integration] = await db.select().from(linkbluePlatformIntegrations).where(eq(linkbluePlatformIntegrations.id, id));
+    return integration || undefined;
+  }
+
+  async createLinkblueIntegration(integration: InsertLinkbluePlatformIntegration): Promise<LinkbluePlatformIntegration> {
+    const [result] = await db.insert(linkbluePlatformIntegrations).values(integration).returning();
+    return result;
+  }
+
+  async updateLinkblueIntegration(id: string, updates: Partial<InsertLinkbluePlatformIntegration>): Promise<LinkbluePlatformIntegration | undefined> {
+    const [updated] = await db.update(linkbluePlatformIntegrations)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(linkbluePlatformIntegrations.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteLinkblueIntegration(id: string): Promise<void> {
+    await db.delete(linkbluePlatformIntegrations).where(eq(linkbluePlatformIntegrations.id, id));
+  }
+
+  // Clients
+  async getLinkblueClients(): Promise<LinkblueClient[]> {
+    return await db.select().from(linkblueClients).orderBy(desc(linkblueClients.updatedAt));
+  }
+
+  async getLinkblueClient(id: string): Promise<LinkblueClient | undefined> {
+    const [client] = await db.select().from(linkblueClients).where(eq(linkblueClients.id, id));
+    return client || undefined;
+  }
+
+  async searchLinkblueClients(query: string): Promise<LinkblueClient[]> {
+    const searchPattern = `%${query.toLowerCase()}%`;
+    return await db.select().from(linkblueClients)
+      .where(
+        or(
+          sql`LOWER(${linkblueClients.companyName}) LIKE ${searchPattern}`,
+          sql`LOWER(${linkblueClients.email}) LIKE ${searchPattern}`,
+          sql`LOWER(${linkblueClients.domain}) LIKE ${searchPattern}`,
+          sql`LOWER(${linkblueClients.contactName}) LIKE ${searchPattern}`,
+          sql`${linkblueClients.universalClientId} LIKE ${searchPattern}`
+        )
+      )
+      .orderBy(linkblueClients.companyName)
+      .limit(50);
+  }
+
+  async createLinkblueClient(client: InsertLinkblueClient): Promise<LinkblueClient> {
+    const [result] = await db.insert(linkblueClients).values(client).returning();
+    return result;
+  }
+
+  async updateLinkblueClient(id: string, updates: Partial<InsertLinkblueClient>): Promise<LinkblueClient | undefined> {
+    const [updated] = await db.update(linkblueClients)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(linkblueClients.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteLinkblueClient(id: string): Promise<void> {
+    await db.delete(linkblueClients).where(eq(linkblueClients.id, id));
+  }
+
+  // Client Accounts
+  async getClientAccounts(clientId: string): Promise<LinkblueClientAccount[]> {
+    return await db.select().from(linkblueClientAccounts)
+      .where(eq(linkblueClientAccounts.clientId, clientId));
+  }
+
+  async getClientAccountByPlatform(clientId: string, platformId: string): Promise<LinkblueClientAccount | undefined> {
+    const [account] = await db.select().from(linkblueClientAccounts)
+      .where(and(
+        eq(linkblueClientAccounts.clientId, clientId),
+        eq(linkblueClientAccounts.platformId, platformId)
+      ));
+    return account || undefined;
+  }
+
+  async createClientAccount(account: InsertLinkblueClientAccount): Promise<LinkblueClientAccount> {
+    const [result] = await db.insert(linkblueClientAccounts).values(account).returning();
+    return result;
+  }
+
+  async updateClientAccount(id: string, updates: Partial<InsertLinkblueClientAccount>): Promise<LinkblueClientAccount | undefined> {
+    const [updated] = await db.update(linkblueClientAccounts)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(linkblueClientAccounts.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteClientAccount(id: string): Promise<void> {
+    await db.delete(linkblueClientAccounts).where(eq(linkblueClientAccounts.id, id));
+  }
+
+  // Alerts
+  async getLinkblueAlerts(options?: { isResolved?: boolean; severity?: string }): Promise<LinkblueAlert[]> {
+    let query = db.select().from(linkblueAlerts);
+    
+    const conditions: any[] = [];
+    if (options?.isResolved !== undefined) {
+      conditions.push(eq(linkblueAlerts.isResolved, options.isResolved));
+    }
+    if (options?.severity) {
+      conditions.push(eq(linkblueAlerts.severity, options.severity));
+    }
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as typeof query;
+    }
+    
+    return await query.orderBy(desc(linkblueAlerts.createdAt));
+  }
+
+  async getLinkblueAlert(id: string): Promise<LinkblueAlert | undefined> {
+    const [alert] = await db.select().from(linkblueAlerts).where(eq(linkblueAlerts.id, id));
+    return alert || undefined;
+  }
+
+  async createLinkblueAlert(alert: InsertLinkblueAlert): Promise<LinkblueAlert> {
+    const [result] = await db.insert(linkblueAlerts).values(alert).returning();
+    return result;
+  }
+
+  async acknowledgeAlert(id: string, userId: string): Promise<LinkblueAlert | undefined> {
+    const [updated] = await db.update(linkblueAlerts)
+      .set({ 
+        isAcknowledged: true, 
+        acknowledgedBy: userId, 
+        acknowledgedAt: new Date() 
+      })
+      .where(eq(linkblueAlerts.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async resolveAlert(id: string): Promise<LinkblueAlert | undefined> {
+    const [updated] = await db.update(linkblueAlerts)
+      .set({ isResolved: true, resolvedAt: new Date() })
+      .where(eq(linkblueAlerts.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteLinkblueAlert(id: string): Promise<void> {
+    await db.delete(linkblueAlerts).where(eq(linkblueAlerts.id, id));
+  }
+
+  // Activity Feed
+  async getLinkblueActivityFeed(limit = 50): Promise<LinkblueActivityFeed[]> {
+    return await db.select().from(linkblueActivityFeed)
+      .orderBy(desc(linkblueActivityFeed.createdAt))
+      .limit(limit);
+  }
+
+  async createLinkblueActivity(activity: InsertLinkblueActivityFeed): Promise<LinkblueActivityFeed> {
+    const [result] = await db.insert(linkblueActivityFeed).values(activity).returning();
+    return result;
+  }
+
+  // Integration Logs
+  async getIntegrationLogs(integrationId: string, limit = 100): Promise<LinkblueIntegrationLog[]> {
+    return await db.select().from(linkblueIntegrationLogs)
+      .where(eq(linkblueIntegrationLogs.integrationId, integrationId))
+      .orderBy(desc(linkblueIntegrationLogs.createdAt))
+      .limit(limit);
+  }
+
+  async createIntegrationLog(log: InsertLinkblueIntegrationLog): Promise<LinkblueIntegrationLog> {
+    const [result] = await db.insert(linkblueIntegrationLogs).values(log).returning();
+    return result;
+  }
+
+  // Dashboard aggregations
+  async getLinkblueDashboardStats(): Promise<{
+    totalClients: number;
+    totalRevenue: number;
+    activeAlerts: number;
+    platformHealth: Array<{ platformId: string; status: string; activeClients: number }>;
+  }> {
+    // Get total clients
+    const [clientCount] = await db.select({ count: sql<number>`count(*)::int` }).from(linkblueClients);
+    
+    // Get total revenue
+    const [revenueSum] = await db.select({ 
+      total: sql<number>`COALESCE(SUM(${linkblueClients.totalRevenue}), 0)::int` 
+    }).from(linkblueClients);
+    
+    // Get active alerts count
+    const [alertCount] = await db.select({ count: sql<number>`count(*)::int` })
+      .from(linkblueAlerts)
+      .where(eq(linkblueAlerts.isResolved, false));
+    
+    // Get latest health for each platform
+    const platforms = await this.getLinkbluePlatforms();
+    const platformHealth = await Promise.all(
+      platforms.map(async (platform) => {
+        const health = await this.getLatestPlatformHealth(platform.id);
+        return {
+          platformId: platform.id,
+          status: health?.status || 'unknown',
+          activeClients: health?.activeClients || 0,
+        };
+      })
+    );
+
+    return {
+      totalClients: clientCount?.count || 0,
+      totalRevenue: revenueSum?.total || 0,
+      activeAlerts: alertCount?.count || 0,
+      platformHealth,
+    };
   }
 }
 
