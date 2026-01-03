@@ -287,6 +287,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         id: user.id,
         username: user.email,
         role: user.role,
+        linkblueAccess: user.linkblueAccess,
+        consoleblueAccess: user.consoleblueAccess,
       };
       authReq.session.platform = "linkblue";
       authReq.session.adminSessionToken = sessionToken;
@@ -365,6 +367,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         id: user.id,
         username: user.email,
         role: user.role,
+        linkblueAccess: user.linkblueAccess,
+        consoleblueAccess: user.consoleblueAccess,
       };
       authReq.session.platform = "consoleblue";
       authReq.session.adminSessionToken = sessionToken;
@@ -425,6 +429,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Seed admin error:", error);
       res.status(500).json({ error: "Failed to create admin user" });
+    }
+  });
+
+  // Forgot password endpoint
+  app.post("/api/auth/forgot-password", async (req, res) => {
+    try {
+      const { email, platform } = req.body;
+
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      // Look up user by email
+      const user = await storage.getAdminUserByEmail(email);
+      
+      // Always return success to prevent email enumeration
+      if (!user) {
+        return res.json({ 
+          success: true, 
+          message: "If an account exists, you will receive a password reset email" 
+        });
+      }
+
+      // In production, this would:
+      // 1. Generate a secure reset token
+      // 2. Store it with expiration in the database
+      // 3. Send email via AgentMail with reset link
+      // For now, we log the request and return success
+      console.log(`Password reset requested for ${email} on platform ${platform}`);
+
+      res.json({ 
+        success: true, 
+        message: "If an account exists, you will receive a password reset email" 
+      });
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      res.status(500).json({ message: "An error occurred" });
     }
   });
   

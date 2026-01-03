@@ -12,7 +12,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Link, useLocation } from "wouter";
-import { Home, FolderKanban, MessageSquare, Settings, Plus, Github, MessagesSquare, Clock, BarChart3, ListTodo, LogOut, ImageIcon, FileText, ExternalLink, Plug, Mail, Settings2, Headphones, Map, Network, Microscope, Link2, Users, Bell, Activity, Grid3X3, PieChart } from "lucide-react";
+import { Home, FolderKanban, MessageSquare, Settings, Plus, Github, MessagesSquare, Clock, BarChart3, ListTodo, LogOut, ImageIcon, FileText, Mail, Settings2, Headphones, Map, Network, Microscope, ArrowLeftRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { Project } from "@shared/schema";
@@ -39,15 +39,6 @@ const navigation = [
   { title: "Site Planner", url: "/site-planner", icon: Network },
   { title: "Site Map", url: "/site-map", icon: Map },
   { title: "Settings", url: "/settings", icon: Settings },
-];
-
-const linkblueNavigation = [
-  { title: "Overview", url: "/linkblue", icon: Link2 },
-  { title: "Platform Health", url: "/linkblue/health", icon: Activity },
-  { title: "Integrations", url: "/linkblue/integrations", icon: Grid3X3 },
-  { title: "Clients 360°", url: "/linkblue/clients", icon: Users },
-  { title: "Analytics", url: "/linkblue/analytics", icon: PieChart },
-  { title: "Alerts", url: "/linkblue/alerts", icon: Bell },
 ];
 
 interface AppSidebarProps {
@@ -86,24 +77,6 @@ export function AppSidebar({ projects = [], onNewProject }: AppSidebarProps) {
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-blue-500">LINKBlue</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {linkblueNavigation.map((item) => (
-                <SidebarMenuItem key={item.url}>
-                  <SidebarMenuButton asChild isActive={location === item.url || location.startsWith(item.url + '/')} data-testid={`nav-${item.title.toLowerCase().replace(/\s+/g, '-')}`}>
-                    <Link href={item.url} onClick={handleNavClick}>
-                      <item.icon className="w-4 h-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
         <SidebarGroup>
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>

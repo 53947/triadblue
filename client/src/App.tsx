@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
+import { LinkBlueLayout } from "@/components/linkblue-layout";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { NotificationBell } from "@/components/notification-bell";
 import { Button } from "@/components/ui/button";
@@ -42,9 +43,13 @@ import LinkBlueIntegrations from "@/pages/linkblue-integrations";
 import LinkBlueClients from "@/pages/linkblue-clients";
 import LinkBlueAnalytics from "@/pages/linkblue-analytics";
 import LinkBlueAlerts from "@/pages/linkblue-alerts";
+import LinkBlueSettings from "@/pages/linkblue-settings";
 import LinkBlueLogin from "@/pages/linkblue-login";
 import ConsoleBlueLogin from "@/pages/consoleblue-login";
-import { ProtectedRoute } from "@/components/protected-route";
+import LinkBlueForgotPassword from "@/pages/linkblue-forgot-password";
+import ConsoleBlueForgotPassword from "@/pages/consoleblue-forgot-password";
+import { ProtectedRoute, LinkBlueProtectedRoute } from "@/components/protected-route";
+import { PlatformSwitcher } from "@/components/platform-switcher";
 import { DynamicFavicon } from "@/components/dynamic-favicon";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect, useRef } from "react";
@@ -54,7 +59,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { Project } from "@shared/schema";
 import { useContextLogo } from "@/hooks/use-context-logo";
 
-function ProtectedRouter() {
+function ConsoleBlueRouter() {
   return (
     <Switch>
       <Route path="/" component={Dashboard} />
@@ -76,13 +81,6 @@ function ProtectedRouter() {
       <Route path="/site-inspector" component={SiteInspector} />
       <Route path="/embeds" component={ProjectEmbeds} />
       <Route path="/agent-setup" component={AgentConnectionSetup} />
-      <Route path="/linkblue" component={LinkBlueDashboard} />
-      <Route path="/linkblue/health" component={LinkBlueHealth} />
-      <Route path="/linkblue/integrations" component={LinkBlueIntegrations} />
-      <Route path="/linkblue/clients" component={LinkBlueClients} />
-      <Route path="/linkblue/clients/:id" component={LinkBlueClients} />
-      <Route path="/linkblue/analytics" component={LinkBlueAnalytics} />
-      <Route path="/linkblue/alerts" component={LinkBlueAlerts} />
       <Route path="/github">
         <div className="p-8 text-center text-muted-foreground">
           GitHub Activity page - Coming soon
@@ -98,7 +96,23 @@ function ProtectedRouter() {
   );
 }
 
-function ProtectedApp() {
+function LinkBlueRouter() {
+  return (
+    <Switch>
+      <Route path="/linkblue" component={LinkBlueDashboard} />
+      <Route path="/linkblue/health" component={LinkBlueHealth} />
+      <Route path="/linkblue/integrations" component={LinkBlueIntegrations} />
+      <Route path="/linkblue/clients" component={LinkBlueClients} />
+      <Route path="/linkblue/clients/:id" component={LinkBlueClients} />
+      <Route path="/linkblue/analytics" component={LinkBlueAnalytics} />
+      <Route path="/linkblue/alerts" component={LinkBlueAlerts} />
+      <Route path="/linkblue/settings" component={LinkBlueSettings} />
+      <Route component={NotFound} />
+    </Switch>
+  );
+}
+
+function ConsoleBlueApp() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [showCreateProjectModal, setShowCreateProjectModal] = useState(false);
@@ -136,7 +150,7 @@ function ProtectedApp() {
       });
       
       redirectTimeoutRef.current = window.setTimeout(() => {
-        setLocation("/login");
+        setLocation("/consoleblue/login");
       }, 1500);
     };
     
@@ -209,6 +223,7 @@ function ProtectedApp() {
               <span className="font-semibold text-sm sm:text-base lg:hidden">ConsoleBlue</span>
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
+              <PlatformSwitcher currentPlatform="consoleblue" />
               <NotificationBell />
               <ThemeToggle />
               <img 
@@ -220,7 +235,7 @@ function ProtectedApp() {
             </div>
           </header>
           <main className="flex-1 overflow-y-auto overflow-x-hidden">
-            <ProtectedRouter />
+            <ConsoleBlueRouter />
           </main>
         </div>
       </div>
@@ -234,8 +249,18 @@ function ProtectedApp() {
   );
 }
 
+function LinkBlueApp() {
+  return (
+    <LinkBlueLayout>
+      <LinkBlueRouter />
+    </LinkBlueLayout>
+  );
+}
+
 function AppContent() {
+  const [location] = useLocation();
   const isConsoleBlue = window.location.hostname.includes('console');
+  const isLinkBlueRoute = location.startsWith('/linkblue');
   
   return (
     <>
@@ -243,7 +268,9 @@ function AppContent() {
       <Switch>
         <Route path="/login" component={Login} />
         <Route path="/linkblue/login" component={LinkBlueLogin} />
+        <Route path="/linkblue/forgot-password" component={LinkBlueForgotPassword} />
         <Route path="/consoleblue/login" component={ConsoleBlueLogin} />
+        <Route path="/consoleblue/forgot-password" component={ConsoleBlueForgotPassword} />
         {!isConsoleBlue && <Route path="/" component={Landing} />}
         <Route path="/apps" component={Products} />
         <Route path="/demo" component={DemoHome} />
@@ -251,9 +278,19 @@ function AppContent() {
         <Route path="/demo/assets" component={DemoAssets} />
         <Route path="/demo/site-map" component={DemoSiteMap} />
         <Route path="/demo/site-planner" component={DemoSitePlanner} />
+        <Route path="/linkblue">
+          <LinkBlueProtectedRoute>
+            <LinkBlueApp />
+          </LinkBlueProtectedRoute>
+        </Route>
+        <Route path="/linkblue/:rest*">
+          <LinkBlueProtectedRoute>
+            <LinkBlueApp />
+          </LinkBlueProtectedRoute>
+        </Route>
         <Route>
           <ProtectedRoute>
-            <ProtectedApp />
+            <ConsoleBlueApp />
           </ProtectedRoute>
         </Route>
       </Switch>
