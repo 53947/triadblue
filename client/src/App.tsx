@@ -37,7 +37,10 @@ import DemoAssets from "@/pages/demo/demo-assets";
 import DemoSiteMap from "@/pages/demo/demo-site-map";
 import DemoSitePlanner from "@/pages/demo/demo-site-planner";
 import LinkBlueDashboard from "@/pages/linkblue-dashboard";
+import LinkBlueHealth from "@/pages/linkblue-health";
+import LinkBlueIntegrations from "@/pages/linkblue-integrations";
 import LinkBlueClients from "@/pages/linkblue-clients";
+import LinkBlueAnalytics from "@/pages/linkblue-analytics";
 import LinkBlueAlerts from "@/pages/linkblue-alerts";
 import LinkBlueLogin from "@/pages/linkblue-login";
 import ConsoleBlueLogin from "@/pages/consoleblue-login";
@@ -74,8 +77,11 @@ function ProtectedRouter() {
       <Route path="/embeds" component={ProjectEmbeds} />
       <Route path="/agent-setup" component={AgentConnectionSetup} />
       <Route path="/linkblue" component={LinkBlueDashboard} />
+      <Route path="/linkblue/health" component={LinkBlueHealth} />
+      <Route path="/linkblue/integrations" component={LinkBlueIntegrations} />
       <Route path="/linkblue/clients" component={LinkBlueClients} />
       <Route path="/linkblue/clients/:id" component={LinkBlueClients} />
+      <Route path="/linkblue/analytics" component={LinkBlueAnalytics} />
       <Route path="/linkblue/alerts" component={LinkBlueAlerts} />
       <Route path="/github">
         <div className="p-8 text-center text-muted-foreground">

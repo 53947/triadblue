@@ -12,7 +12,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Link, useLocation } from "wouter";
-import { Home, FolderKanban, MessageSquare, Settings, Plus, Github, MessagesSquare, Clock, BarChart3, ListTodo, LogOut, ImageIcon, FileText, ExternalLink, Plug, Mail, Settings2, Headphones, Map, Network, Microscope, Link2, Users, Bell } from "lucide-react";
+import { Home, FolderKanban, MessageSquare, Settings, Plus, Github, MessagesSquare, Clock, BarChart3, ListTodo, LogOut, ImageIcon, FileText, ExternalLink, Plug, Mail, Settings2, Headphones, Map, Network, Microscope, Link2, Users, Bell, Activity, Grid3X3, PieChart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { Project } from "@shared/schema";
@@ -42,8 +42,11 @@ const navigation = [
 ];
 
 const linkblueNavigation = [
-  { title: "LINKBlue Dashboard", url: "/linkblue", icon: Link2 },
+  { title: "Overview", url: "/linkblue", icon: Link2 },
+  { title: "Platform Health", url: "/linkblue/health", icon: Activity },
+  { title: "Integrations", url: "/linkblue/integrations", icon: Grid3X3 },
   { title: "Clients 360°", url: "/linkblue/clients", icon: Users },
+  { title: "Analytics", url: "/linkblue/analytics", icon: PieChart },
   { title: "Alerts", url: "/linkblue/alerts", icon: Bell },
 ];
 
