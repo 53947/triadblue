@@ -36,9 +36,9 @@ export default function Login() {
           <div className="flex justify-center mb-4">
             <img src={consoleBlueLockup} alt="ConsoleBlue" className="h-16 w-auto" />
           </div>
-          <CardTitle className="text-2xl" style={{ fontFamily: 'var(--font-heading)' }}>Dashboard Access</CardTitle>
+          <CardTitle className="text-2xl" style={{ fontFamily: 'var(--font-heading)' }}>ConsoleBlue Panel</CardTitle>
           <CardDescription>
-            Enter password to access ConsoleBlue
+            Enter password to access the ConsoleBlue Panel
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -80,10 +80,10 @@ export default function LinkBlueLogin() {
             />
           </div>
           <CardTitle className="text-2xl text-white" style={{ fontFamily: "var(--font-heading)" }}>
-            Dashboard Login
+            LINKBlue Dashboard
           </CardTitle>
           <CardDescription className="text-slate-400">
-            Access your cross-platform operations center
+            Enter your credentials to access the LINKBlue Dashboard
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-4">
@@ -169,7 +169,7 @@ export default function LinkBlueLogin() {
                   Signing in...
                 </>
               ) : (
-                "Login to LINKBlue"
+                "Login to LINKBlue Dashboard"
               )}
             </Button>
           </form>

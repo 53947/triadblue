@@ -69,10 +69,10 @@ export default function ConsoleBlueLgogin() {
             />
           </div>
           <CardTitle className="text-2xl text-white" style={{ fontFamily: "var(--font-heading)" }}>
-            ConsoleBlue Panel Login
+            ConsoleBlue Panel
           </CardTitle>
           <CardDescription className="text-slate-400">
-            Access your app development center
+            Enter your credentials to access the ConsoleBlue Panel
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-4">
@@ -158,7 +158,7 @@ export default function ConsoleBlueLgogin() {
                   Signing in...
                 </>
               ) : (
-                "Login to ConsoleBlue"
+                "Login to ConsoleBlue Panel"
               )}
             </Button>
           </form>
