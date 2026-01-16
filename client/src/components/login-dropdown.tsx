@@ -44,7 +44,7 @@ export function LoginDropdown() {
         aria-expanded={isOpen}
         aria-haspopup="true"
       >
-        <span style={{ fontWeight: 600, fontSize: "14px" }}>Login</span>
+        <span style={{ fontWeight: 600, fontSize: "14px" }}>Interface</span>
         <ChevronDown 
           size={14} 
           style={{ 
@@ -95,7 +95,7 @@ export function LoginDropdown() {
             />
             <div>
               <div style={{ fontWeight: 600, color: "white", marginBottom: 2 }}>
-                LINKBlue Dashboard
+                LinkBlue Control Panel
               </div>
               <div style={{ fontSize: "13px", color: "rgba(255, 255, 255, 0.6)" }}>
                 Monitor all platforms
