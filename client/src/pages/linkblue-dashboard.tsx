@@ -8,9 +8,6 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { 
   Link2, 
-  Building2, 
-  CreditCard, 
-  Server, 
   Activity, 
   AlertTriangle, 
   CheckCircle2, 
@@ -24,6 +21,13 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import { formatDistanceToNow } from "date-fns";
+import businessBlueprintIcon from "@assets/1-Master_business_blueprint_icon_1768562166809.png";
+import swipesBlueIcon from "@assets/Swipes_Blue_Logo_1768565417072.png";
+import hostsBlueIcon from "@assets/HostsBlue_Icon_1768566057049.png";
+import listItIcon from "@assets/ListIt_1768562194251.png";
+import mealPrepProIcon from "@assets/MealPrepProIcon_1768562003431.png";
+import scansBlueIcon from "@assets/scansblue_icon_1768561547970.png";
+import consoleBlueIcon from "@assets/ConsoleBlue_Favicon_Lit_1767372218913.png";
 import type { 
   LinkbluePlatform, 
   LinkbluePlatformHealth,
@@ -47,11 +51,20 @@ interface DashboardData {
   activeAlerts: LinkblueAlert[];
 }
 
-const platformIcons: Record<string, any> = {
-  Building2: Building2,
-  CreditCard: CreditCard,
-  Server: Server,
+const platformImageIcons: Record<string, string> = {
+  businessblueprint: businessBlueprintIcon,
+  swipesblue: swipesBlueIcon,
+  hostsblue: hostsBlueIcon,
+  listit: listItIcon,
+  mealpreppro: mealPrepProIcon,
+  scansblue: scansBlueIcon,
+  consoleblue: consoleBlueIcon,
 };
+
+function getPlatformIcon(platform: { name?: string; shortName?: string }) {
+  const code = (platform.shortName || platform.name || "").toLowerCase().replace(/[\s\-_]/g, "");
+  return platformImageIcons[code] || businessBlueprintIcon;
+}
 
 function getStatusColor(status: string) {
   switch (status) {
@@ -97,7 +110,7 @@ function getSeverityColor(severity: string) {
 }
 
 function PlatformCard({ platform }: { platform: PlatformWithHealth }) {
-  const Icon = platformIcons[platform.icon || "Building2"] || Building2;
+  const iconSrc = getPlatformIcon(platform);
   
   return (
     <Card className="hover-elevate">
@@ -105,10 +118,10 @@ function PlatformCard({ platform }: { platform: PlatformWithHealth }) {
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-3">
             <div 
-              className="w-10 h-10 rounded-md flex items-center justify-center"
+              className="w-10 h-10 rounded-md flex items-center justify-center overflow-hidden"
               style={{ backgroundColor: `${platform.color}20` }}
             >
-              <Icon className="w-5 h-5" style={{ color: platform.color }} />
+              <img src={iconSrc} alt={platform.name} className="w-8 h-8 object-contain" />
             </div>
             <div>
               <CardTitle className="text-base">{platform.shortName}</CardTitle>
@@ -171,8 +184,8 @@ function IntegrationMatrix({ integrations, platforms }: { integrations: Linkblue
           {integrations.map((integration) => {
             const source = getPlatform(integration.sourcePlatformId);
             const target = getPlatform(integration.targetPlatformId);
-            const SourceIcon = platformIcons[source?.icon || "Building2"] || Building2;
-            const TargetIcon = platformIcons[target?.icon || "Building2"] || Building2;
+            const sourceIcon = source ? getPlatformIcon(source) : businessBlueprintIcon;
+            const targetIcon = target ? getPlatformIcon(target) : businessBlueprintIcon;
             
             return (
               <div 
@@ -182,12 +195,12 @@ function IntegrationMatrix({ integrations, platforms }: { integrations: Linkblue
               >
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1">
-                    <SourceIcon className="w-4 h-4" style={{ color: source?.color }} />
+                    <img src={sourceIcon} alt={source?.shortName} className="w-5 h-5 object-contain" />
                     <span className="text-sm font-medium">{source?.shortName}</span>
                   </div>
                   <ArrowRight className="w-4 h-4 text-muted-foreground" />
                   <div className="flex items-center gap-1">
-                    <TargetIcon className="w-4 h-4" style={{ color: target?.color }} />
+                    <img src={targetIcon} alt={target?.shortName} className="w-5 h-5 object-contain" />
                     <span className="text-sm font-medium">{target?.shortName}</span>
                   </div>
                 </div>

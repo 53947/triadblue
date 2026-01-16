@@ -19,13 +19,8 @@ import {
   Users, 
   PieChart, 
   Bell, 
-  Settings, 
   LogOut,
   ExternalLink,
-  Plug,
-  Building2,
-  CreditCard,
-  Server,
   ArrowLeftRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,21 +28,25 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import linkblueLogo from "@assets/LINKBlue_Logo_1767377727413.png";
 import linkblueIcon from "@assets/LinkBlue_Icon_1767377569222.png";
+import settingsIcon from "@assets/Settings_1768562053879.png";
+import businessBlueprintIcon from "@assets/1-Master_business_blueprint_icon_1768562166809.png";
+import swipesBlueIcon from "@assets/Swipes_Blue_Logo_1768565417072.png";
+import hostsBlueIcon from "@assets/HostsBlue_Icon_1768566057049.png";
 
 const linkblueNavigation = [
-  { title: "Overview", url: "/linkblue", icon: Link2 },
-  { title: "Platform Health", url: "/linkblue/health", icon: Activity },
-  { title: "Clients 360°", url: "/linkblue/clients", icon: Users },
-  { title: "Analytics", url: "/linkblue/analytics", icon: PieChart },
-  { title: "Integrations", url: "/linkblue/integrations", icon: Grid3X3 },
-  { title: "Alerts", url: "/linkblue/alerts", icon: Bell },
-  { title: "Settings", url: "/linkblue/settings", icon: Settings },
+  { title: "Overview", url: "/linkblue", icon: Link2, imageIcon: null },
+  { title: "Platform Health", url: "/linkblue/health", icon: Activity, imageIcon: null },
+  { title: "Clients 360°", url: "/linkblue/clients", icon: Users, imageIcon: null },
+  { title: "Analytics", url: "/linkblue/analytics", icon: PieChart, imageIcon: null },
+  { title: "Integrations", url: "/linkblue/integrations", icon: Grid3X3, imageIcon: null },
+  { title: "Alerts", url: "/linkblue/alerts", icon: Bell, imageIcon: null },
+  { title: "Settings", url: "/linkblue/settings", icon: null, imageIcon: settingsIcon },
 ];
 
 const platformQuickLinks = [
-  { title: "BusinessBlueprint", url: "https://businessblueprint.io/admin", icon: Building2, color: "#3B82F6" },
-  { title: "SwipesBlue", url: "https://swipesblue.com/admin", icon: CreditCard, color: "#10B981" },
-  { title: "HostsBlue", url: "https://hostsblue.com/admin", icon: Server, color: "#8B5CF6" },
+  { title: "BusinessBlueprint", url: "https://businessblueprint.io/admin", imageIcon: businessBlueprintIcon },
+  { title: "SwipesBlue", url: "https://swipesblue.com/admin", imageIcon: swipesBlueIcon },
+  { title: "HostsBlue", url: "https://hostsblue.com/admin", imageIcon: hostsBlueIcon },
 ];
 
 interface LinkBlueSidebarProps {
@@ -104,7 +103,11 @@ export function LinkBlueSidebar({
                     data-testid={`nav-linkblue-${item.title.toLowerCase().replace(/\s+/g, '-').replace('°', '')}`}
                   >
                     <Link href={item.url} onClick={handleNavClick}>
-                      <item.icon className="w-4 h-4" />
+                      {item.imageIcon ? (
+                        <img src={item.imageIcon} alt={item.title} className="w-4 h-4 object-contain rounded-sm" />
+                      ) : item.icon ? (
+                        <item.icon className="w-4 h-4" />
+                      ) : null}
                       <span>{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
@@ -130,7 +133,7 @@ export function LinkBlueSidebar({
                       rel="noopener noreferrer"
                       onClick={handleNavClick}
                     >
-                      <item.icon className="w-4 h-4" style={{ color: item.color }} />
+                      <img src={item.imageIcon} alt={item.title} className="w-5 h-5 object-contain rounded-sm" />
                       <span>{item.title}</span>
                       <ExternalLink className="w-3 h-3 ml-auto text-muted-foreground" />
                     </a>
