@@ -34,6 +34,7 @@ import swipesBlueIcon from "@assets/Swipes_Blue_Logo_1768565417072.png";
 import hostsBlueIcon from "@assets/HostsBlue_Icon_1768566057049.png";
 import mealPrepProIcon from "@assets/MealPrepProIcon_1768562003431.png";
 import scansBlueIcon from "@assets/scansblue_icon_1768561547970.png";
+import listItIcon from "@assets/ListIt_1768562194251.png";
 
 const linkblueNavigation = [
   { title: "Overview", url: "/linkblue", icon: Link2, imageIcon: null },
@@ -51,6 +52,7 @@ const platformQuickLinks = [
   { title: "HostsBlue", url: "https://hostsblue.com/admin", imageIcon: hostsBlueIcon },
   { title: "MealPrepPro", url: "https://mealpreppro.com/admin", imageIcon: mealPrepProIcon },
   { title: "ScansBlue", url: "https://scansblue.com/admin", imageIcon: scansBlueIcon },
+  { title: "ListIt", url: "https://listit.com/admin", imageIcon: listItIcon },
 ];
 
 interface LinkBlueSidebarProps {
