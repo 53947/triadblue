@@ -482,63 +482,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const baseUrl = "https://triadblue.com";
       const resetUrl = `${baseUrl}/${platform}/reset-password?token=${resetToken}`;
 
-      // Send email via AgentMail
+      // Send email via Resend
       try {
-        const agentMailClient = await getUncachableAgentMailClient();
+        const { sendPasswordResetEmail } = await import("./resend");
+        const emailSent = await sendPasswordResetEmail(email, resetToken, platform, user.displayName || undefined);
         
-        const platformName = platform === "linkblue" ? "LINKBlue Dashboard" : "ConsoleBlue Panel";
-        const platformColor = platform === "linkblue" ? "#3b82f6" : "#10b981";
-
-        await agentMailClient.messages.send({
-          from: { 
-            address: "noreply@agentmail.to",
-            name: "TriadBlue" 
-          },
-          to: [{ address: email }],
-          subject: `Reset Your ${platformName} Password`,
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <div style="text-align: center; margin-bottom: 30px;">
-                <h1 style="color: ${platformColor}; margin: 0;">${platformName}</h1>
-                <p style="color: #64748b; margin-top: 5px;">Password Reset Request</p>
-              </div>
-              
-              <p style="color: #334155; font-size: 16px; line-height: 1.6;">
-                Hi${user.displayName ? ` ${user.displayName}` : ''},
-              </p>
-              
-              <p style="color: #334155; font-size: 16px; line-height: 1.6;">
-                We received a request to reset your password for your ${platformName} account. 
-                Click the button below to create a new password:
-              </p>
-              
-              <div style="text-align: center; margin: 30px 0;">
-                <a href="${resetUrl}" 
-                   style="display: inline-block; padding: 14px 32px; background-color: ${platformColor}; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
-                  Reset Password
-                </a>
-              </div>
-              
-              <p style="color: #64748b; font-size: 14px;">
-                This link will expire in 1 hour. If you didn't request this password reset, 
-                you can safely ignore this email.
-              </p>
-              
-              <p style="color: #64748b; font-size: 14px;">
-                If the button doesn't work, copy and paste this link into your browser:<br/>
-                <a href="${resetUrl}" style="color: ${platformColor};">${resetUrl}</a>
-              </p>
-              
-              <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;"/>
-              
-              <p style="color: #94a3b8; font-size: 12px; text-align: center;">
-                TriadBlue • Unified Platform Management
-              </p>
-            </div>
-          `,
-        });
-        
-        console.log(`Password reset email sent to ${email} for platform ${platform}`);
+        if (emailSent) {
+          console.log(`Password reset email sent to ${email} for platform ${platform}`);
+        } else {
+          console.error("Failed to send password reset email");
+        }
       } catch (emailError) {
         console.error("Failed to send password reset email:", emailError);
         // Still return success to prevent email enumeration
