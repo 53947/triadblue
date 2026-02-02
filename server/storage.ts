@@ -37,6 +37,7 @@ import {
   // Admin users
   adminUsers,
   adminSessions,
+  passwordResetTokens,
   type User,
   type InsertUser,
   type Project,
@@ -1516,6 +1517,45 @@ export class DatabaseStorage implements IStorage {
   async deleteExpiredAdminSessions(): Promise<void> {
     await db.delete(adminSessions)
       .where(sql`${adminSessions.expiresAt} < NOW()`);
+  }
+
+  // ============= Password Reset Tokens =============
+
+  async createPasswordResetToken(userId: string, token: string, platform: string): Promise<void> {
+    // Delete any existing tokens for this user/platform first
+    await db.delete(passwordResetTokens)
+      .where(and(
+        eq(passwordResetTokens.userId, userId),
+        eq(passwordResetTokens.platform, platform)
+      ));
+    
+    // Create new token (expires in 1 hour)
+    await db.insert(passwordResetTokens).values({
+      userId,
+      token,
+      platform,
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+    });
+  }
+
+  async getPasswordResetToken(token: string): Promise<{ userId: string; platform: string; expiresAt: Date } | undefined> {
+    const [result] = await db.select({
+      userId: passwordResetTokens.userId,
+      platform: passwordResetTokens.platform,
+      expiresAt: passwordResetTokens.expiresAt,
+    }).from(passwordResetTokens)
+      .where(eq(passwordResetTokens.token, token));
+    return result || undefined;
+  }
+
+  async deletePasswordResetToken(token: string): Promise<void> {
+    await db.delete(passwordResetTokens).where(eq(passwordResetTokens.token, token));
+  }
+
+  async updateAdminUserPassword(userId: string, passwordHash: string): Promise<void> {
+    await db.update(adminUsers)
+      .set({ passwordHash })
+      .where(eq(adminUsers.id, userId));
   }
 }
 

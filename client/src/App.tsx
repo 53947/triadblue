@@ -47,7 +47,9 @@ import LinkBlueSettings from "@/pages/linkblue-settings";
 import LinkBlueLogin from "@/pages/linkblue-login";
 import ConsoleBlueLogin from "@/pages/consoleblue-login";
 import LinkBlueForgotPassword from "@/pages/linkblue-forgot-password";
+import LinkBlueResetPassword from "@/pages/linkblue-reset-password";
 import ConsoleBlueForgotPassword from "@/pages/consoleblue-forgot-password";
+import ConsoleBlueResetPassword from "@/pages/consoleblue-reset-password";
 import { ProtectedRoute, LinkBlueProtectedRoute } from "@/components/protected-route";
 import { PlatformSwitcher } from "@/components/platform-switcher";
 import { DynamicFavicon } from "@/components/dynamic-favicon";
@@ -269,8 +271,10 @@ function AppContent() {
         <Route path="/login" component={Login} />
         <Route path="/linkblue/login" component={LinkBlueLogin} />
         <Route path="/linkblue/forgot-password" component={LinkBlueForgotPassword} />
+        <Route path="/linkblue/reset-password" component={LinkBlueResetPassword} />
         <Route path="/consoleblue/login" component={ConsoleBlueLogin} />
         <Route path="/consoleblue/forgot-password" component={ConsoleBlueForgotPassword} />
+        <Route path="/consoleblue/reset-password" component={ConsoleBlueResetPassword} />
         {!isConsoleBlue && <Route path="/" component={Landing} />}
         <Route path="/apps" component={Products} />
         <Route path="/demo" component={DemoHome} />

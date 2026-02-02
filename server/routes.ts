@@ -16,7 +16,8 @@ import { templatingService } from "./templating";
 import { scanConsoleBlueRoutes } from "./site-map-scanner";
 import { StandardsService } from "./standards-service";
 import { TRIADBLUE_PROJECTS } from "./triadblue-config";
-import { randomBytes, createHmac, randomUUID } from "crypto";
+import { randomBytes, createHmac, randomUUID, createHash } from "crypto";
+import { getUncachableAgentMailClient } from "./agentmail";
 import AdmZip from "adm-zip";
 import { z } from "zod";
 import { insertProjectSchema, insertTaskSchema, insertConversationSchema, insertGithubActivitySchema, insertApiKeySchema, insertAgentConnectionSchema, insertAgentChatMessageSchema, insertTaskTemplateSchema, insertConversationTemplateSchema, insertAssetSchema, insertSitePlannerNodeSchema, insertSitePlannerEdgeSchema, insertProjectRouteSchema, insertLinkbluePlatformSchema, insertLinkblueClientSchema, insertLinkblueAlertSchema, insertLinkblueActivityFeedSchema, insertLinkbluePlatformIntegrationSchema } from "@shared/schema";
@@ -452,12 +453,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // In production, this would:
-      // 1. Generate a secure reset token
-      // 2. Store it with expiration in the database
-      // 3. Send email via AgentMail with reset link
-      // For now, we log the request and return success
-      console.log(`Password reset requested for ${email} on platform ${platform}`);
+      // Check platform access
+      const validPlatform = platform === "linkblue" || platform === "consoleblue";
+      if (!validPlatform) {
+        return res.json({ 
+          success: true, 
+          message: "If an account exists, you will receive a password reset email" 
+        });
+      }
+
+      // Check if user has access to the requested platform
+      const hasAccess = (platform === "linkblue" && user.linkblueAccess) || 
+                       (platform === "consoleblue" && user.consoleblueAccess);
+      if (!hasAccess) {
+        return res.json({ 
+          success: true, 
+          message: "If an account exists, you will receive a password reset email" 
+        });
+      }
+
+      // Generate a secure reset token
+      const resetToken = randomBytes(32).toString("hex");
+      
+      // Store the token in the database
+      await storage.createPasswordResetToken(user.id, resetToken, platform);
+
+      // Build the reset URL
+      const baseUrl = "https://triadblue.com";
+      const resetUrl = `${baseUrl}/${platform}/reset-password?token=${resetToken}`;
+
+      // Send email via AgentMail
+      try {
+        const agentMailClient = await getUncachableAgentMailClient();
+        
+        const platformName = platform === "linkblue" ? "LINKBlue Dashboard" : "ConsoleBlue Panel";
+        const platformColor = platform === "linkblue" ? "#3b82f6" : "#10b981";
+
+        await agentMailClient.messages.send({
+          from: { 
+            address: "noreply@agentmail.to",
+            name: "TriadBlue" 
+          },
+          to: [{ address: email }],
+          subject: `Reset Your ${platformName} Password`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="color: ${platformColor}; margin: 0;">${platformName}</h1>
+                <p style="color: #64748b; margin-top: 5px;">Password Reset Request</p>
+              </div>
+              
+              <p style="color: #334155; font-size: 16px; line-height: 1.6;">
+                Hi${user.displayName ? ` ${user.displayName}` : ''},
+              </p>
+              
+              <p style="color: #334155; font-size: 16px; line-height: 1.6;">
+                We received a request to reset your password for your ${platformName} account. 
+                Click the button below to create a new password:
+              </p>
+              
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${resetUrl}" 
+                   style="display: inline-block; padding: 14px 32px; background-color: ${platformColor}; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
+                  Reset Password
+                </a>
+              </div>
+              
+              <p style="color: #64748b; font-size: 14px;">
+                This link will expire in 1 hour. If you didn't request this password reset, 
+                you can safely ignore this email.
+              </p>
+              
+              <p style="color: #64748b; font-size: 14px;">
+                If the button doesn't work, copy and paste this link into your browser:<br/>
+                <a href="${resetUrl}" style="color: ${platformColor};">${resetUrl}</a>
+              </p>
+              
+              <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;"/>
+              
+              <p style="color: #94a3b8; font-size: 12px; text-align: center;">
+                TriadBlue • Unified Platform Management
+              </p>
+            </div>
+          `,
+        });
+        
+        console.log(`Password reset email sent to ${email} for platform ${platform}`);
+      } catch (emailError) {
+        console.error("Failed to send password reset email:", emailError);
+        // Still return success to prevent email enumeration
+      }
 
       res.json({ 
         success: true, 
@@ -466,6 +551,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Forgot password error:", error);
       res.status(500).json({ message: "An error occurred" });
+    }
+  });
+
+  // Reset password endpoint - validates token and updates password
+  app.post("/api/auth/reset-password", async (req, res) => {
+    try {
+      const { token, password } = req.body;
+
+      if (!token || !password) {
+        return res.status(400).json({ message: "Token and password are required" });
+      }
+
+      if (password.length < 8) {
+        return res.status(400).json({ message: "Password must be at least 8 characters" });
+      }
+
+      // Look up the token
+      const resetToken = await storage.getPasswordResetToken(token);
+      
+      if (!resetToken) {
+        return res.status(400).json({ message: "Invalid or expired reset link" });
+      }
+
+      // Check if token is expired
+      if (new Date() > resetToken.expiresAt) {
+        await storage.deletePasswordResetToken(token);
+        return res.status(400).json({ message: "Reset link has expired. Please request a new one." });
+      }
+
+      // Hash the new password
+      const passwordHash = await hashPassword(password);
+
+      // Update the user's password
+      await storage.updateAdminUserPassword(resetToken.userId, passwordHash);
+
+      // Delete the used token
+      await storage.deletePasswordResetToken(token);
+
+      console.log(`Password reset successful for user ${resetToken.userId} on platform ${resetToken.platform}`);
+
+      res.json({ 
+        success: true, 
+        message: "Password has been reset successfully",
+        platform: resetToken.platform
+      });
+    } catch (error) {
+      console.error("Reset password error:", error);
+      res.status(500).json({ message: "An error occurred" });
+    }
+  });
+
+  // Validate reset token endpoint
+  app.get("/api/auth/validate-reset-token", async (req, res) => {
+    try {
+      const token = req.query.token as string;
+
+      if (!token) {
+        return res.status(400).json({ valid: false, message: "Token is required" });
+      }
+
+      const resetToken = await storage.getPasswordResetToken(token);
+      
+      if (!resetToken) {
+        return res.json({ valid: false, message: "Invalid or expired reset link" });
+      }
+
+      if (new Date() > resetToken.expiresAt) {
+        await storage.deletePasswordResetToken(token);
+        return res.json({ valid: false, message: "Reset link has expired" });
+      }
+
+      res.json({ 
+        valid: true, 
+        platform: resetToken.platform 
+      });
+    } catch (error) {
+      console.error("Validate reset token error:", error);
+      res.status(500).json({ valid: false, message: "An error occurred" });
     }
   });
   
