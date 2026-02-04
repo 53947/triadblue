@@ -1,5 +1,6 @@
-import express, { type Express } from "express";
+import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import { createServer, type Server } from "http";
+import { Octokit } from "octokit";
 import { storage } from "./storage";
 import { extractActionItemsFromConversation } from "./ai";
 import { syncGitHubActivity } from "./github";
@@ -28,6 +29,17 @@ import fs from "fs";
 import { promisify } from "util";
 
 const unlinkAsync = promisify(fs.unlink);
+
+// GitHub API Setup for external AI agents
+const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+
+function requireGitHubApiKey(req: Request, res: Response, next: NextFunction) {
+  const apiKey = req.headers['x-api-key'];
+  if (apiKey !== process.env.CONSOLE_API_KEY) {
+    return res.status(401).json({ error: 'Unauthorized', message: 'Invalid or missing API key' });
+  }
+  next();
+}
 
 // Helper function to create HMAC signature for webhook payloads
 function createHmacSignature(payload: string, secret: string): string {
@@ -3556,6 +3568,293 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to seed platforms" });
     }
   });
+
+  // ========================================
+  // GITHUB API ROUTES (for external AI agents)
+  // ========================================
+
+  // Health check - no auth required
+  app.get('/api/github/health', (req, res) => {
+    res.json({
+      status: 'ok',
+      service: 'ConsoleBlue GitHub API',
+      version: '1.0.0',
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  // List all repositories
+  app.get('/api/github/repos', requireGitHubApiKey, async (req, res) => {
+    try {
+      const { data } = await octokit.rest.repos.listForUser({
+        username: '53947',
+        type: 'owner',
+        sort: 'updated',
+        per_page: 100
+      });
+
+      const repos = data.map(repo => ({
+        name: repo.name,
+        url: repo.html_url,
+        description: repo.description,
+        updated_at: repo.updated_at,
+        default_branch: repo.default_branch,
+        language: repo.language,
+        size: repo.size
+      }));
+
+      res.json({ count: repos.length, repos });
+    } catch (error: any) {
+      console.error('Error fetching repos:', error);
+      res.status(500).json({ error: 'Internal Server Error', message: error.message });
+    }
+  });
+
+  // Get directory tree or file metadata
+  app.get('/api/github/tree', requireGitHubApiKey, async (req, res) => {
+    const { repo, path = '' } = req.query;
+
+    if (!repo) {
+      return res.status(400).json({ error: 'Bad Request', message: 'repo parameter is required' });
+    }
+
+    try {
+      const { data } = await octokit.rest.repos.getContent({
+        owner: '53947',
+        repo: repo as string,
+        path: path as string
+      });
+
+      if (Array.isArray(data)) {
+        const contents = data.map(item => ({
+          name: item.name,
+          path: item.path,
+          type: item.type,
+          size: item.size
+        }));
+        return res.json({ repo, path: path || '/', type: 'directory', contents });
+      }
+
+      res.json({
+        repo,
+        name: data.name,
+        path: data.path,
+        type: 'file',
+        size: data.size
+      });
+    } catch (error: any) {
+      if (error.status === 404) {
+        return res.status(404).json({ error: 'Not Found', message: `Path '${path}' not found in repo '${repo}'` });
+      }
+      console.error('Error fetching tree:', error);
+      res.status(500).json({ error: 'Internal Server Error', message: error.message });
+    }
+  });
+
+  // Get file contents
+  app.get('/api/github/file', requireGitHubApiKey, async (req, res) => {
+    const { repo, path } = req.query;
+
+    if (!repo || !path) {
+      return res.status(400).json({ error: 'Bad Request', message: 'repo and path parameters are required' });
+    }
+
+    try {
+      const { data } = await octokit.rest.repos.getContent({
+        owner: '53947',
+        repo: repo as string,
+        path: path as string
+      });
+
+      if (Array.isArray(data) || data.type !== 'file') {
+        return res.status(400).json({ error: 'Bad Request', message: 'Path must be a file, not a directory' });
+      }
+
+      const content = Buffer.from(data.content, 'base64').toString('utf-8');
+
+      res.json({
+        repo,
+        name: data.name,
+        path: data.path,
+        size: data.size,
+        encoding: 'utf-8',
+        content
+      });
+    } catch (error: any) {
+      if (error.status === 404) {
+        return res.status(404).json({ error: 'Not Found', message: `File '${path}' not found in repo '${repo}'` });
+      }
+      console.error('Error fetching file:', error);
+      res.status(500).json({ error: 'Internal Server Error', message: error.message });
+    }
+  });
+
+  // Extract routes from React app
+  app.get('/api/github/routes', requireGitHubApiKey, async (req, res) => {
+    const { repo } = req.query;
+
+    if (!repo) {
+      return res.status(400).json({ error: 'Bad Request', message: 'repo parameter is required' });
+    }
+
+    const possiblePaths = [
+      'client/src/App.tsx',
+      'client/src/App.jsx',
+      'src/App.tsx',
+      'src/App.jsx',
+      'app/routes.tsx'
+    ];
+
+    try {
+      let routesContent: string | null = null;
+      let foundPath: string | null = null;
+
+      for (const filePath of possiblePaths) {
+        try {
+          const { data } = await octokit.rest.repos.getContent({
+            owner: '53947',
+            repo: repo as string,
+            path: filePath
+          });
+          if (!Array.isArray(data) && data.content) {
+            routesContent = Buffer.from(data.content, 'base64').toString('utf-8');
+            foundPath = filePath;
+            break;
+          }
+        } catch (e) {
+          continue;
+        }
+      }
+
+      if (!routesContent) {
+        return res.status(404).json({ error: 'Not Found', message: 'Could not find routes file' });
+      }
+
+      const routes = new Set<string>();
+      
+      // Extract path patterns
+      const patterns = [
+        /path\s*[=:]\s*["']([^"']+)["']/g,
+        /<Route[^>]*\s+path\s*=\s*["']([^"']+)["']/g,
+        /to\s*=\s*["']([^"']+)["']/g
+      ];
+
+      for (const pattern of patterns) {
+        const matches = routesContent.matchAll(pattern);
+        for (const match of matches) {
+          if (match[1].startsWith('/')) {
+            routes.add(match[1]);
+          }
+        }
+      }
+
+      const sortedRoutes = [...routes].sort();
+
+      res.json({
+        repo,
+        source_file: foundPath,
+        route_count: sortedRoutes.length,
+        routes: sortedRoutes
+      });
+    } catch (error: any) {
+      console.error('Error extracting routes:', error);
+      res.status(500).json({ error: 'Internal Server Error', message: error.message });
+    }
+  });
+
+  // Get recent commits
+  app.get('/api/github/commits', requireGitHubApiKey, async (req, res) => {
+    const { repo, count = '10' } = req.query;
+
+    if (!repo) {
+      return res.status(400).json({ error: 'Bad Request', message: 'repo parameter is required' });
+    }
+
+    const commitCount = Math.min(Math.max(parseInt(count as string) || 10, 1), 100);
+
+    try {
+      const { data } = await octokit.rest.repos.listCommits({
+        owner: '53947',
+        repo: repo as string,
+        per_page: commitCount
+      });
+
+      const commits = data.map(commit => ({
+        sha: commit.sha.substring(0, 7),
+        message: commit.commit.message.split('\n')[0],
+        author: commit.commit.author?.name,
+        date: commit.commit.author?.date,
+        url: commit.html_url
+      }));
+
+      res.json({ repo, count: commits.length, commits });
+    } catch (error: any) {
+      if (error.status === 404) {
+        return res.status(404).json({ error: 'Not Found', message: `Repository '${repo}' not found` });
+      }
+      console.error('Error fetching commits:', error);
+      res.status(500).json({ error: 'Internal Server Error', message: error.message });
+    }
+  });
+
+  // Search files in repository
+  app.get('/api/github/search', requireGitHubApiKey, async (req, res) => {
+    const { repo, query, path = '' } = req.query;
+
+    if (!repo || !query) {
+      return res.status(400).json({ error: 'Bad Request', message: 'repo and query parameters are required' });
+    }
+
+    try {
+      const { data: repoData } = await octokit.rest.repos.get({
+        owner: '53947',
+        repo: repo as string
+      });
+
+      const { data: treeData } = await octokit.rest.git.getTree({
+        owner: '53947',
+        repo: repo as string,
+        tree_sha: repoData.default_branch,
+        recursive: 'true'
+      });
+
+      const queryLower = (query as string).toLowerCase();
+      const pathLower = (path as string).toLowerCase();
+
+      const matchingFiles = treeData.tree
+        .filter(item => {
+          if (item.type !== 'blob') return false;
+          const itemPathLower = item.path?.toLowerCase() || '';
+          const matchesQuery = itemPathLower.includes(queryLower);
+          const matchesPath = !path || itemPathLower.startsWith(pathLower);
+          return matchesQuery && matchesPath;
+        })
+        .map(item => ({
+          name: item.path?.split('/').pop(),
+          path: item.path,
+          size: item.size
+        }))
+        .slice(0, 100);
+
+      res.json({
+        repo,
+        query,
+        path: path || '/',
+        count: matchingFiles.length,
+        files: matchingFiles
+      });
+    } catch (error: any) {
+      if (error.status === 404) {
+        return res.status(404).json({ error: 'Not Found', message: `Repository '${repo}' not found` });
+      }
+      console.error('Error searching:', error);
+      res.status(500).json({ error: 'Internal Server Error', message: error.message });
+    }
+  });
+
+  // ========================================
+  // END GITHUB API ROUTES
+  // ========================================
 
   const httpServer = createServer(app);
   return httpServer;
