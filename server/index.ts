@@ -80,6 +80,10 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Log environment availability (not values)
+  console.log(`GITHUB_TOKEN exists: ${!!process.env.GITHUB_TOKEN}`);
+  console.log(`CONSOLE_API_KEY exists: ${!!process.env.CONSOLE_API_KEY}`);
+  
   // Seed default user for foreign key constraints
   const systemUser = await seedDefaultUser();
   
