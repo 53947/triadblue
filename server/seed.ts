@@ -1,8 +1,9 @@
 import { db } from "./db";
-import { users, projects, agentConnections, emailGithubConfigs } from "@shared/schema";
+import { users, projects, agentConnections, emailGithubConfigs, adminUsers } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 import { TRIADBLUE_PROJECTS } from "./triadblue-config";
 import { randomUUID } from "crypto";
+import bcrypt from "bcrypt";
 
 export async function seedDefaultUser() {
   try {
@@ -163,5 +164,46 @@ export async function seedSharedEmailInboxes() {
     return;
   } catch (error) {
     console.error("Error with email inbox seeding:", error);
+  }
+}
+
+export async function seedAdminUser() {
+  try {
+    const email = "53947@triadblue.com";
+    const password = "board.Triad$2026";
+    
+    // Check if admin user already exists
+    const [existing] = await db.select().from(adminUsers).where(eq(adminUsers.email, email));
+    
+    if (existing) {
+      // Reset password and unlock account
+      const passwordHash = await bcrypt.hash(password, 12);
+      await db.update(adminUsers)
+        .set({ 
+          passwordHash,
+          linkblueAccess: true,
+          consoleblueAccess: true,
+          failedLoginAttempts: 0,
+          lockedUntil: null,
+          accountLocked: false
+        })
+        .where(eq(adminUsers.email, email));
+      console.log("✓ Admin user updated (password reset, account unlocked)");
+      return;
+    }
+    
+    // Create new admin user
+    const passwordHash = await bcrypt.hash(password, 12);
+    await db.insert(adminUsers).values({
+      email,
+      passwordHash,
+      displayName: "TriadBlue Admin",
+      linkblueAccess: true,
+      consoleblueAccess: true,
+    });
+    
+    console.log("✓ Admin user created: " + email);
+  } catch (error) {
+    console.error("Error seeding admin user:", error);
   }
 }
