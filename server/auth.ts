@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction } from "express";                                                                                            
 import "express-session";
-import type { IStorage } from "./storage";
+import type { IStorage } from "./storage";                                                                                                            
 
 declare module "express-session" {
   interface SessionData {
@@ -34,10 +34,41 @@ export function setStorageForAuth(storage: IStorage) {
 
 export async function authRequired(req: Request, res: Response, next: NextFunction) {
   const authReq = req as AuthRequest;
+
+  // Allow API key authentication as alternative to session auth
+  const apiKey = req.headers['x-api-key'] as string;
+  if (apiKey && apiKey === process.env.CONSOLE_API_KEY) {
+    if (!authReq.session?.user) {
+      if (storageInstance) {
+        try {
+          const systemUser = await storageInstance.ensureSystemAdminUser();
+          authReq.session.user = {
+            id: systemUser.id,
+            username: systemUser.username,
+            role: systemUser.role,
+          };
+        } catch (error) {
+          authReq.session.user = {
+            id: 'api-agent',
+            username: 'api-agent',
+            role: 'admin',
+          };
+        }
+      } else {
+        authReq.session.user = {
+          id: 'api-agent',
+          username: 'api-agent',
+          role: 'admin',
+        };
+      }
+    }
+    return next();
+  }
+
   if (!authReq.session?.user) {
     return res.status(401).json({ error: "Authentication required" });
   }
-  
+
   // Migrate old session format to new format
   if (!authReq.session.user.id && authReq.session.user.role) {
     console.log("Migrating old session format to new format");
@@ -64,7 +95,7 @@ export async function authRequired(req: Request, res: Response, next: NextFuncti
       return res.status(500).json({ error: "Session migration failed" });
     }
   }
-  
+
   next();
 }
 
@@ -72,11 +103,11 @@ export function constantTimeCompare(a: string, b: string): boolean {
   if (a.length !== b.length) {
     return false;
   }
-  
+
   let result = 0;
   for (let i = 0; i < a.length; i++) {
     result |= a.charCodeAt(i) ^ b.charCodeAt(i);
   }
-  
+
   return result === 0;
 }
