@@ -76,7 +76,10 @@ export const tasks = pgTable("tasks", {
   githubIssueUrl: text("github_issue_url"), // URL to GitHub issue
   githubIssueState: text("github_issue_state"), // 'open', 'closed'
   githubSyncedAt: timestamp("github_synced_at"), // When task was synced to GitHub
-});
+}, (table) => ({
+  projectStatusIdx: sql`create index if not exists "tasks_project_status_idx" on ${table} ("project_id", "status")`,
+  assignedToIdx: sql`create index if not exists "tasks_assigned_to_idx" on ${table} ("assigned_to")`,
+}));
 
 // Conversations with agents
 export const conversations = pgTable("conversations", {
@@ -89,7 +92,9 @@ export const conversations = pgTable("conversations", {
   extractedItems: text("extracted_items").array().default(sql`ARRAY[]::text[]`), // AI-extracted action items
   isProcessed: boolean("is_processed").notNull().default(false), // Has AI extraction been run?
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (table) => ({
+  projectIdx: sql`create index if not exists "conversations_project_idx" on ${table} ("project_id")`,
+}));
 
 // GitHub activity tracking
 export const githubActivity = pgTable("github_activity", {
@@ -103,7 +108,9 @@ export const githubActivity = pgTable("github_activity", {
   activityType: text("activity_type").notNull().default("commit"), // 'commit', 'pr', 'issue'
   url: text("url").notNull(), // Link to GitHub
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (table) => ({
+  projectIdx: sql`create index if not exists "github_activity_project_idx" on ${table} ("project_id")`,
+}));
 
 // Webhooks - allows external projects to register webhook endpoints
 export const webhooks = pgTable("webhooks", {
@@ -138,7 +145,9 @@ export const agentChatMessages = pgTable("agent_chat_messages", {
   content: text("content").notNull(), // Message text
   metadata: text("metadata"), // JSON string for additional data
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (table) => ({
+  connectionIdx: sql`create index if not exists "agent_chat_messages_connection_idx" on ${table} ("connection_id")`,
+}));
 
 // Notifications for users
 export const notifications = pgTable("notifications", {
@@ -293,7 +302,9 @@ export const emailThreads = pgTable("email_threads", {
   analysisSummary: text("analysis_summary"), // AI-generated summary of conversation
   githubIssues: json("github_issues"), // Array of {id, type, descriptionHash, severity, issueNumber, issueUrl, createdAt}
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (table) => ({
+  projectIdx: sql`create index if not exists "email_threads_project_idx" on ${table} ("project_id")`,
+}));
 
 // Email Messages - stores individual email messages within threads
 export const emailMessages = pgTable("email_messages", {
@@ -306,7 +317,9 @@ export const emailMessages = pgTable("email_messages", {
   body: text("body").notNull(),
   metadata: text("metadata"), // JSON string for additional data (headers, etc.)
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (table) => ({
+  threadIdx: sql`create index if not exists "email_messages_thread_id_idx" on ${table} ("thread_id")`,
+}));
 
 // Email Attachments - stores full attachment data for sent and received emails
 export const emailAttachments = pgTable("email_attachments", {
@@ -840,7 +853,9 @@ export const linkbluePlatformHealth = pgTable("linkblue_platform_health", {
   lastSyncAt: timestamp("last_sync_at").notNull().defaultNow(),
   metadata: json("metadata").$type<Record<string, any>>(), // Additional platform-specific metrics
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (table) => ({
+  platformIdx: sql`create index if not exists "linkblue_platform_health_platform_idx" on ${table} ("platform_id")`,
+}));
 
 // LINKBlue Platform Integrations - Connections between platforms
 export const linkbluePlatformIntegrations = pgTable("linkblue_platform_integrations", {
@@ -913,7 +928,9 @@ export const linkblueAlerts = pgTable("linkblue_alerts", {
   resolvedAt: timestamp("resolved_at"),
   metadata: json("metadata").$type<Record<string, any>>(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (table) => ({
+  platformResolvedIdx: sql`create index if not exists "linkblue_alerts_platform_resolved_idx" on ${table} ("platform_id", "is_resolved")`,
+}));
 
 // LINKBlue Activity Feed - Cross-platform activity stream
 export const linkblueActivityFeed = pgTable("linkblue_activity_feed", {
@@ -1118,7 +1135,10 @@ export const adminSessions = pgTable("admin_sessions", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   expiresAt: timestamp("expires_at").notNull(),
   lastActivity: timestamp("last_activity").notNull().defaultNow(),
-});
+}, (table) => ({
+  tokenIdx: sql`create index if not exists "admin_sessions_token_idx" on ${table} ("session_token")`,
+  userIdx: sql`create index if not exists "admin_sessions_user_idx" on ${table} ("user_id")`,
+}));
 
 // Password reset tokens
 export const passwordResetTokens = pgTable("password_reset_tokens", {
@@ -1129,7 +1149,9 @@ export const passwordResetTokens = pgTable("password_reset_tokens", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   expiresAt: timestamp("expires_at").notNull(),
   usedAt: timestamp("used_at"),
-});
+}, (table) => ({
+  tokenIdx: sql`create index if not exists "password_reset_tokens_token_idx" on ${table} ("token")`,
+}));
 
 // Admin Users Insert Schema
 export const insertAdminUserSchema = createInsertSchema(adminUsers).omit({

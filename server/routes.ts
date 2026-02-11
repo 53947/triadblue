@@ -592,9 +592,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Store the token in the database
       await storage.createPasswordResetToken(user.id, resetToken, platform);
 
-      // Build the reset URL
-      const baseUrl = "https://triadblue.com";
-      const resetUrl = `${baseUrl}/${platform}/reset-password?token=${resetToken}`;
+      // Build the reset URL — use subdomain if available
+      const subdomainBase = platform === "linkblue"
+        ? "https://linkblue.triadblue.com"
+        : platform === "consoleblue"
+        ? "https://consoleblue.triadblue.com"
+        : "https://triadblue.com";
+      const resetUrl = `${subdomainBase}/${platform}/reset-password?token=${resetToken}`;
 
       // Send email via Resend
       try {

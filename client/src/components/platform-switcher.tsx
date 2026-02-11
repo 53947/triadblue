@@ -21,6 +21,12 @@ interface PlatformSwitcherProps {
   currentPlatform: "linkblue" | "consoleblue";
 }
 
+// B4: Detect if running on a subdomain
+function isSubdomain(): boolean {
+  const hostname = window.location.hostname;
+  return hostname.startsWith("consoleblue.") || hostname.startsWith("linkblue.");
+}
+
 export function PlatformSwitcher({ currentPlatform }: PlatformSwitcherProps) {
   const [, setLocation] = useLocation();
   const [userAccess, setUserAccess] = useState<UserAccess | null>(null);
@@ -60,6 +66,7 @@ export function PlatformSwitcher({ currentPlatform }: PlatformSwitcherProps) {
       icon: Monitor,
       path: "/linkblue",
       color: "#3b82f6",
+      subdomain: "linkblue",
     },
     {
       id: "consoleblue" as const,
@@ -68,25 +75,40 @@ export function PlatformSwitcher({ currentPlatform }: PlatformSwitcherProps) {
       icon: Layout,
       path: "/dashboard",
       color: "#10b981",
+      subdomain: "consoleblue",
     },
   ];
 
   const currentPlatformInfo = platforms.find(p => p.id === currentPlatform);
   const otherPlatform = platforms.find(p => p.id !== currentPlatform);
 
+  const handleSwitch = (platform: typeof platforms[0]) => {
+    if (platform.id === currentPlatform) return;
+
+    // B4: On subdomains, navigate to the other subdomain via full URL
+    if (isSubdomain()) {
+      const baseDomain = window.location.hostname.replace(/^(consoleblue|linkblue)\./, "");
+      const protocol = window.location.protocol;
+      window.location.href = `${protocol}//${platform.subdomain}.${baseDomain}${platform.path}`;
+    } else {
+      // Dev / root domain: use client-side routing
+      setLocation(platform.path);
+    }
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button 
-          variant="ghost" 
-          size="sm" 
+        <Button
+          variant="ghost"
+          size="sm"
           className="gap-2"
           data-testid="button-platform-switcher"
         >
           {currentPlatformInfo && (
-            <currentPlatformInfo.icon 
-              className="w-4 h-4" 
-              style={{ color: currentPlatformInfo.color }} 
+            <currentPlatformInfo.icon
+              className="w-4 h-4"
+              style={{ color: currentPlatformInfo.color }}
             />
           )}
           <span className="hidden sm:inline">{currentPlatformInfo?.name}</span>
@@ -98,21 +120,17 @@ export function PlatformSwitcher({ currentPlatform }: PlatformSwitcherProps) {
           Switch Platform
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        
+
         {platforms.map((platform) => {
           const isCurrentPlatform = platform.id === currentPlatform;
           return (
             <DropdownMenuItem
               key={platform.id}
-              onClick={() => {
-                if (!isCurrentPlatform) {
-                  setLocation(platform.path);
-                }
-              }}
+              onClick={() => handleSwitch(platform)}
               className={`flex items-start gap-3 py-3 ${isCurrentPlatform ? 'bg-muted/50' : 'cursor-pointer'}`}
               data-testid={`menu-platform-${platform.id}`}
             >
-              <div 
+              <div
                 className="w-8 h-8 rounded-md flex items-center justify-center shrink-0"
                 style={{ backgroundColor: `${platform.color}20` }}
               >
