@@ -6,6 +6,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { seedDefaultUser, seedTriadBlueProjects, seedLocalPlatformBuilderAgent, seedSharedEmailInboxes, seedAdminUser } from "./seed";
 import { seedDocumentationTemplates } from "./seed-documentation-templates";
+import path from "path";
 
 const app = express();
 
@@ -45,9 +46,34 @@ app.use(
       maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
       sameSite: "lax",
       path: "/",
+      domain: process.env.COOKIE_DOMAIN || undefined, // B1: cross-subdomain session sharing
     },
   })
 );
+
+// B2: Hostname detection middleware — sets res.locals.platform
+app.use((req, res, next) => {
+  const hostname = req.hostname || "";
+  if (hostname.startsWith("linkblue.")) {
+    res.locals.platform = "linkblue";
+  } else if (hostname.startsWith("consoleblue.")) {
+    res.locals.platform = "consoleblue";
+  } else {
+    res.locals.platform = "unknown";
+  }
+  next();
+});
+
+// B6: Per-subdomain favicon routing
+app.get("/favicon.ico", (req, res, next) => {
+  if (res.locals.platform === "linkblue") {
+    res.sendFile(path.resolve("client/public/linkblue-favicon.png"));
+  } else if (res.locals.platform === "consoleblue") {
+    res.sendFile(path.resolve("client/public/consoleblue-favicon.png"));
+  } else {
+    next(); // fall through to default static serving
+  }
+});
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -83,25 +109,25 @@ app.use((req, res, next) => {
   // Log environment availability (not values)
   console.log(`GITHUB_TOKEN exists: ${!!process.env.GITHUB_TOKEN}`);
   console.log(`CONSOLE_API_KEY exists: ${!!process.env.CONSOLE_API_KEY}`);
-  
+
   // Seed default user for foreign key constraints
   const systemUser = await seedDefaultUser();
-  
+
   // Seed admin user for LINKBlue/ConsoleBlue access
   await seedAdminUser();
-  
+
   // Seed TriadBlue projects and agent connections
   await seedTriadBlueProjects();
-  
+
   // Seed local Platform Builder agent for direct communication
   await seedLocalPlatformBuilderAgent();
-  
+
   // Seed 3 shared email inboxes with project-level filtering
   await seedSharedEmailInboxes();
-  
+
   // Seed documentation templates
   await seedDocumentationTemplates(systemUser.id);
-  
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
