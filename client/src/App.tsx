@@ -128,36 +128,36 @@ function ConsoleBlueApp() {
         const cacheNames = await caches.keys();
         await Promise.all(cacheNames.map(name => caches.delete(name)));
       }
-      
+
       queryClient.clear();
-      
+
       window.location.reload();
     } catch (error) {
       console.error('Hard reset error:', error);
       window.location.reload();
     }
   };
-  
+
   useEffect(() => {
     const handleSessionExpired = () => {
       if (hasShownNotificationRef.current) return;
-      
+
       hasShownNotificationRef.current = true;
-      
+
       toast({
         title: "Session Expired",
         description: "Your session has expired. Please sign in again.",
         variant: "destructive",
         duration: 5000,
       });
-      
+
       redirectTimeoutRef.current = window.setTimeout(() => {
         setLocation("/consoleblue/login");
       }, 1500);
     };
-    
+
     setSessionExpiredCallback(handleSessionExpired);
-    
+
     return () => {
       setSessionExpiredCallback(null);
       if (redirectTimeoutRef.current) {
@@ -165,7 +165,7 @@ function ConsoleBlueApp() {
       }
     };
   }, [toast, setLocation]);
-  
+
   const { data: projects = [] } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
   });
@@ -196,8 +196,8 @@ function ConsoleBlueApp() {
   return (
     <SidebarProvider style={style as React.CSSProperties}>
       <div className="flex h-screen w-full min-h-screen overflow-x-hidden">
-        <AppSidebar 
-          projects={projects} 
+        <AppSidebar
+          projects={projects}
           onNewProject={() => setShowCreateProjectModal(true)}
         />
         <div className="flex flex-col flex-1 min-w-0">
@@ -228,9 +228,9 @@ function ConsoleBlueApp() {
               <PlatformSwitcher currentPlatform="consoleblue" />
               <NotificationBell />
               <ThemeToggle />
-              <img 
-                src={contextLogo} 
-                alt={contextLogoAlt} 
+              <img
+                src={contextLogo}
+                alt={contextLogoAlt}
                 className="h-8 sm:h-11 w-auto object-contain"
                 data-testid="header-context-logo"
               />
@@ -241,7 +241,7 @@ function ConsoleBlueApp() {
           </main>
         </div>
       </div>
-      
+
       <CreateProjectModal
         open={showCreateProjectModal}
         onClose={() => setShowCreateProjectModal(false)}
@@ -259,22 +259,84 @@ function LinkBlueApp() {
   );
 }
 
+// B3: Detect subdomain to restrict routing per platform
+function getSubdomainMode(): "consoleblue" | "linkblue" | "all" {
+  const hostname = window.location.hostname;
+  if (hostname.startsWith("consoleblue.")) return "consoleblue";
+  if (hostname.startsWith("linkblue.")) return "linkblue";
+  return "all"; // dev URLs, triadblue.com root, localhost
+}
+
 function AppContent() {
   const [location] = useLocation();
+  const subdomainMode = getSubdomainMode();
+
+  // Shared auth routes (always available on all subdomains)
+  const authRoutes = (
+    <>
+      <Route path="/login" component={Login} />
+      <Route path="/linkblue/login" component={LinkBlueLogin} />
+      <Route path="/linkblue/forgot-password" component={LinkBlueForgotPassword} />
+      <Route path="/linkblue/reset-password" component={LinkBlueResetPassword} />
+      <Route path="/consoleblue/login" component={ConsoleBlueLogin} />
+      <Route path="/consoleblue/forgot-password" component={ConsoleBlueForgotPassword} />
+      <Route path="/consoleblue/reset-password" component={ConsoleBlueResetPassword} />
+    </>
+  );
+
+  // ConsoleBlue subdomain: only ConsoleBlue routes, root goes to dashboard
+  if (subdomainMode === "consoleblue") {
+    return (
+      <>
+        <DynamicFavicon />
+        <Switch>
+          {authRoutes}
+          <Route>
+            <ProtectedRoute>
+              <ConsoleBlueApp />
+            </ProtectedRoute>
+          </Route>
+        </Switch>
+      </>
+    );
+  }
+
+  // LINKBlue subdomain: only LINKBlue routes, root goes to LINKBlue dashboard
+  if (subdomainMode === "linkblue") {
+    return (
+      <>
+        <DynamicFavicon />
+        <Switch>
+          {authRoutes}
+          <Route path="/">
+            <LinkBlueProtectedRoute>
+              <LinkBlueApp />
+            </LinkBlueProtectedRoute>
+          </Route>
+          <Route path="/linkblue">
+            <LinkBlueProtectedRoute>
+              <LinkBlueApp />
+            </LinkBlueProtectedRoute>
+          </Route>
+          <Route path="/linkblue/:rest*">
+            <LinkBlueProtectedRoute>
+              <LinkBlueApp />
+            </LinkBlueProtectedRoute>
+          </Route>
+          <Route component={NotFound} />
+        </Switch>
+      </>
+    );
+  }
+
+  // Default (dev / triadblue.com): all routes accessible (original behavior)
   const isConsoleBlue = window.location.hostname.includes('console');
-  const isLinkBlueRoute = location.startsWith('/linkblue');
-  
+
   return (
     <>
       <DynamicFavicon />
       <Switch>
-        <Route path="/login" component={Login} />
-        <Route path="/linkblue/login" component={LinkBlueLogin} />
-        <Route path="/linkblue/forgot-password" component={LinkBlueForgotPassword} />
-        <Route path="/linkblue/reset-password" component={LinkBlueResetPassword} />
-        <Route path="/consoleblue/login" component={ConsoleBlueLogin} />
-        <Route path="/consoleblue/forgot-password" component={ConsoleBlueForgotPassword} />
-        <Route path="/consoleblue/reset-password" component={ConsoleBlueResetPassword} />
+        {authRoutes}
         {!isConsoleBlue && <Route path="/" component={Landing} />}
         <Route path="/apps" component={Products} />
         <Route path="/demo" component={DemoHome} />
