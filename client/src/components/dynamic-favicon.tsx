@@ -19,9 +19,14 @@ export function DynamicFavicon() {
       ? new Date(activeFavicon.uploadedAt).getTime()
       : Date.now();
     
-    const relativeFaviconUrl = activeFavicon 
+    const hostname = window.location.hostname;
+    let faviconDir = "triadblue";
+    if (hostname.startsWith("consoleblue.")) faviconDir = "consoleblue";
+    else if (hostname.startsWith("linkblue.")) faviconDir = "linkblue";
+
+    const relativeFaviconUrl = activeFavicon
       ? `/uploads/${activeFavicon.filename}?v=${cacheBust}`
-      : `/favicon.png?v=${cacheBust}`;
+      : `/favicons/${faviconDir}/favicon.png?v=${cacheBust}`;
     const absoluteFaviconUrl = window.location.origin + relativeFaviconUrl;
     const mimeType = activeFavicon?.mimeType || "image/png";
 
