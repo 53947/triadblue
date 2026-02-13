@@ -19,7 +19,6 @@ import type { Project } from "@shared/schema";
 import consoleBlueLogo from "@assets/ConsoleBlue-logo_1763756605648.png";
 import { logout } from "@/lib/auth";
 import { useLocation as useWouterLocation } from "wouter";
-import { useActiveLogo } from "@/hooks/use-active-logo";
 
 const navigation = [
   { title: "Dashboard", url: "/dashboard", icon: Home },
@@ -49,7 +48,6 @@ interface AppSidebarProps {
 export function AppSidebar({ projects = [], onNewProject }: AppSidebarProps) {
   const [location] = useLocation();
   const [, setWouterLocation] = useWouterLocation();
-  const { logoUrl } = useActiveLogo();
   const { setOpenMobile, isMobile } = useSidebar();
 
   const handleLogout = async () => {
@@ -68,7 +66,7 @@ export function AppSidebar({ projects = [], onNewProject }: AppSidebarProps) {
       <SidebarHeader className="p-4">
         <div className="flex flex-col gap-2 items-center">
           <img 
-            src={logoUrl || consoleBlueLogo} 
+            src={consoleBlueLogo}
             alt="ConsoleBlue" 
             className="h-10 w-auto object-contain"
           />
