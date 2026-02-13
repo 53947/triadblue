@@ -7,6 +7,7 @@ import { setupVite, serveStatic, log } from "./vite";
 import { seedDefaultUser, seedTriadBlueProjects, seedLocalPlatformBuilderAgent, seedSharedEmailInboxes, seedAdminUser } from "./seed";
 import { seedDocumentationTemplates } from "./seed-documentation-templates";
 import path from "path";
+import { getBranding, type Platform } from "../shared/branding";
 
 const app = express();
 
@@ -66,13 +67,33 @@ app.use((req, res, next) => {
 
 // B6: Per-subdomain favicon routing
 app.get("/favicon.ico", (req, res, next) => {
-  if (res.locals.platform === "linkblue") {
-    res.sendFile(path.resolve("client/public/linkblue-favicon.png"));
-  } else if (res.locals.platform === "consoleblue") {
-    res.sendFile(path.resolve("client/public/consoleblue-favicon.png"));
-  } else {
-    next(); // fall through to default static serving
-  }
+  const platform = res.locals.platform === "linkblue" || res.locals.platform === "consoleblue"
+    ? res.locals.platform
+    : "triadblue";
+  res.sendFile(path.resolve(`client/public/favicons/${platform}/favicon.png`));
+});
+
+// Dynamic manifest.json — platform-specific name, icons, theme
+app.get("/manifest.json", (req, res) => {
+  const platform: Platform = res.locals.platform === "linkblue" || res.locals.platform === "consoleblue"
+    ? res.locals.platform
+    : "unknown";
+  const faviconDir = platform === "unknown" ? "triadblue" : platform;
+  const branding = getBranding(platform);
+  res.json({
+    name: branding.title,
+    short_name: branding.title,
+    description: branding.description,
+    start_url: "/",
+    display: "standalone",
+    background_color: "#000000",
+    theme_color: branding.themeColor,
+    icons: [
+      { src: `/favicons/${faviconDir}/favicon-192x192.png`, sizes: "192x192", type: "image/png" },
+      { src: `/favicons/${faviconDir}/favicon-512x512.png`, sizes: "512x512", type: "image/png", purpose: "any maskable" },
+      { src: `/favicons/${faviconDir}/apple-touch-icon.png`, sizes: "180x180", type: "image/png" },
+    ],
+  });
 });
 
 app.use((req, res, next) => {

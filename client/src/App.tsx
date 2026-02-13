@@ -60,6 +60,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Project } from "@shared/schema";
 import { useContextLogo } from "@/hooks/use-context-logo";
+import { usePlatformBranding } from "@/hooks/use-platform-branding";
 
 function ConsoleBlueRouter() {
   return (
@@ -270,6 +271,7 @@ function getSubdomainMode(): "consoleblue" | "linkblue" | "all" {
 function AppContent() {
   const [location] = useLocation();
   const subdomainMode = getSubdomainMode();
+  usePlatformBranding();
 
   // Shared auth routes (always available on all subdomains)
   const authRoutes = (
