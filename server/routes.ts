@@ -63,9 +63,9 @@ const unlinkAsync = promisify(fs.unlink);
 const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
 function requireGitHubApiKey(req: Request, res: Response, next: NextFunction) {
-  console.log("API KEY DEBUG:", JSON.stringify(apiKey), "===", JSON.stringify(process.env.CONSOLE_API_KEY), "→", apiKey === process.env.CONSOLE_API_KEY);
   const apiKey = req.headers["x-api-key"] || req.query.api_key;
-  if (apiKey !== process.env.CONSOLE_API_KEY) {
+  console.log("DEBUG:", typeof apiKey, JSON.stringify(apiKey), typeof process.env.BLUE_API_KEY, JSON.stringify(process.env.BLUE_API_KEY));
+  if (apiKey !== process.env.BLUE_API_KEY) {
     return res
       .status(401)
       .json({ error: "Unauthorized", message: "Invalid or missing API key" });

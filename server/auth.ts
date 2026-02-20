@@ -41,7 +41,7 @@ export async function authRequired(
 
   // Allow API key authentication as alternative to session auth
   const apiKey = (req.headers["x-api-key"] || req.query.api_key) as string;
-  if (apiKey && apiKey === process.env.CONSOLE_API_KEY) {
+  if (apiKey && apiKey === process.env.BLUE_API_KEY) {
     if (!authReq.session?.user) {
       if (storageInstance) {
         try {
