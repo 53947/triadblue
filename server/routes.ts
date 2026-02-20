@@ -63,7 +63,7 @@ const unlinkAsync = promisify(fs.unlink);
 const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
 function requireGitHubApiKey(req: Request, res: Response, next: NextFunction) {
-  const apiKey = req.headers["x-api-key"];
+  const apiKey = req.headers["x-api-key"] || req.query.api_key;
   if (apiKey !== process.env.CONSOLE_API_KEY) {
     return res
       .status(401)
@@ -320,12 +320,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check if account is locked
       if (await storage.isAccountLocked(user.id)) {
-        return res
-          .status(423)
-          .json({
-            message:
-              "Account is temporarily locked. Please try again in 15 minutes.",
-          });
+        return res.status(423).json({
+          message:
+            "Account is temporarily locked. Please try again in 15 minutes.",
+        });
       }
 
       // Verify password
@@ -335,12 +333,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           user.id,
         );
         if (shouldLock) {
-          return res
-            .status(423)
-            .json({
-              message:
-                "Too many failed attempts. Account locked for 15 minutes.",
-            });
+          return res.status(423).json({
+            message: "Too many failed attempts. Account locked for 15 minutes.",
+          });
         }
         return res.status(401).json({ message: "Invalid email or password" });
       }
@@ -423,12 +418,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (await storage.isAccountLocked(user.id)) {
-        return res
-          .status(423)
-          .json({
-            message:
-              "Account is temporarily locked. Please try again in 15 minutes.",
-          });
+        return res.status(423).json({
+          message:
+            "Account is temporarily locked. Please try again in 15 minutes.",
+        });
       }
 
       const isValidPassword = await verifyPassword(password, user.passwordHash);
@@ -437,12 +430,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           user.id,
         );
         if (shouldLock) {
-          return res
-            .status(423)
-            .json({
-              message:
-                "Too many failed attempts. Account locked for 15 minutes.",
-            });
+          return res.status(423).json({
+            message: "Too many failed attempts. Account locked for 15 minutes.",
+          });
         }
         return res.status(401).json({ message: "Invalid email or password" });
       }
@@ -593,11 +583,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.createPasswordResetToken(user.id, resetToken, platform);
 
       // Build the reset URL — use subdomain if available
-      const subdomainBase = platform === "linkblue"
-        ? "https://linkblue.triadblue.com"
-        : platform === "consoleblue"
-        ? "https://consoleblue.triadblue.com"
-        : "https://triadblue.com";
+      const subdomainBase =
+        platform === "linkblue"
+          ? "https://linkblue.triadblue.com"
+          : platform === "consoleblue"
+            ? "https://consoleblue.triadblue.com"
+            : "https://triadblue.com";
       const resetUrl = `${subdomainBase}/${platform}/reset-password?token=${resetToken}`;
 
       // Send email via Resend
@@ -662,11 +653,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if token is expired
       if (new Date() > resetToken.expiresAt) {
         await storage.deletePasswordResetToken(token);
-        return res
-          .status(400)
-          .json({
-            message: "Reset link has expired. Please request a new one.",
-          });
+        return res.status(400).json({
+          message: "Reset link has expired. Please request a new one.",
+        });
       }
 
       // Hash the new password
@@ -944,11 +933,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Use the raw body for HMAC verification (captured by express.json verify option)
       const rawBody = (req as any).rawBody;
       if (!rawBody) {
-        return res
-          .status(400)
-          .json({
-            error: "Unable to verify webhook signature - raw body missing",
-          });
+        return res.status(400).json({
+          error: "Unable to verify webhook signature - raw body missing",
+        });
       }
       const payload = rawBody.toString("utf8");
 
@@ -988,11 +975,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         matchedWebhook.events.length > 0 &&
         !matchedWebhook.events.includes(eventType)
       ) {
-        return res
-          .status(403)
-          .json({
-            error: `Event type '${eventType}' not allowed for this webhook`,
-          });
+        return res.status(403).json({
+          error: `Event type '${eventType}' not allowed for this webhook`,
+        });
       }
 
       console.log(
@@ -1454,11 +1439,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (!project.githubRepo) {
-        return res
-          .status(400)
-          .json({
-            error: "Project does not have a GitHub repository configured",
-          });
+        return res.status(400).json({
+          error: "Project does not have a GitHub repository configured",
+        });
       }
 
       const token = process.env.GITHUB_TOKEN;
@@ -1740,11 +1723,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         if (!project.metadataApiUrl) {
-          return res
-            .status(400)
-            .json({
-              error: "Project does not have a metadata API URL configured",
-            });
+          return res.status(400).json({
+            error: "Project does not have a metadata API URL configured",
+          });
         }
 
         // Fetch metadata from external project with timeout
@@ -1804,21 +1785,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Validate response format
         if (features && !Array.isArray(features)) {
-          return res
-            .status(400)
-            .json({
-              error:
-                "External API returned invalid features format (must be array)",
-            });
+          return res.status(400).json({
+            error:
+              "External API returned invalid features format (must be array)",
+          });
         }
 
         if (techStack && !Array.isArray(techStack)) {
-          return res
-            .status(400)
-            .json({
-              error:
-                "External API returned invalid techStack format (must be array)",
-            });
+          return res.status(400).json({
+            error:
+              "External API returned invalid techStack format (must be array)",
+          });
         }
 
         // Validate array contents and sanitize
@@ -1828,12 +1805,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             (f: any) => typeof f === "string" && f.trim().length > 0,
           )
         ) {
-          return res
-            .status(400)
-            .json({
-              error:
-                "External API features must contain only non-empty strings",
-            });
+          return res.status(400).json({
+            error: "External API features must contain only non-empty strings",
+          });
         }
 
         if (
@@ -1842,12 +1816,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             (t: any) => typeof t === "string" && t.trim().length > 0,
           )
         ) {
-          return res
-            .status(400)
-            .json({
-              error:
-                "External API techStack must contain only non-empty strings",
-            });
+          return res.status(400).json({
+            error: "External API techStack must contain only non-empty strings",
+          });
         }
 
         // Sanitize and trim values
@@ -1948,12 +1919,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error creating agent connection:", error);
       if (error.name === "ZodError") {
-        return res
-          .status(400)
-          .json({
-            error: "Invalid agent connection data",
-            details: error.errors,
-          });
+        return res.status(400).json({
+          error: "Invalid agent connection data",
+          details: error.errors,
+        });
       }
       res.status(500).json({ error: "Failed to create agent connection" });
     }
@@ -1976,12 +1945,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error updating agent connection:", error);
       if (error.name === "ZodError") {
-        return res
-          .status(400)
-          .json({
-            error: "Invalid agent connection data",
-            details: error.errors,
-          });
+        return res.status(400).json({
+          error: "Invalid agent connection data",
+          details: error.errors,
+        });
       }
       res.status(500).json({ error: "Failed to update agent connection" });
     }
@@ -2398,12 +2365,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         const configs = await storage.getProjectDocumentationConfigs(projectId);
         if (configs.length === 0) {
-          return res
-            .status(400)
-            .json({
-              error:
-                "Documentation config not found. Please configure templates first.",
-            });
+          return res.status(400).json({
+            error:
+              "Documentation config not found. Please configure templates first.",
+          });
         }
 
         const config = configs[0];
@@ -2476,12 +2441,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const outputs = await storage.getProjectDocumentationOutputs(projectId);
 
         if (outputs.length === 0) {
-          return res
-            .status(404)
-            .json({
-              error:
-                "No documentation outputs found. Please generate documentation first.",
-            });
+          return res.status(404).json({
+            error:
+              "No documentation outputs found. Please generate documentation first.",
+          });
         }
 
         const zip = new AdmZip();
@@ -2702,11 +2665,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const validTypes = ["favicon", "logo", "image"];
         if (!validTypes.includes(type)) {
           await unlinkAsync(req.file.path);
-          return res
-            .status(400)
-            .json({
-              error: "Invalid asset type. Must be: favicon, logo, or image",
-            });
+          return res.status(400).json({
+            error: "Invalid asset type. Must be: favicon, logo, or image",
+          });
         }
 
         const userId = "default-user";
@@ -2916,12 +2877,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         if (!config.inboxId) {
-          return res
-            .status(400)
-            .json({
-              error:
-                "Inbox ID not configured. Please set up the email configuration first.",
-            });
+          return res.status(400).json({
+            error:
+              "Inbox ID not configured. Please set up the email configuration first.",
+          });
         }
 
         // Get or create email thread
@@ -3178,11 +3137,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           for (const att of attachments) {
             // Validate base64 encoding
             if (!att.content || typeof att.content !== "string") {
-              return res
-                .status(400)
-                .json({
-                  error: `Invalid attachment: ${att.filename} - missing or invalid content`,
-                });
+              return res.status(400).json({
+                error: `Invalid attachment: ${att.filename} - missing or invalid content`,
+              });
             }
 
             try {
@@ -3190,11 +3147,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const size = buffer.length;
 
               if (size > MAX_ATTACHMENT_SIZE) {
-                return res
-                  .status(400)
-                  .json({
-                    error: `Attachment ${att.filename} exceeds 10MB limit`,
-                  });
+                return res.status(400).json({
+                  error: `Attachment ${att.filename} exceeds 10MB limit`,
+                });
               }
 
               totalSize += size;
@@ -3204,11 +3159,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   .json({ error: `Total attachment size exceeds 25MB limit` });
               }
             } catch (error) {
-              return res
-                .status(400)
-                .json({
-                  error: `Invalid base64 encoding in attachment: ${att.filename}`,
-                });
+              return res.status(400).json({
+                error: `Invalid base64 encoding in attachment: ${att.filename}`,
+              });
             }
           }
         }
@@ -3234,11 +3187,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          return res
-            .status(502)
-            .json({
-              error: `Email service error: ${errorData.message || response.statusText}`,
-            });
+          return res.status(502).json({
+            error: `Email service error: ${errorData.message || response.statusText}`,
+          });
         }
 
         // Only persist to database after successful send
@@ -3290,11 +3241,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json(response_data);
       } catch (error: any) {
         console.error("Error replying to email thread:", error);
-        res
-          .status(500)
-          .json({
-            error: error.message || "Internal server error while sending reply",
-          });
+        res.status(500).json({
+          error: error.message || "Internal server error while sending reply",
+        });
       }
     },
   );
@@ -4337,12 +4286,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error: any) {
       if (error.status === 404) {
-        return res
-          .status(404)
-          .json({
-            error: "Not Found",
-            message: `Path '${path}' not found in repo '${repo}'`,
-          });
+        return res.status(404).json({
+          error: "Not Found",
+          message: `Path '${path}' not found in repo '${repo}'`,
+        });
       }
       console.error("Error fetching tree:", error);
       res
@@ -4356,12 +4303,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const { repo, path } = req.query;
 
     if (!repo || !path) {
-      return res
-        .status(400)
-        .json({
-          error: "Bad Request",
-          message: "repo and path parameters are required",
-        });
+      return res.status(400).json({
+        error: "Bad Request",
+        message: "repo and path parameters are required",
+      });
     }
 
     try {
@@ -4372,12 +4317,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       if (Array.isArray(data) || data.type !== "file") {
-        return res
-          .status(400)
-          .json({
-            error: "Bad Request",
-            message: "Path must be a file, not a directory",
-          });
+        return res.status(400).json({
+          error: "Bad Request",
+          message: "Path must be a file, not a directory",
+        });
       }
 
       const content = Buffer.from(data.content, "base64").toString("utf-8");
@@ -4392,12 +4335,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error: any) {
       if (error.status === 404) {
-        return res
-          .status(404)
-          .json({
-            error: "Not Found",
-            message: `File '${path}' not found in repo '${repo}'`,
-          });
+        return res.status(404).json({
+          error: "Not Found",
+          message: `File '${path}' not found in repo '${repo}'`,
+        });
       }
       console.error("Error fetching file:", error);
       res
@@ -4520,12 +4461,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ repo, count: commits.length, commits });
     } catch (error: any) {
       if (error.status === 404) {
-        return res
-          .status(404)
-          .json({
-            error: "Not Found",
-            message: `Repository '${repo}' not found`,
-          });
+        return res.status(404).json({
+          error: "Not Found",
+          message: `Repository '${repo}' not found`,
+        });
       }
       console.error("Error fetching commits:", error);
       res
@@ -4539,12 +4478,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const { repo, query, path = "" } = req.query;
 
     if (!repo || !query) {
-      return res
-        .status(400)
-        .json({
-          error: "Bad Request",
-          message: "repo and query parameters are required",
-        });
+      return res.status(400).json({
+        error: "Bad Request",
+        message: "repo and query parameters are required",
+      });
     }
 
     try {
@@ -4587,12 +4524,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error: any) {
       if (error.status === 404) {
-        return res
-          .status(404)
-          .json({
-            error: "Not Found",
-            message: `Repository '${repo}' not found`,
-          });
+        return res.status(404).json({
+          error: "Not Found",
+          message: `Repository '${repo}' not found`,
+        });
       }
       console.error("Error searching:", error);
       res
@@ -4644,12 +4579,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       } catch (error: any) {
         if (error.status === 404) {
-          return res
-            .status(404)
-            .json({
-              error: "Not Found",
-              message: `Path '${path}' not found in repo '${repo}'`,
-            });
+          return res.status(404).json({
+            error: "Not Found",
+            message: `Path '${path}' not found in repo '${repo}'`,
+          });
         }
         console.error("Error fetching tree:", error);
         res
@@ -4681,12 +4614,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
 
         if (Array.isArray(data) || data.type !== "file") {
-          return res
-            .status(400)
-            .json({
-              error: "Bad Request",
-              message: "Path must be a file, not a directory",
-            });
+          return res.status(400).json({
+            error: "Bad Request",
+            message: "Path must be a file, not a directory",
+          });
         }
 
         const content = Buffer.from(data.content, "base64").toString("utf-8");
@@ -4701,12 +4632,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       } catch (error: any) {
         if (error.status === 404) {
-          return res
-            .status(404)
-            .json({
-              error: "Not Found",
-              message: `File '${filePath}' not found in repo '${repo}'`,
-            });
+          return res.status(404).json({
+            error: "Not Found",
+            message: `File '${filePath}' not found in repo '${repo}'`,
+          });
         }
         console.error("Error fetching file contents:", error);
         res
@@ -4755,12 +4684,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         if (!routesContent) {
-          return res
-            .status(404)
-            .json({
-              error: "Not Found",
-              message: "Could not find routes file",
-            });
+          return res.status(404).json({
+            error: "Not Found",
+            message: "Could not find routes file",
+          });
         }
 
         const routes = new Set<string>();
@@ -4826,12 +4753,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json({ repo, count: commits.length, commits });
       } catch (error: any) {
         if (error.status === 404) {
-          return res
-            .status(404)
-            .json({
-              error: "Not Found",
-              message: `Repository '${repo}' not found`,
-            });
+          return res.status(404).json({
+            error: "Not Found",
+            message: `Repository '${repo}' not found`,
+          });
         }
         console.error("Error fetching commits:", error);
         res
