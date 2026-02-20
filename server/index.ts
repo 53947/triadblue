@@ -4,26 +4,45 @@ import pgSession from "connect-pg-simple";
 import { Pool } from "@neondatabase/serverless";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { seedDefaultUser, seedTriadBlueProjects, seedLocalPlatformBuilderAgent, seedSharedEmailInboxes, seedAdminUser } from "./seed";
+import {
+  seedDefaultUser,
+  seedTriadBlueProjects,
+  seedLocalPlatformBuilderAgent,
+  seedSharedEmailInboxes,
+  seedAdminUser,
+} from "./seed";
 import { seedDocumentationTemplates } from "./seed-documentation-templates";
 import path from "path";
 import { getBranding, type Platform } from "../shared/branding";
 
 const app = express();
 
-// Trust proxy for secure cookies in production (Replit)
-app.set('trust proxy', 1);
+// Allow external API access for AI agents (bypass Replit proxy restrictions)
+app.use("/api/github", (req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Headers", "x-api-key, content-type");
+  if (req.method === "OPTIONS") {
+    res.sendStatus(200);
+    return;
+  }
+  next();
+});
 
-declare module 'http' {
+// Trust proxy for secure cookies in production (Replit)
+app.set("trust proxy", 1);
+
+declare module "http" {
   interface IncomingMessage {
-    rawBody: unknown
+    rawBody: unknown;
   }
 }
-app.use(express.json({
-  verify: (req, _res, buf) => {
-    req.rawBody = buf;
-  }
-}));
+app.use(
+  express.json({
+    verify: (req, _res, buf) => {
+      req.rawBody = buf;
+    },
+  }),
+);
 app.use(express.urlencoded({ extended: false }));
 
 // PostgreSQL session store for production persistence
@@ -37,7 +56,9 @@ app.use(
       pool: sessionPool,
       createTableIfMissing: true,
     }),
-    secret: process.env.SESSION_SECRET || "consoleblue-secret-key-change-in-production",
+    secret:
+      process.env.SESSION_SECRET ||
+      "consoleblue-secret-key-change-in-production",
     resave: false,
     saveUninitialized: false,
     rolling: true, // Refresh session on each request
@@ -49,7 +70,7 @@ app.use(
       path: "/",
       domain: process.env.COOKIE_DOMAIN || undefined, // B1: cross-subdomain session sharing
     },
-  })
+  }),
 );
 
 // B2: Hostname detection middleware — sets res.locals.platform
@@ -67,17 +88,19 @@ app.use((req, res, next) => {
 
 // B6: Per-subdomain favicon routing
 app.get("/favicon.ico", (req, res, next) => {
-  const platform = res.locals.platform === "linkblue" || res.locals.platform === "consoleblue"
-    ? res.locals.platform
-    : "triadblue";
+  const platform =
+    res.locals.platform === "linkblue" || res.locals.platform === "consoleblue"
+      ? res.locals.platform
+      : "triadblue";
   res.sendFile(path.resolve(`client/public/favicons/${platform}/favicon.png`));
 });
 
 // Dynamic manifest.json — platform-specific name, icons, theme
 app.get("/manifest.json", (req, res) => {
-  const platform: Platform = res.locals.platform === "linkblue" || res.locals.platform === "consoleblue"
-    ? res.locals.platform
-    : "unknown";
+  const platform: Platform =
+    res.locals.platform === "linkblue" || res.locals.platform === "consoleblue"
+      ? res.locals.platform
+      : "unknown";
   const faviconDir = platform === "unknown" ? "triadblue" : platform;
   const branding = getBranding(platform);
   res.json({
@@ -89,9 +112,22 @@ app.get("/manifest.json", (req, res) => {
     background_color: "#000000",
     theme_color: branding.themeColor,
     icons: [
-      { src: `/favicons/${faviconDir}/favicon-192x192.png`, sizes: "192x192", type: "image/png" },
-      { src: `/favicons/${faviconDir}/favicon-512x512.png`, sizes: "512x512", type: "image/png", purpose: "any maskable" },
-      { src: `/favicons/${faviconDir}/apple-touch-icon.png`, sizes: "180x180", type: "image/png" },
+      {
+        src: `/favicons/${faviconDir}/favicon-192x192.png`,
+        sizes: "192x192",
+        type: "image/png",
+      },
+      {
+        src: `/favicons/${faviconDir}/favicon-512x512.png`,
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "any maskable",
+      },
+      {
+        src: `/favicons/${faviconDir}/apple-touch-icon.png`,
+        sizes: "180x180",
+        type: "image/png",
+      },
     ],
   });
 });
@@ -129,7 +165,7 @@ app.use((req, res, next) => {
 (async () => {
   // Log environment availability (not values)
   console.log(`GITHUB_TOKEN exists: ${!!process.env.GITHUB_TOKEN}`);
-  console.log(`CONSOLE_API_KEY exists: ${!!process.env.CONSOLE_API_KEY}`);
+  console.log(`BLUE_API_KEY exists: ${!!process.env.BLUE_API_KEY}`);
 
   // Seed default user for foreign key constraints
   const systemUser = await seedDefaultUser();
@@ -172,12 +208,15 @@ app.use((req, res, next) => {
   // Other ports are firewalled. Default to 5000 if not specified.
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || '5000', 10);
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-  });
+  const port = parseInt(process.env.PORT || "5000", 10);
+  server.listen(
+    {
+      port,
+      host: "0.0.0.0",
+      reusePort: true,
+    },
+    () => {
+      log(`serving on port ${port}`);
+    },
+  );
 })();
