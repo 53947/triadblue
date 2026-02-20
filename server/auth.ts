@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from "express";                                                                                            
+import { Request, Response, NextFunction } from "express";
 import "express-session";
-import type { IStorage } from "./storage";                                                                                                            
+import type { IStorage } from "./storage";
 
 declare module "express-session" {
   interface SessionData {
@@ -32,11 +32,15 @@ export function setStorageForAuth(storage: IStorage) {
   storageInstance = storage;
 }
 
-export async function authRequired(req: Request, res: Response, next: NextFunction) {
+export async function authRequired(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   const authReq = req as AuthRequest;
 
   // Allow API key authentication as alternative to session auth
-  const apiKey = req.headers['x-api-key'] as string;
+  const apiKey = (req.headers["x-api-key"] || req.query.api_key) as string;
   if (apiKey && apiKey === process.env.CONSOLE_API_KEY) {
     if (!authReq.session?.user) {
       if (storageInstance) {
@@ -49,16 +53,16 @@ export async function authRequired(req: Request, res: Response, next: NextFuncti
           };
         } catch (error) {
           authReq.session.user = {
-            id: 'api-agent',
-            username: 'api-agent',
-            role: 'admin',
+            id: "api-agent",
+            username: "api-agent",
+            role: "admin",
           };
         }
       } else {
         authReq.session.user = {
-          id: 'api-agent',
-          username: 'api-agent',
-          role: 'admin',
+          id: "api-agent",
+          username: "api-agent",
+          role: "admin",
         };
       }
     }
