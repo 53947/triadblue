@@ -52,7 +52,6 @@ import ConsoleBlueForgotPassword from "@/pages/consoleblue-forgot-password";
 import ConsoleBlueResetPassword from "@/pages/consoleblue-reset-password";
 import { ProtectedRoute, LinkBlueProtectedRoute } from "@/components/protected-route";
 import { PlatformSwitcher } from "@/components/platform-switcher";
-import { DynamicFavicon } from "@/components/dynamic-favicon";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect, useRef } from "react";
 import { CreateProjectModal } from "@/components/modals/create-project-modal";
@@ -290,7 +289,6 @@ function AppContent() {
   if (subdomainMode === "consoleblue") {
     return (
       <>
-        <DynamicFavicon />
         <Switch>
           {authRoutes}
           <Route>
@@ -307,7 +305,6 @@ function AppContent() {
   if (subdomainMode === "linkblue") {
     return (
       <>
-        <DynamicFavicon />
         <Switch>
           {authRoutes}
           <Route path="/">
@@ -336,7 +333,6 @@ function AppContent() {
 
   return (
     <>
-      <DynamicFavicon />
       <Switch>
         {authRoutes}
         {!isConsoleBlue && <Route path="/" component={Landing} />}

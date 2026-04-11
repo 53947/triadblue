@@ -584,11 +584,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.createPasswordResetToken(user.id, resetToken, platform);
 
       // Build the reset URL — use subdomain if available
+      // consoleblue.triadblue.com is decommissioned; Console.Blue now lives at https://console.blue
       const subdomainBase =
         platform === "linkblue"
           ? "https://linkblue.triadblue.com"
           : platform === "consoleblue"
-            ? "https://consoleblue.triadblue.com"
+            ? "https://console.blue"
             : "https://triadblue.com";
       const resetUrl = `${subdomainBase}/${platform}/reset-password?token=${resetToken}`;
 

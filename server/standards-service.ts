@@ -29,7 +29,7 @@ export class StandardsService {
       version: "1.0.0",
       lastUpdated: new Date().toISOString(),
       projectCount: TRIADBLUE_PROJECTS.length,
-      documentationUrl: "https://consoleblue.replit.app/docs/standards",
+      documentationUrl: "https://console.blue/docs/standards",
       requiredEndpoints: [
         {
           name: "Metadata API",
@@ -38,7 +38,7 @@ export class StandardsService {
           description: "Returns project features and tech stack for documentation generation",
           authentication: "None (public)",
           required: true,
-          documentationUrl: "https://consoleblue.replit.app/docs/api/metadata",
+          documentationUrl: "https://console.blue/docs/api/metadata",
         },
         {
           name: "Agent API",
@@ -47,7 +47,7 @@ export class StandardsService {
           description: "Handles conversational AI requests for agent chat integration",
           authentication: "Optional Bearer token",
           required: true,
-          documentationUrl: "https://consoleblue.replit.app/docs/api/agent",
+          documentationUrl: "https://console.blue/docs/api/agent",
         },
         {
           name: "Routes API",
@@ -56,7 +56,7 @@ export class StandardsService {
           description: "Returns application routes for site map generation",
           authentication: "None (public)",
           required: true,
-          documentationUrl: "https://consoleblue.replit.app/docs/api/routes",
+          documentationUrl: "https://console.blue/docs/api/routes",
         },
       ],
     };
@@ -71,7 +71,7 @@ export class StandardsService {
 This project is part of the TriadBlue ecosystem. All TriadBlue projects follow standardized requirements to enable seamless integration with ConsoleBlue (the centralized hub).
 
 ## Getting Started
-Visit **https://consoleblue.replit.app/api/standards** to fetch the latest TriadBlue standards. This ensures your project is always aligned with current requirements.
+Visit **https://console.blue/api/standards** to fetch the latest TriadBlue standards. This ensures your project is always aligned with current requirements.
 
 ## Required Endpoints
 
@@ -124,9 +124,9 @@ Your project automatically receives updates from ConsoleBlue through an automate
 **This means**: You don't need to manually track standards changes. Your project will always stay in sync with the latest TriadBlue requirements.
 
 ## Important Links
-- **Standards Documentation**: https://consoleblue.replit.app/api/standards
-- **ConsoleBlue Dashboard**: https://consoleblue.replit.app
-- **ConsoleBlue Docs**: https://consoleblue.replit.app/docs
+- **Standards Documentation**: https://console.blue/api/standards
+- **ConsoleBlue Dashboard**: https://console.blue
+- **ConsoleBlue Docs**: https://console.blue/docs
 - **TriadBlue Ecosystem**: https://triadblue.com
 
 ## Questions?

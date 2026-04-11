@@ -7,13 +7,8 @@
     <meta name="facebook-domain-verification" content="tnc5snt9xsg0qxmmr25fvj3zae7v2t" />
     <title>TriadBlue</title>
 
-    <!-- Favicon - Multiple sizes for global visibility (server rewrites per-subdomain) -->
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicons/triadblue/favicon-16x16.png" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicons/triadblue/favicon-32x32.png" />
-    <link rel="icon" type="image/png" sizes="48x48" href="/favicons/triadblue/favicon-48x48.png" />
-    <link rel="icon" type="image/png" sizes="192x192" href="/favicons/triadblue/favicon-192x192.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/favicons/triadblue/apple-touch-icon.png" />
-    <link rel="shortcut icon" href="/favicons/triadblue/favicon.png" />
+    <!-- Favicon managed by OGA (console.blue) -->
+    <link rel="icon" href="data:," />
 
     <!-- Web App Manifest for PWA/Desktop Shortcuts -->
     <link rel="manifest" href="/manifest.json" />
@@ -36,7 +31,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Expletus+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
     <!-- OGA: Online Global Assets (managed at console.blue) -->
-    <script src="https://console.blue/api/oga/embed.js?key=OGA_KEY_TRIADBLUE" async></script>
+    <!-- VITE_OGA_KEY_TRIADBLUE must be set in Replit Secrets. Generate by creating an ogaSite row for domain "triadblue.com" and copying its apiKey. -->
+    <script src="https://console.blue/api/oga/embed.js?key=%VITE_OGA_KEY_TRIADBLUE%" async></script>
   </head>
   <body>
     <script>
